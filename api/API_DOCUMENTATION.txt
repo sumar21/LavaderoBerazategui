@@ -1,0 +1,1276 @@
+# API Documentation
+
+## Auth Routes
+
+- **POST** `/api/auth/check-status`
+    - Body: `{ email: string }`
+    - Response: `{ exists: boolean }`
+
+- **POST** `/api/auth/validate`
+    - Body: `{ email: string, code: string }`
+    - Response: `{ token: string, user: object }`
+
+- **POST** `/api/auth/recover`
+    - Body: `{ email: string }`
+    - Response: `{ success: boolean }`
+
+- **POST** `/api/login`
+    - Body: `{ usuarioApp: string, password: string }`
+    - Response: `{ token: string, user: object }`
+
+## Data Routes (Requires Authorization Header: `Bearer <token>`)
+
+> **Nota de paginación:** Todos los endpoints GET soportan hasta **3000 registros**. SharePoint devuelve 999 por página; el servidor pagina automáticamente hasta el límite.
+
+- **GET** `/api/ordenes-compra`
+    - Description: Fetch all Purchase Orders.
+    - Response: Array of `OrdenCompra` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `idUnivoco`: IDUnivoco_OC
+        - `usuario`: Usuario_OC
+        - `fecha`: Fecha_OC
+        - `hora`: Hora_OC
+        - `proveedor`: Proveedor_SI (nombre interno real en SharePoint)
+        - `cantidadArticulos`: CantidadArticulos_OC
+        - `cantidadTotal`: CantidadTotal_OC
+        - `precio`: Precio_OC
+        - `conversion`: Conversion_OC
+        - `status`: Status_OC
+        - `versionApp`: Version_OC
+        - `mesAnio`: MesAño_OC
+        - `creadoPor`: Creator name
+
+- **POST** `/api/ordenes-compra`
+    - Description: Create a new Purchase Order.
+    - Body:
+        - `IDUnivoco`: string (required)
+        - `Usuario`: string
+        - `Fecha`: string (required)
+        - `Hora`: string
+        - `Proveedor`: string (required)
+        - `CantidadArticulos`: string
+        - `CantidadTotal`: string
+        - `Precio`: string
+        - `Conversion`: string
+        - `Status`: string
+        - `VersionApp`: string
+        - `MesAnio`: string
+    - Response: Created object from SharePoint.
+
+- **PATCH** `/api/ordenes-compra`
+    - Description: Update an existing Purchase Order.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional) → Status_OC
+        - `CantidadArticulos`: string (optional) → CantidadArticulos_OC
+        - `CantidadTotal`: string (optional) → CantidadTotal_OC
+        - `Precio`: string (optional) → Precio_OC
+    - Note: At least one optional field is required. Numbers must be sent as strings.
+    - Response: Updated object from SharePoint.
+
+- **GET** `/api/detalles-oc`
+    - Description: Fetch Purchase Order Details. Optionally filter by `idCompra`.
+    - Query Params: `idCompra` (optional)
+    - Response: Array of `DetalleOC` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `idCompra`: IdCompra_DOC
+        - `usuario`: Usuario_DOC
+        - `fecha`: Fecha_DOC
+        - `hora`: Hora_DOC
+        - `idArticulo`: IdArticulo_DOC
+        - `articuloConcat`: ArticuloConcat_DOC
+        - `articulo`: Articulo_DOC
+        - `sku`: SKU_DOC
+        - `precioUnitario`: PrecioUnitario_DOC
+        - `cantidad`: Cantidad_DOC
+        - `precioTotal`: PrecioTotal_DOC
+        - `cantidadRecepcionada`: CantidadRecepcionada_DOC
+        - `valorRecepcionado`: ValorRecepcionado_DOC
+        - `status`: Status_DOC
+        - `versionApp`: VersionApp_DOC
+        - `mesAnio`: MesAño_DOC
+        - `creadoPor`: Creator name
+
+- **POST** `/api/detalles-oc`
+    - Description: Create a new Purchase Order Detail.
+    - Body:
+        - `IdCompra`: string (required)
+        - `Usuario`: string
+        - `Fecha`: string
+        - `Hora`: string
+        - `IdArticulo`: string (required)
+        - `ArticuloConcat`: string
+        - `Articulo`: string
+        - `SKU`: string
+        - `PrecioUnitario`: string
+        - `Cantidad`: string
+        - `PrecioTotal`: string
+        - `CantidadRecepcionada`: string
+        - `ValorRecepcionado`: string
+        - `Status`: string
+        - `VersionApp`: string
+        - `MesAnio`: string
+    - Response: Created object.
+
+- **PATCH** `/api/detalles-oc`
+    - Description: Update an existing Purchase Order Detail.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional) → Status_DOC
+        - `CantidadRecepcionada`: string (optional) → CantidadRecepcionada_DOC
+        - `ValorRecepcionado`: string (optional) → ValorRecepcionado_DOC
+        - `IdCompra`: string (optional) → IdCompra_DOC
+        - `Usuario`: string (optional) → Usuario_DOC
+        - `Fecha`: string (optional) → Fecha_DOC
+        - `Hora`: string (optional) → Hora_DOC
+        - `IdArticulo`: string (optional) → IdArticulo_DOC
+        - `ArticuloConcat`: string (optional) → ArticuloConcat_DOC
+        - `Articulo`: string (optional) → Articulo_DOC
+        - `SKU`: string (optional) → SKU_DOC
+        - `PrecioUnitario`: string (optional) → PrecioUnitario_DOC
+        - `Cantidad`: string (optional) → Cantidad_DOC
+        - `PrecioTotal`: string (optional) → PrecioTotal_DOC
+        - `VersionApp`: string (optional) → VersionApp_DOC
+        - `MesAnio`: string (optional) → MesAño_DOC
+    - Note: At least one optional field is required. Numbers must be sent as strings.
+    - Response: Updated object from SharePoint.
+
+- **GET** `/api/recepciones-oc`
+    - Description: Fetch Purchase Order Receptions. Optionally filter by `idCompra` or `idRecepcionGrupal`.
+    - Query Params: `idCompra`, `idRecepcionGrupal` (optional)
+    - Response: Array of `RecepcionOC` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `idRecepcionGrupal`: IDRecepcionGrupal_ROC
+        - `idCompra`: IDCompra_ROC
+        - `idDetalleCompra`: IDDetalleCompra_ROC
+        - `usuario`: Usuario_ROC
+        - `fecha`: Fecha_ROC
+        - `hora`: Hora_ROC
+        - `fechaRecepcion`: FechaRecepcion_ROC
+        - `nroRemito`: NroRemito_ROC
+        - `lote`: Lote_ROC
+        - `idArticulo`: IdArticulo_ROC
+        - `detalleArticulo`: DetalleArticulo_ROC
+        - `articuloConcat`: ArticuloConcat_ROC
+        - `sku`: SKU_ROC
+        - `cantidadRecepcion`: CantidadRecepcion_ROC
+        - `status`: Status_ROC
+        - `versionApp`: VersionApp_ROC
+        - `mesAnio`: MesAño_ROC
+        - `creadoPor`: Creator name
+
+- **POST** `/api/recepciones-oc`
+    - Description: Create a new Purchase Order Reception.
+    - Body:
+        - `IDRecepcionGrupal`: string
+        - `IDCompra`: string (required)
+        - `IDDetalleCompra`: string
+        - `Usuario`: string
+        - `Fecha`: string
+        - `Hora`: string
+        - `FechaRecepcion`: string
+        - `NroRemito`: string
+        - `Lote`: string
+        - `IdArticulo`: string (required)
+        - `DetalleArticulo`: string
+        - `ArticuloConcat`: string
+        - `SKU`: string
+        - `CantidadRecepcion`: string
+        - `Status`: string
+        - `VersionApp`: string
+        - `MesAnio`: string
+    - Response: Created object.
+
+- **PATCH** `/api/recepciones-oc`
+    - Description: Update an existing Purchase Order Reception.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/carga-transito`
+    - Description: Fetch Transit Load items. Optionally filter by `idTransaccion` or `sku`.
+    - Query Params: `idTransaccion`, `sku` (optional)
+    - Response: Array of `CargaTransito` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `idTransaccion`: IDTRX_CT
+        - `fecha`: Fecha_CT
+        - `hora`: Hora_CT
+        - `movimiento`: Movimiento_CT
+        - `almacen`: Almacen_CT
+        - `almacenDestino`: AlmacenDestino_CT
+        - `usuario`: Usuario_CT
+        - `sku`: SKU_CT
+        - `concatArtCliente`: ConcatArtCliente_CT
+        - `articulo`: Articulo_CT
+        - `cantidadInicial`: CantidadInicial_CT
+        - `cantidad`: Cantidad_CT
+        - `status`: Status_CT
+        - `version`: Version_CT
+        - `cliente`: Cliente_CT
+        - `creadoPor`: Creator name
+
+- **POST** `/api/carga-transito`
+    - Description: Create a new Transit Load item.
+    - Body:
+        - `IDTRX`: string (required)
+        - `Fecha`: string
+        - `Hora`: string
+        - `Movimiento`: string
+        - `Almacen`: string
+        - `AlmacenDestino`: string
+        - `Usuario`: string
+        - `SKU`: string (required)
+        - `ConcatArtCliente`: string
+        - `Articulo`: string
+        - `CantidadInicial`: string
+        - `Cantidad`: string
+        - `Status`: string
+        - `Version`: string
+        - `Cliente`: string
+    - Response: Created object.
+
+- **PATCH** `/api/carga-transito`
+    - Description: Update an existing Transit Load item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/almacenes`
+    - Description: Fetch Almacenes (Test List) items. Optionally filter by `idAlmacen` or `sku`.
+    - Query Params: `idAlmacen`, `sku` (optional)
+    - Response: Array of `Almacen` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `fecha`: Fecha_A
+        - `idAlmacen`: IDAlmacen_A
+        - `nroAlmacen`: NroAlmacen_A
+        - `sku`: SKU_A
+        - `articulo`: Articulo_A
+        - `concat`: Concat_A
+        - `stockInicial`: StockInicial_A
+        - `ingreso`: Ingreso_A
+        - `egreso`: Egreso_A
+        - `stockFinal`: StockFinal_A
+        - `status`: Status_A
+        - `creadoPor`: Creator name
+
+- **POST** `/api/almacenes`
+    - Description: Create a new Almacen item.
+    - Body:
+        - `Fecha`: string
+        - `IDAlmacen`: string (required)
+        - `NroAlmacen`: string
+        - `SKU`: string (required)
+        - `Articulo`: string
+        - `Concat`: string
+        - `StockInicial`: string
+        - `Ingreso`: string
+        - `Egreso`: string
+        - `StockFinal`: string
+        - `Status`: string
+    - Response: Created object.
+
+- **PATCH** `/api/almacenes`
+    - Description: Update an existing Almacen item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/ordenes-trabajo`
+    - Description: Fetch Ordenes de Trabajo items. Optionally filter by `ordenTrabajo`, `idTransaccion`, or `sku`.
+    - Query Params: `ordenTrabajo`, `idTransaccion`, `sku` (optional)
+    - Response: Array of `OrdenTrabajo` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `idTransaccion`: IDTRX_OT
+        - `ordenTrabajo`: OrdenTrabajo_OT
+        - `fecha`: Fecha_OT
+        - `hora`: Hora_OT
+        - `estado`: Status_OT
+        - `usuario`: Usuario_OT
+        - `sku`: SKU_OT
+        - `cliente`: Cliente_OT
+        - `articulo`: Articulo_OT
+        - `version`: Version_OT
+        - `mesAnio`: MesAño_OT
+        - `creadoPor`: Creator name
+
+- **POST** `/api/ordenes-trabajo`
+    - Description: Create a new OrdenTrabajo item.
+    - Body:
+        - `IDTRX`: string (required)
+        - `OrdenTrabajo`: string (required)
+        - `Fecha`: string
+        - `Hora`: string
+        - `Status`: string
+        - `Usuario`: string
+        - `SKU`: string
+        - `Cliente`: string
+        - `Articulo`: string
+        - `Version`: string
+        - `MesAnio`: string
+    - Response: Created object.
+
+- **PATCH** `/api/ordenes-trabajo`
+    - Description: Update an existing OrdenTrabajo item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/solicitud-inyecciones`
+    - Description: Fetch Solicitud Inyecciones items. Optionally filter by `idTransaccion`, `sku`, or `cliente`.
+    - Query Params: `idTransaccion`, `sku`, `cliente` (optional)
+    - Response: Array of `SolicitudInyeccion` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `idTransaccion`: IDTRX_SI
+        - `usuario`: Usuario_SI
+        - `fecha`: Fecha_SI
+        - `hora`: Hora_SI
+        - `movimiento`: Movimiento_SI
+        - `articulo`: Articulo_SI
+        - `sku`: SKU_SI
+        - `cliente`: Cliente_SI
+        - `cantidadInicial`: CantidadInicial_SI
+        - `cantidad`: Cantidad_SI
+        - `status`: Status_SI
+        - `observaciones`: Observaciones_SI
+        - `version`: Version_SI
+        - `mesAnio`: MesAño_SI
+        - `mesAnioReal`: MesAñoReal_SI
+        - `creadoPor`: Creator name
+
+- **POST** `/api/solicitud-inyecciones`
+    - Description: Create a new SolicitudInyeccion item.
+    - Body:
+        - `IDTRX`: string (required)
+        - `Usuario`: string
+        - `Fecha`: string
+        - `Hora`: string
+        - `Movimiento`: string
+        - `Articulo`: string
+        - `SKU`: string (required)
+        - `Cliente`: string
+        - `CantidadInicial`: string
+        - `Cantidad`: string
+        - `Status`: string
+        - `Observaciones`: string
+        - `Version`: string
+        - `MesAnio`: string
+        - `MesAnioReal`: string
+    - Response: Created object.
+
+- **PATCH** `/api/solicitud-inyecciones`
+    - Description: Update an existing SolicitudInyeccion item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+        - `Cantidad`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/carga-transito-univoca`
+    - Description: Fetch Carga Transito Univoca items. Optionally filter by `sku` or `cliente`.
+    - Query Params: `sku`, `cliente` (optional)
+    - Response: Array of `CargaTransitoUnivoca` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `ultimoUsuario`: UltimoUsuario_CTU
+        - `ultimaFecha`: UltimaFecha_CTU
+        - `ultimaHora`: UltimaHora_CTU
+        - `cliente`: Cliente_CTU
+        - `articulo`: Articulo_CTU
+        - `concat`: Concat_CTU
+        - `sku`: Sku_CTU
+        - `cantidadInicial`: CantidadInicial_CTU
+        - `movimiento`: Movimiento_CTU
+        - `cantidadFinal`: CantidadFinal_CTU
+        - `versionApp`: VersionApp_CTU
+        - `creadoPor`: Creator name
+
+- **POST** `/api/carga-transito-univoca`
+    - Description: Create a new CargaTransitoUnivoca item.
+    - Body:
+        - `UltimoUsuario`: string
+        - `UltimaFecha`: string
+        - `UltimaHora`: string
+        - `Cliente`: string (required)
+        - `Articulo`: string
+        - `Concat`: string
+        - `Sku`: string (required)
+        - `CantidadInicial`: string
+        - `Movimiento`: string
+        - `CantidadFinal`: string
+        - `VersionApp`: string
+    - Response: Created object.
+
+- **PATCH** `/api/carga-transito-univoca`
+    - Description: Update an existing CargaTransitoUnivoca item.
+    - Body:
+        - `id`: string (required)
+        - `Movimiento`: string (optional)
+        - `CantidadFinal`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/aprobaciones`
+    - Description: Fetch Aprobaciones items. Optionally filter by `status`, `cliente`, or `idUnivoco`.
+    - Query Params: `status`, `cliente`, `idUnivoco` (optional)
+    - Response: Array of `Aprobacion` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `idUnivoco`: IDUnivoco_A
+        - `usuario`: Usuario_A
+        - `fechaAprobacion`: FechaAprobacion_A
+        - `horaAprobacion`: HoraAprobacion_A
+        - `fechaCreacion`: FechaCreacion_A
+        - `horaCreacion`: HoraCreacion_A
+        - `cliente`: Cliente_A
+        - `tipo`: Tipo_A
+        - `tipoPrenda`: TipoPrenda_A
+        - `almacenOrigen`: AlmacenOrigen_A
+        - `almacenDestino`: AlmacenDestino_A
+        - `cantidad`: Cantidad_A
+        - `status`: Status_A
+        - `mesAnio`: MesAño_A
+        - `versionApp`: VersionApp_A
+        - `creadoPor`: Creator name
+
+- **POST** `/api/aprobaciones`
+    - Description: Create a new Aprobacion item.
+    - Body:
+        - `IDUnivoco`: string (required)
+        - `Usuario`: string
+        - `FechaAprobacion`: string
+        - `HoraAprobacion`: string
+        - `FechaCreacion`: string
+        - `HoraCreacion`: string
+        - `Cliente`: string (required)
+        - `Tipo`: string
+        - `TipoPrenda`: string
+        - `AlmacenOrigen`: string
+        - `AlmacenDestino`: string
+        - `Cantidad`: string
+        - `Status`: string
+        - `MesAnio`: string
+        - `VersionApp`: string
+    - Response: Created object.
+
+- **PATCH** `/api/aprobaciones`
+    - Description: Update an existing Aprobacion item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/stock`
+    - Description: Fetch Stock items. Optionally filter by `sku` or `idSubdeposito`.
+    - Query Params: `sku`, `idSubdeposito` (optional)
+    - Response: Array of `Stock` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `fecha`: Fecha_St
+        - `idSubdeposito`: IDSubdeposito_St
+        - `subdeposito`: Subdeposito_St
+        - `sku`: SKU_St
+        - `articulo`: Articulo_St
+        - `concat`: Concat_St
+        - `stockFinal`: StockFinal_St
+        - `stockPendiente`: StockPendiente_St
+        - `status`: Status_St
+        - `modificado`: Modified
+        - `creadoPor`: Creator name
+
+- **POST** `/api/stock`
+    - Description: Create a new Stock item.
+    - Body:
+        - `Fecha`: string
+        - `IDSubdeposito`: string (required)
+        - `Subdeposito`: string
+        - `SKU`: string (required)
+        - `Articulo`: string
+        - `Concat`: string
+        - `StockFinal`: string
+        - `StockPendiente`: string
+        - `Status`: string
+    - Response: Created object.
+
+- **PATCH** `/api/stock`
+    - Description: Update an existing Stock item.
+    - Body:
+        - `id`: string (required)
+        - `Fecha`: string (optional) → Fecha_St
+        - `IDSubdeposito`: string (optional) → IDSubdeposito_St
+        - `Subdeposito`: string (optional) → Subdeposito_St
+        - `SKU`: string (optional) → SKU_St
+        - `Articulo`: string (optional) → Articulo_St
+        - `Concat`: string (optional) → Concat_St
+        - `StockFinal`: string (optional) → StockFinal_St
+        - `StockPendiente`: string (optional) → StockPendiente_St
+        - `Status`: string (optional) → Status_St
+    - Note: At least one optional field is required. Numbers must be sent as strings.
+    - Response: Updated object.
+
+- **GET** `/api/resumen-ingresos-egresos`
+    - Description: Fetch Resumen Ingresos Egresos items. Optionally filter by `idUnivoco` or `tipo`.
+    - Query Params: `idUnivoco`, `tipo` (optional)
+    - Response: Array of `ResumenIngresoEgreso` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `idUnivoco`: IDUnivoco_RE
+        - `tipo`: Tipo_RE
+        - `articulos`: Articulos_RE
+        - `total`: Total_RE
+        - `subdeposito`: Subdeposito_RE
+        - `usuario`: Usuario_RE
+        - `fecha`: Fecha_RE
+        - `mes`: Mes_RE
+        - `anio`: Año_RE
+        - `mesAnio`: MesAño_RE
+        - `hora`: Hora_RE
+        - `status`: Status_RE
+        - `versionApp`: VersionApp_RE
+        - `creadoPor`: Creator name
+
+- **POST** `/api/resumen-ingresos-egresos`
+    - Description: Create a new Resumen Ingreso Egreso item.
+    - Body:
+        - `IDUnivoco`: string (required)
+        - `Tipo`: string
+        - `Articulos`: string
+        - `Total`: string
+        - `Subdeposito`: string
+        - `Usuario`: string
+        - `Fecha`: string
+        - `Mes`: string
+        - `Anio`: string
+        - `MesAnio`: string
+        - `Hora`: string
+        - `Status`: string
+        - `VersionApp`: string
+    - Response: Created object.
+
+- **PATCH** `/api/resumen-ingresos-egresos`
+    - Description: Update an existing Resumen Ingreso Egreso item.
+    - Body:
+        - `id`: string (required)
+        - `IDUnivoco`: string (optional) → IDUnivoco_RE
+        - `Tipo`: string (optional) → Tipo_RE
+        - `Articulos`: string (optional) → Articulos_RE
+        - `Total`: string (optional) → Total_RE
+        - `Subdeposito`: string (optional) → Subdeposito_RE
+        - `Usuario`: string (optional) → Usuario_RE
+        - `Fecha`: string (optional) → Fecha_RE
+        - `Mes`: string (optional) → Mes_RE
+        - `Anio`: string (optional) → Año_RE
+        - `MesAnio`: string (optional) → MesAño_RE
+        - `Hora`: string (optional) → Hora_RE
+        - `Status`: string (optional) → Status_RE
+        - `VersionApp`: string (optional) → VersionApp_RE
+    - Note: At least one optional field is required.
+    - Response: Updated object.
+
+- **GET** `/api/detalles-ingresos-egresos`
+    - Description: Fetch Detalle Ingreso Egreso items. Optionally filter by `idUnivoco` or `tipo`.
+    - Query Params: `idUnivoco`, `tipo` (optional)
+    - Response: Array of `DetalleIngresoEgreso` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `idUnivoco`: IDUnivoco_DIE
+        - `tipo`: Tipo_DIE
+        - `articulo`: Articulo_DIE
+        - `subdeposito`: Subdeposito_DIE
+        - `cantidad`: Cantidad_DIE
+        - `stockInicial`: StockInicial_DIE
+        - `stockFinal`: StockFinal_DIE
+        - `concat`: Concat_DIE
+        - `usuario`: Usuario_DIE
+        - `fecha`: Fecha_DIE
+        - `mes`: Mes_DIE
+        - `anio`: Año_DIE
+        - `hora`: Hora_DIE
+        - `status`: Status_DIE
+        - `versionApp`: VersionApp_DIE
+        - `creadoPor`: Creator name
+
+- **POST** `/api/detalles-ingresos-egresos`
+    - Description: Create a new Detalle Ingreso Egreso item.
+    - Body:
+        - `IDUnivoco`: string (required)
+        - `Tipo`: string
+        - `Articulo`: string (required)
+        - `Subdeposito`: string
+        - `Cantidad`: string
+        - `StockInicial`: string
+        - `StockFinal`: string
+        - `Concat`: string
+        - `Usuario`: string
+        - `Fecha`: string
+        - `Mes`: string
+        - `Anio`: string
+        - `Hora`: string
+        - `Status`: string
+        - `VersionApp`: string
+    - Response: Created object.
+
+- **PATCH** `/api/detalles-ingresos-egresos`
+    - Description: Update an existing Detalle Ingreso Egreso item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/movimientos-stock`
+    - Description: Fetch Movimiento Stock items. Optionally filter by `idUnivoco` or `tipo`.
+    - Query Params: `idUnivoco`, `tipo` (optional)
+    - Response: Array of `MovimientoStock` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `idUnivoco`: IDUnivoco_MS
+        - `tipo`: Tipo_MS
+        - `articulo`: Articulo_MS
+        - `concat`: Concat_MS
+        - `stockInicial`: StockInicial_MS
+        - `stockFinal`: StockFinal_MS
+        - `subdepositoActual`: SubdepositoActual_MS
+        - `subdepositoFinal`: SubdepositoFinal_MS
+        - `usuario`: Usuario_MS
+        - `fecha`: Fecha_MS
+        - `mes`: Mes_MS
+        - `anio`: Año_MS
+        - `mesAnio`: MesAño_MS
+        - `hora`: Hora_MS
+        - `status`: Status_MS
+        - `versionApp`: VersionApp_MS
+        - `creadoPor`: Creator name
+
+- **POST** `/api/movimientos-stock`
+    - Description: Create a new Movimiento Stock item.
+    - Body:
+        - `IDUnivoco`: string (required)
+        - `Tipo`: string
+        - `Articulo`: string (required)
+        - `Concat`: string
+        - `StockInicial`: string
+        - `StockFinal`: string
+        - `SubdepositoActual`: string
+        - `SubdepositoFinal`: string
+        - `Usuario`: string
+        - `Fecha`: string
+        - `Mes`: string
+        - `Anio`: string
+        - `MesAnio`: string
+        - `Hora`: string
+        - `Status`: string
+        - `VersionApp`: string
+    - Response: Created object.
+
+- **PATCH** `/api/movimientos-stock`
+    - Description: Update an existing Movimiento Stock item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/inyecciones-pendientes`
+    - Description: Fetch Inyecciones Pendientes items. Optionally filter by `idUnivoco` or `cliente`.
+    - Query Params: `idUnivoco`, `cliente` (optional)
+    - Response: Array of `InyeccionPendiente` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `idUnivoco`: IDUnivoco_IP
+        - `fecha`: Fecha_IP
+        - `cantidadSku`: CantidadSKU_IP
+        - `cantidadTotal`: CantidadTotal_IP
+        - `status`: Status_IP
+        - `usuario`: Usuario_IP
+        - `cliente`: Cliente_IP
+        - `hora`: Hora_IP
+        - `mes`: Mes_IP
+        - `anio`: Año_IP
+        - `mesAnio`: MesAño_IP
+        - `versionApp`: VersionApp_IP
+        - `creadoPor`: Creator name
+
+- **POST** `/api/inyecciones-pendientes`
+    - Description: Create a new Inyeccion Pendiente item.
+    - Body:
+        - `IDUnivoco`: string (required)
+        - `Fecha`: string
+        - `CantidadSKU`: string
+        - `CantidadTotal`: string
+        - `Status`: string
+        - `Usuario`: string
+        - `Cliente`: string
+        - `Hora`: string
+        - `Mes`: string
+        - `Anio`: string
+        - `MesAnio`: string
+        - `VersionApp`: string
+    - Response: Created object.
+
+- **PATCH** `/api/inyecciones-pendientes`
+    - Description: Update an existing Inyeccion Pendiente item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/detalle-inyecciones`
+    - Description: Fetch Detalle Inyecciones items. Optionally filter by `idUnivoco`.
+    - Query Params: `idUnivoco` (optional)
+    - Response: Array of `DetalleInyeccion` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `idUnivoco`: IDUnivoco_DI
+        - `articulo`: Articulo_DI
+        - `sku`: SKU_DI
+        - `concat`: Concat_DI
+        - `origen`: Origen_DI
+        - `subdeposito`: Subdeposito_DI
+        - `cantidadOriginal`: CantidadOriginalPedida_DI
+        - `cantidad`: Cantidad_DI
+        - `status`: Status_DI
+        - `usuario`: Usuario_DI
+        - `fecha`: Fecha_DI
+        - `mes`: Mes_DI
+        - `anio`: Año_DI
+        - `mesAnio`: MesAño_DI
+        - `hora`: Hora_DI
+        - `versionApp`: VersionApp_DI
+        - `creadoPor`: Creator name
+
+- **POST** `/api/detalle-inyecciones`
+    - Description: Create a new Detalle Inyeccion item.
+    - Body:
+        - `IDUnivoco`: string (required)
+        - `Articulo`: string (required)
+        - `SKU`: string
+        - `Concat`: string
+        - `Origen`: string
+        - `Subdeposito`: string
+        - `CantidadOriginal`: string
+        - `Cantidad`: string
+        - `Status`: string
+        - `Usuario`: string
+        - `Fecha`: string
+        - `Mes`: string
+        - `Anio`: string
+        - `MesAnio`: string
+        - `Hora`: string
+        - `VersionApp`: string
+    - Response: Created object.
+
+- **PATCH** `/api/detalle-inyecciones`
+    - Description: Update an existing Detalle Inyeccion item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/imagenes-recepciones`
+    - Description: Fetch Imagenes Recepciones items. Optionally filter by `idOrdenCompra` or `idRecepcion`.
+    - Query Params: `idOrdenCompra`, `idRecepcion` (optional)
+    - Response: Array of `ImagenRecepcion` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `usuario`: Usuario_IR
+        - `fecha`: Fecha_IR
+        - `hora`: Hora_IR
+        - `idOrdenCompra`: IdUnivocoOrdenCompra_IR
+        - `idDetalleCompra`: IdDetalleCompra_IR
+        - `idRecepcion`: IdRecepcion_IR
+        - `imagen`: Imagen_IR (Base64 or URL)
+        - `tipo`: Tipo_IR
+        - `status`: Status_IR
+        - `versionApp`: VersionApp_IR
+        - `mesAnio`: MesAño_IR
+        - `creadoPor`: Creator name
+
+- **POST** `/api/imagenes-recepciones`
+    - Description: Create a new Imagen Recepcion item.
+    - Body:
+        - `Usuario`: string
+        - `Fecha`: string
+        - `Hora`: string
+        - `IdOrdenCompra`: string (required)
+        - `IdDetalleCompra`: string
+        - `IdRecepcion`: string (required)
+        - `Imagen`: string (required)
+        - `Tipo`: string
+        - `Status`: string
+        - `VersionApp`: string
+        - `MesAnio`: string
+    - Response: Created object.
+
+- **PATCH** `/api/imagenes-recepciones`
+    - Description: Update an existing Imagen Recepcion item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/funcionalidades-home`
+    - Description: Fetch Funcionalidades Home items. Optionally filter by `tipoApp` or `status`.
+    - Query Params: `tipoApp`, `status` (optional)
+    - Response: Array of `FuncionalidadHome` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `idFh`: ID_FH
+        - `tipoApp`: TipoApp_FH
+        - `funcionalidad`: Funcionalidad_FH
+        - `admin`: Admin_FH
+        - `calidad`: Calidad_FH
+        - `costureraJefe`: CostureraJefe_FH
+        - `costureraOp`: CostureraOP_FH
+        - `produccion`: Produccion_FH
+        - `calidadOp`: CalidadOp_FH
+        - `deposito`: Deposito_FH
+        - `img`: Img_FH
+        - `imgSelected`: ImgSelected_FH
+        - `orden`: Orden_FH
+        - `status`: Status_FH
+        - `creadoPor`: Creator name
+
+- **POST** `/api/funcionalidades-home`
+    - Description: Create a new Funcionalidad Home item.
+    - Body:
+        - `Titulo`: string (required)
+        - `ID_FH`: string (required)
+        - `TipoApp`: string
+        - `Funcionalidad`: string
+        - `Admin`: string
+        - `Calidad`: string
+        - `CostureraJefe`: string
+        - `CostureraOP`: string
+        - `Produccion`: string
+        - `CalidadOp`: string
+        - `Deposito`: string
+        - `Img`: string
+        - `ImgSelected`: string
+        - `Orden`: string
+        - `Status`: string
+    - Response: Created object.
+
+- **PATCH** `/api/funcionalidades-home`
+    - Description: Update an existing Funcionalidad Home item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+        - `Orden`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/articulos`
+    - Description: Fetch Articulos items. Optionally filter by `sku` or `status`.
+    - Query Params: `sku`, `status` (optional)
+    - Response: Array of `Articulo` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `sku`: SKU
+        - `concat`: Concat_A
+        - `tipoPrenda`: TipoPrenda_A
+        - `descripcion`: Descripcion_A
+        - `status`: Status_A
+        - `principal`: Principal_A
+        - `familia`: Familia_A
+        - `codigoCliente`: CodigoCliente_A
+        - `nOrden`: NOrden_A
+        - `proveedores`: Proveedores_A
+        - `precio`: Precio_A
+        - `creadoPor`: Creator name
+
+- **POST** `/api/articulos`
+    - Description: Create a new Articulo item.
+    - Body:
+        - `Titulo`: string (required)
+        - `SKU`: string (required)
+        - `Concat`: string
+        - `TipoPrenda`: string
+        - `Descripcion`: string
+        - `Status`: string
+        - `Principal`: string
+        - `Familia`: string
+        - `CodigoCliente`: string
+        - `NOrden`: string
+        - `Proveedores`: string
+        - `Precio`: string
+    - Response: Created object.
+
+- **PATCH** `/api/articulos`
+    - Description: Update an existing Articulo item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional) → Status_A
+        - `Precio`: string (optional) → Precio_A
+        - `SKU`: string (optional) → SKU
+        - `Concat`: string (optional) → Concat_A
+        - `TipoPrenda`: string (optional) → TipoPrenda_A
+        - `Descripcion`: string (optional) → Descripcion_A
+        - `Principal`: string (optional) → Principal_A
+        - `Familia`: string (optional) → Familia_A
+        - `CodigoCliente`: string (optional) → CodigoCliente_A
+        - `NOrden`: string (optional) → NOrden_A
+        - `Proveedores`: string (optional) → Proveedores_A
+    - Note: At least one optional field is required. Numbers must be sent as strings.
+    - Response: Updated object from SharePoint.
+
+- **GET** `/api/segmentos-metricas`
+    - Description: Fetch Segmentos Metricas items. Optionally filter by `segmento` or `perfil`.
+    - Query Params: `segmento`, `perfil` (optional)
+    - Response: Array of `SegmentoMetrica` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `segmento`: Segmento_SM
+        - `perfil`: Perfil_SM
+        - `numOrden`: NumOrden_SM
+        - `creadoPor`: Creator name
+
+- **POST** `/api/segmentos-metricas`
+    - Description: Create a new Segmento Metrica item.
+    - Body:
+        - `Titulo`: string (required)
+        - `Segmento`: string (required)
+        - `Perfil`: string
+        - `NumOrden`: string
+    - Response: Created object.
+
+- **PATCH** `/api/segmentos-metricas`
+    - Description: Update an existing Segmento Metrica item.
+    - Body:
+        - `id`: string (required)
+        - `NumOrden`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/clientes`
+    - Description: Fetch Clientes items. Optionally filter by `codigo` or `status`.
+    - Query Params: `codigo`, `status` (optional)
+    - Response: Array of `Cliente` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `codigo`: Codigo_C
+        - `nombre`: Nombre_C
+        - `concat`: ConcatCodigoCliente_C
+        - `status`: Status_C
+        - `creadoPor`: Creator name
+
+- **POST** `/api/clientes`
+    - Description: Create a new Cliente item.
+    - Body:
+        - `Codigo`: string (required)
+        - `Nombre`: string (required)
+        - `Concat`: string (optional)
+        - `Status`: string (optional)
+    - Response: Created object.
+
+- **PATCH** `/api/clientes`
+    - Description: Update an existing Cliente item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/segmentos-aprobaciones`
+    - Description: Fetch Segmentos Aprobaciones items. Optionally filter by `segmento`.
+    - Query Params: `segmento` (optional)
+    - Response: Array of `SegmentoAprobacion` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `segmento`: Segmento_SA
+        - `admin`: Admin_SA
+        - `calidad`: Calidad_SA
+        - `costureraOperaria`: CostureraOperaria_SA
+        - `costureraJefa`: CostureraJefa_SA
+        - `produccion`: Produccion_SA
+        - `numOrden`: NumOrden_SA
+        - `creadoPor`: Creator name
+
+- **POST** `/api/segmentos-aprobaciones`
+    - Description: Create a new Segmento Aprobacion item.
+    - Body:
+        - `Titulo`: string (required)
+        - `Segmento`: string (required)
+        - `Admin`: string
+        - `Calidad`: string
+        - `CostureraOperaria`: string
+        - `CostureraJefa`: string
+        - `Produccion`: string
+        - `NumOrden`: string
+    - Response: Created object.
+
+- **PATCH** `/api/segmentos-aprobaciones`
+    - Description: Update an existing Segmento Aprobacion item.
+    - Body:
+        - `id`: string (required)
+        - `NumOrden`: string (optional)
+        - `Admin`: string (optional)
+        - `Calidad`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/proveedores`
+    - Description: Fetch Proveedores items. Optionally filter by `proveedor` or `status`.
+    - Query Params: `proveedor`, `status` (optional)
+    - Response: Array of `Proveedor` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `proveedor`: Proveedor_P
+        - `segmento`: Segmento_P
+        - `moneda`: Moneda_P
+        - `emails`: Emails_P
+        - `telefono`: Telefono_P
+        - `status`: Status_P
+        - `creadoPor`: Creator name
+
+- **POST** `/api/proveedores`
+    - Description: Create a new Proveedor item.
+    - Body:
+        - `Titulo`: string (required)
+        - `Proveedor`: string (required)
+        - `Segmento`: string
+        - `Moneda`: string
+        - `Emails`: string
+        - `Telefono`: string
+        - `Status`: string
+    - Response: Created object.
+
+- **PATCH** `/api/proveedores`
+    - Description: Update an existing Proveedor item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional) → Status_P
+        - `Emails`: string (optional) → Emails_P
+        - `Telefono`: string (optional) → Telefono_P
+        - `Proveedor`: string (optional) → Proveedor_P
+        - `Segmento`: string (optional) → Segmento_P
+        - `Moneda`: string (optional) → Moneda_P
+    - Note: At least one optional field is required.
+    - Response: Updated object from SharePoint.
+
+- **GET** `/api/emails`
+    - Description: Fetch Email config items. Optionally filter by `modulo` or `status`.
+    - Query Params: `modulo`, `status` (optional)
+    - Response: Array of `Email` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `modulo`: Modulo_E
+        - `emailConcat`: EmailConcat_E
+        - `copiaOculta`: CopiaOculta_E
+        - `status`: Status_E
+        - `creadoPor`: Creator name
+
+- **POST** `/api/emails`
+    - Description: Create a new Email config item.
+    - Body:
+        - `Titulo`: string (required)
+        - `Modulo`: string (required)
+        - `EmailConcat`: string
+        - `CopiaOculta`: string
+        - `Status`: string
+    - Response: Created object.
+
+- **PATCH** `/api/emails`
+    - Description: Update an existing Email config item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+        - `EmailConcat`: string (optional)
+        - `CopiaOculta`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/familias`
+    - Description: Fetch Familias items. Optionally filter by `familia` or `status`.
+    - Query Params: `familia`, `status` (optional)
+    - Response: Array of `Familia` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `familia`: Familia_F
+        - `su`: Su_F
+        - `concatFamiliaSu`: ConcatFamiliaSu_F
+        - `status`: Status_F
+        - `creadoPor`: Creator name
+
+- **POST** `/api/familias`
+    - Description: Create a new Familia item.
+    - Body:
+        - `Titulo`: string (required)
+        - `Familia`: string (required)
+        - `Su`: string
+        - `ConcatFamiliaSu`: string
+        - `Status`: string
+    - Response: Created object.
+
+- **PATCH** `/api/familias`
+    - Description: Update an existing Familia item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/principales`
+    - Description: Fetch Principal items. Optionally filter by `codigo` or `status`.
+    - Query Params: `codigo`, `status` (optional)
+    - Response: Array of `Principal` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `codigo`: Codigo_F
+        - `principal`: Principal_F
+        - `concatPrincipalCodigo`: ConcatPrincipalCodigo_P
+        - `status`: Status_P
+        - `creadoPor`: Creator name
+
+- **POST** `/api/principales`
+    - Description: Create a new Principal item.
+    - Body:
+        - `Titulo`: string (required)
+        - `Codigo`: string (required)
+        - `Principal`: string
+        - `ConcatPrincipalCodigo`: string
+        - `Status`: string
+    - Response: Created object.
+
+- **PATCH** `/api/principales`
+    - Description: Update an existing Principal item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/almacenes-univocos`
+    - Description: Fetch Almacenes Univocos items. Optionally filter by `almacenes`.
+    - Query Params: `almacenes` (optional)
+    - Response: Array of `AlmacenUnivoco` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `almacenes`: Almacenes_AU
+        - `creadoPor`: Creator name
+
+- **POST** `/api/almacenes-univocos`
+    - Description: Create a new AlmacenUnivoco item.
+    - Body:
+        - `Titulo`: string (required)
+        - `Almacenes`: string
+    - Response: Created object.
+
+- **PATCH** `/api/almacenes-univocos`
+    - Description: Update an existing AlmacenUnivoco item.
+    - Body:
+        - `id`: string (required)
+        - `Almacenes`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/tipo-prendas`
+    - Description: Fetch Tipo Prendas items. Optionally filter by `tipoPrendas` or `status`.
+    - Query Params: `tipoPrendas`, `status` (optional)
+    - Response: Array of `TipoPrenda` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `tipoPrendas`: TipoPrendas_TP
+        - `status`: Status_TP
+        - `creadoPor`: Creator name
+
+- **POST** `/api/tipo-prendas`
+    - Description: Create a new TipoPrenda item.
+    - Body:
+        - `Titulo`: string (required)
+        - `TipoPrendas`: string (required)
+        - `Status`: string
+    - Response: Created object.
+
+- **PATCH** `/api/tipo-prendas`
+    - Description: Update an existing TipoPrenda item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/codigo-puntos`
+    - Description: Fetch Codigo Puntos items. Optionally filter by `codigo` or `status`.
+    - Query Params: `codigo`, `status` (optional)
+    - Response: Array of `CodigoPunto` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `codigo`: Codigo_CP
+        - `conPunto`: ConPunto_CP
+        - `status`: Status_CP
+        - `creadoPor`: Creator name
+
+- **POST** `/api/codigo-puntos`
+    - Description: Create a new CodigoPunto item.
+    - Body:
+        - `Titulo`: string (required)
+        - `Codigo`: string (required)
+        - `ConPunto`: string
+        - `Status`: string
+    - Response: Created object.
+
+- **PATCH** `/api/codigo-puntos`
+    - Description: Update an existing CodigoPunto item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+        - `ConPunto`: string (optional)
+    - Response: Updated object.
+
+- **GET** `/api/articulos-nuevos`
+    - Description: Fetch Articulos Nuevos items. Optionally filter by `sku`, `status`, or `codigoCliente`.
+    - Query Params: `sku`, `status`, `codigoCliente` (optional)
+    - Response: Array of `ArticuloNuevo` objects.
+    - Fields:
+        - `id`: unique SharePoint ID
+        - `titulo`: Title
+        - `sku`: SKU
+        - `concat`: Concat_A
+        - `creado`: Creado_OD
+        - `tipoPrenda`: TipoPrenda_A
+        - `descripcion`: Descripcion_A
+        - `status`: Status_A
+        - `principal`: Principal_A
+        - `familia`: Familia_A
+        - `codigoCliente`: CodigoCliente_A
+        - `nOrden`: NOrden_A
+        - `countId`: CountID
+        - `creadoPor`: Creator name
+
+- **POST** `/api/articulos-nuevos`
+    - Description: Create a new ArticuloNuevo item.
+    - Body:
+        - `Titulo`: string (required)
+        - `SKU`: string (required)
+        - `Concat`: string
+        - `Creado`: string (date)
+        - `TipoPrenda`: string
+        - `Descripcion`: string
+        - `Status`: string
+        - `Principal`: string
+        - `Familia`: string
+        - `CodigoCliente`: string
+        - `NOrden`: string
+        - `CountID`: string
+    - Response: Created object.
+
+- **PATCH** `/api/articulos-nuevos`
+    - Description: Update an existing ArticuloNuevo item.
+    - Body:
+        - `id`: string (required)
+        - `Status`: string (optional)
+        - `NOrden`: string (optional)
+        - `CountID`: string (optional)
+    - Response: Updated object.
+
