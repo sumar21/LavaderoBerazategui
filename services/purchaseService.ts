@@ -133,26 +133,14 @@ export const purchaseService = {
   },
 
   // Notificaciones
-  notifyPurchaseOrder: async (orderId: string, providerEmail: string, notes?: string) => {
-    const url = 'https://default20435c5a4f504349a09a856bdf1f70.49.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/148a85b74ad740f58cf9818981173379/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=8TAGhxDqKLUOAtZUYgDkoqz6Yxaq_wdkSOp6NcRh-0w';
-    
-    // Using fetch directly to avoid base URL issues with the custom axios instance if it has a baseURL set
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            correo: providerEmail,
-            id: orderId,
-            notas: notes || ''
-        })
+  // The recipient is resolved server-side from the provider record, so the
+  // caller only needs to say which order to notify.
+  notifyPurchaseOrder: async (orderId: string, _providerEmail: string, notes?: string) => {
+    await api.post('/notificaciones/orden-compra', {
+      id: orderId,
+      notas: notes || ''
     });
 
-    if (!response.ok) {
-        throw new Error(`Error notifying order: ${response.statusText}`);
-    }
-    
     return true;
   }
 };

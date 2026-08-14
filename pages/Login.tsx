@@ -1,12 +1,23 @@
-
 import React, { useState, useEffect } from 'react';
-import { User, Lock, ArrowRight, LayoutDashboard, AlertCircle, Timer } from 'lucide-react';
+import { User, Lock, ArrowRight, AlertCircle, Timer, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Logo } from '../components/ui/Logo';
 import { Modal } from '../components/ui/Modal';
+import { cn } from '../components/ui/UIComponents';
 import { authService } from '../services/auth';
 import { notify } from '../components/ui/Notice';
+
+const APP_VERSION = 'v20251223_1.0.10';
+const LOCKOUT_ATTEMPTS = 5;
+const LOCKOUT_SECONDS = 60;
+
+/** "4:32" over a minute, "32s" under it (DESIGN.md §12.2). */
+const formatLockTime = (seconds: number) =>
+  seconds >= 60 ? `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}` : `${seconds}s`;
+
+const FIELD_LABEL = 'text-xs font-semibold uppercase tracking-wider text-muted-foreground ml-1';
+const FIELD_INPUT = 'h-12 bg-secondary/30 border-border pl-10 focus:border-primary focus:bg-background transition-all';
 
 interface LoginProps {
   onLogin: () => void;
@@ -17,37 +28,35 @@ export const Login: React.FC<LoginProps> = ({ onLogin, sessionExpired }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [usuarioApp, setUsuarioApp] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
-  // Rate Limiting State
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
   const [remainingTime, setRemainingTime] = useState<number>(0);
 
-  // Forgot Password State
   const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [isRecovering, setIsRecovering] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
-
-  // Session Expired State
   const [isSessionExpiredModalOpen, setIsSessionExpiredModalOpen] = useState(!!sessionExpired);
 
+  const locked = !!lockoutUntil;
+  const disabled = locked || isLoading;
+
   useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (lockoutUntil) {
-      interval = setInterval(() => {
-        const now = Date.now();
-        if (now >= lockoutUntil) {
-          setLockoutUntil(null);
-          setFailedAttempts(0);
-          setRemainingTime(0);
-          setError('');
-        } else {
-          setRemainingTime(Math.ceil((lockoutUntil - now) / 1000));
-        }
-      }, 1000);
-    }
+    if (!lockoutUntil) return;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      if (now >= lockoutUntil) {
+        setLockoutUntil(null);
+        setFailedAttempts(0);
+        setRemainingTime(0);
+        setError('');
+      } else {
+        setRemainingTime(Math.ceil((lockoutUntil - now) / 1000));
+      }
+    }, 1000);
     return () => clearInterval(interval);
   }, [lockoutUntil]);
 
@@ -67,10 +76,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin, sessionExpired }) => {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
       const newAttempts = failedAttempts + 1;
       setFailedAttempts(newAttempts);
-      if (newAttempts >= 5) {
-        const until = Date.now() + 60 * 1000;
-        setLockoutUntil(until);
-        setRemainingTime(60);
+      if (newAttempts >= LOCKOUT_ATTEMPTS) {
+        setLockoutUntil(Date.now() + LOCKOUT_SECONDS * 1000);
+        setRemainingTime(LOCKOUT_SECONDS);
       }
     } finally {
       setIsLoading(false);
@@ -81,223 +89,208 @@ export const Login: React.FC<LoginProps> = ({ onLogin, sessionExpired }) => {
     if (!forgotEmail) return;
     setIsRecovering(true);
     try {
-        await authService.recoverPassword(forgotEmail);
-        setIsForgotModalOpen(false);
-        setIsSuccessModalOpen(true);
-        setForgotEmail('');
-    } catch (error) {
-        console.error("Error recovering password:", error);
-        notify.error("Hubo un error al procesar la solicitud.");
+      await authService.recoverPassword(forgotEmail);
+      setIsForgotModalOpen(false);
+      setIsSuccessModalOpen(true);
+      setForgotEmail('');
+    } catch (err) {
+      console.error('Error recovering password:', err);
+      notify.error('Hubo un error al procesar la solicitud.');
     } finally {
-        setIsRecovering(false);
+      setIsRecovering(false);
     }
   };
 
   return (
-    <div className="w-full min-h-screen lg:grid lg:grid-cols-2 font-sans bg-white">
-      
-      {/* LEFT SIDE: Visual & Branding */}
-      <div className="hidden lg:flex flex-col justify-between relative bg-[#0B0F19] text-white p-12 overflow-hidden min-h-screen">
-        {/* Abstract Background Pattern */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
-             <div className="absolute top-0 -left-1/4 w-full h-full bg-gradient-to-br from-blue-600/30 to-transparent rounded-full blur-3xl" />
-             <div className="absolute bottom-0 -right-1/4 w-full h-full bg-gradient-to-tl from-indigo-600/30 to-transparent rounded-full blur-3xl" />
-             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150"></div>
-        </div>
+    <div className="min-h-screen flex flex-col md:flex-row bg-background animate-in fade-in duration-500">
 
-        <div className="relative z-10">
-           <Logo variant="light" size="lg" showText={true} />
-        </div>
+      {/* Branding panel — desktop only (DESIGN.md §12.1) */}
+      <div className="hidden md:flex flex-col justify-between w-1/2 lg:w-3/5 relative overflow-hidden text-white">
+        <div
+          className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 hover:scale-105"
+          style={{ backgroundImage: 'url(/ImagenLogin.jpeg)' }}
+        />
+        <div className="absolute inset-0 z-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+        <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/90 via-transparent to-black/30" />
 
-        <div className="relative z-10 max-w-md my-auto">
-            <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center mb-6 border border-white/10 shadow-xl">
-                <LayoutDashboard className="w-6 h-6 text-blue-400" />
-            </div>
-            <h2 className="text-4xl font-bold tracking-tight leading-tight mb-6">
+        <div className="relative z-10 flex h-full flex-col justify-between p-12">
+          <Logo variant="light" size="lg" />
+          <div>
+            {/* Hero on the photo panel — the one place the kit's scale tops out
+                at 2xl, so it steps up rather than inventing a new weight. */}
+            <h1 className="mb-6 text-3xl font-bold leading-tight tracking-tight drop-shadow-lg lg:text-4xl">
               Control total de tu planta industrial.
-            </h2>
-            <p className="text-slate-400 text-lg leading-relaxed">
-              Gestión eficiente de stock, logística y procesos de lavado en una única plataforma unificada.
+            </h1>
+            <p className="max-w-md border-l-2 border-white/30 pl-4 text-lg text-white/85">
+              Gestión de stock, compras, inyecciones y logística en una única plataforma.
             </p>
-        </div>
-
-        <div className="relative z-10 flex items-center gap-2 text-xs text-slate-500 font-mono mt-8">
-            <span>Lavadero Berazategui Manager</span>
-            <span className="w-1 h-1 rounded-full bg-slate-600" />
-            <span>v20251223_1.0.10</span>
+          </div>
+          <p className="text-xs font-medium uppercase tracking-wide text-white/60">
+            © {new Date().getFullYear()} Lavadero Berazategui
+          </p>
         </div>
       </div>
 
-      {/* RIGHT SIDE: Form */}
-      <div className="flex items-center justify-center p-8 bg-white text-slate-900 relative min-h-screen">
-        {/* Mobile background decoration */}
-        <div className="lg:hidden absolute inset-0 bg-slate-50 -z-10" />
+      {/* Form panel */}
+      <div className="relative flex flex-1 flex-col bg-card">
+        <div className="flex flex-1 items-center justify-center p-6">
+          <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-8 duration-700">
 
-        <div className="mx-auto w-full max-w-[400px] space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-          
-          <div className="flex flex-col space-y-2 text-center lg:text-left">
-            {/* Mobile Logo */}
-            <div className="lg:hidden mx-auto mb-6 transform scale-110">
-                <Logo variant="dark" size="md" />
+            <div className="md:hidden mb-8 flex justify-center">
+              <Logo variant="dark" size="md" />
             </div>
 
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Bienvenido</h1>
-            <p className="text-slate-500 text-sm">
-              Ingrese sus credenciales para acceder al sistema.
-            </p>
-          </div>
+            <h2 className="text-2xl font-bold tracking-tight text-primary">Bienvenido</h2>
+            <p className="mb-6 text-sm text-muted-foreground">Ingresá tus credenciales para acceder al sistema.</p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 flex items-center gap-2 text-red-600 text-sm animate-in fade-in slide-in-from-top-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-            
-            {lockoutUntil && (
-              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-center gap-2 text-amber-700 text-sm animate-in fade-in slide-in-from-top-2">
-                <Timer className="w-4 h-4 shrink-0 animate-pulse" />
-                <span>Demasiados intentos. Intenta de nuevo en {remainingTime} segundos.</span>
-              </div>
-            )}
-
-            <div className="space-y-4">
-                <div className="space-y-1 relative group">
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Usuario</label>
-                    <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
-                        <Input 
-                            type="text"
-                            value={usuarioApp}
-                            onChange={(e) => setUsuarioApp(e.target.value)}
-                            placeholder="nombre.apellido" 
-                            className="pl-10" 
-                            required
-                            disabled={!!lockoutUntil || isLoading}
-                        />
-                    </div>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {error && (
+                <div role="alert" className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 animate-in fade-in slide-in-from-top-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{error}</span>
                 </div>
-                
-                <div className="space-y-1 relative group">
-                    <div className="flex items-center justify-between ml-1">
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Contraseña</label>
-                        <button 
-                            type="button"
-                            onClick={() => setIsForgotModalOpen(true)}
-                            className="text-xs font-medium text-blue-600 hover:text-blue-500 hover:underline"
-                            disabled={!!lockoutUntil || isLoading}
-                        >
-                            ¿Olvidaste tu contraseña?
-                        </button>
-                    </div>
-                    <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
-                        <Input 
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••" 
-                            className="pl-10"
-                            required
-                            disabled={!!lockoutUntil || isLoading}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <Button 
-              type="submit" 
-              className={`w-full h-11 text-white font-medium text-base shadow-lg transition-all group rounded-xl mt-4 ${!!lockoutUntil ? 'bg-slate-400 cursor-not-allowed shadow-none' : 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/10 hover:shadow-slate-900/20'}`}
-              isLoading={isLoading}
-              disabled={!!lockoutUntil || isLoading}
-            >
-              {!isLoading && (
-                  <span className="flex items-center gap-2">
-                      {lockoutUntil ? `Esperar ${remainingTime}s` : 'Iniciar Sesión'} 
-                      {!lockoutUntil && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
-                  </span>
               )}
-              {isLoading && 'Autenticando...'}
-            </Button>
-          </form>
+
+              {locked && (
+                <div role="alert" className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700 animate-in fade-in slide-in-from-top-2">
+                  <Timer className="h-4 w-4 shrink-0 animate-pulse" aria-hidden="true" />
+                  <span>Demasiados intentos. Reintentá en {formatLockTime(remainingTime)}.</span>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <label htmlFor="login-user" className={FIELD_LABEL}>Usuario</label>
+                <div className="relative group">
+                  <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" aria-hidden="true" />
+                  <Input
+                    id="login-user"
+                    type="text"
+                    autoComplete="username"
+                    value={usuarioApp}
+                    onChange={(e) => setUsuarioApp(e.target.value)}
+                    placeholder="nombre.apellido"
+                    className={FIELD_INPUT}
+                    required
+                    disabled={disabled}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="login-password" className={FIELD_LABEL}>Contraseña</label>
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotModalOpen(true)}
+                    className="text-xs font-medium text-brand hover:underline disabled:opacity-50"
+                    disabled={disabled}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                </div>
+                <div className="relative group">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" aria-hidden="true" />
+                  <Input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className={cn(FIELD_INPUT, 'pr-11')}
+                    required
+                    disabled={disabled}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-2 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="group mt-4 h-12 w-full text-base font-semibold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] md:h-12"
+                isLoading={isLoading}
+                disabled={disabled}
+              >
+                {isLoading ? 'Autenticando…' : locked ? (
+                  <span className="flex items-center gap-2">
+                    <Lock className="h-4 w-4" aria-hidden="true" />
+                    Bloqueado · {formatLockTime(remainingTime)}
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    Iniciar sesión
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                  </span>
+                )}
+              </Button>
+            </form>
+
+            <p className="mt-6 text-center text-xs font-medium tracking-wide text-muted-foreground/70">{APP_VERSION}</p>
+          </div>
         </div>
       </div>
 
       <Modal
         isOpen={isForgotModalOpen}
         onClose={() => setIsForgotModalOpen(false)}
-        title="Recuperar Contraseña"
-        description="Ingresa tu correo electrónico para recibir tus credenciales."
+        title="Recuperar contraseña"
+        description="Ingresá tu correo electrónico para recibir tus credenciales."
         maxWidth="sm"
         footer={
-            <>
-                <Button variant="outline" onClick={() => setIsForgotModalOpen(false)}>
-                    Cancelar
-                </Button>
-                <Button 
-                    variant="primary" 
-                    onClick={handleRecoverPassword}
-                    isLoading={isRecovering}
-                    disabled={!forgotEmail}
-                >
-                    Enviar
-                </Button>
-            </>
+          <>
+            <Button variant="outline" onClick={() => setIsForgotModalOpen(false)}>Cancelar</Button>
+            <Button onClick={handleRecoverPassword} isLoading={isRecovering} disabled={!forgotEmail}>Enviar</Button>
+          </>
         }
       >
         <div className="py-2">
-            <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Email</label>
-            <Input 
-                type="email"
-                value={forgotEmail}
-                onChange={(e) => setForgotEmail(e.target.value)}
-                placeholder="ejemplo@lavaderoberazategui.com.ar"
-                className="w-full"
-            />
+          <Input
+            label="Email"
+            type="email"
+            autoComplete="email"
+            value={forgotEmail}
+            onChange={(e) => setForgotEmail(e.target.value)}
+            placeholder="ejemplo@lavaderoberazategui.com.ar"
+          />
         </div>
       </Modal>
+
       <Modal
         isOpen={isSuccessModalOpen}
         onClose={() => setIsSuccessModalOpen(false)}
-        title="Solicitud Enviada"
-        description="Si el correo es correcto, recibirás un mail con tus credenciales."
+        title="Solicitud enviada"
+        description="Si el correo es correcto, vas a recibir un mail con tus credenciales."
         maxWidth="sm"
-        footer={
-            <Button variant="primary" onClick={() => setIsSuccessModalOpen(false)} className="w-full">
-                Entendido
-            </Button>
-        }
+        footer={<Button onClick={() => setIsSuccessModalOpen(false)}>Entendido</Button>}
       >
         <div className="flex flex-col items-center justify-center py-4 text-center">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                <ArrowRight className="w-6 h-6 text-green-600" />
-            </div>
-            <p className="text-sm text-slate-600">
-                Por favor, revisa tu bandeja de entrada y la carpeta de spam.
-            </p>
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+            <CheckCircle2 className="h-6 w-6 text-emerald-600" aria-hidden="true" />
+          </div>
+          <p className="text-sm text-muted-foreground">Revisá tu bandeja de entrada y la carpeta de spam.</p>
         </div>
       </Modal>
 
       <Modal
         isOpen={isSessionExpiredModalOpen}
         onClose={() => setIsSessionExpiredModalOpen(false)}
-        title="Sesión Expirada"
-        description="Tu sesión ha expirado por seguridad."
+        title="Sesión expirada"
+        description="Tu sesión expiró por seguridad."
         maxWidth="sm"
-        footer={
-            <Button variant="primary" onClick={() => setIsSessionExpiredModalOpen(false)} className="w-full">
-                Entendido
-            </Button>
-        }
+        footer={<Button onClick={() => setIsSessionExpiredModalOpen(false)}>Entendido</Button>}
       >
         <div className="flex flex-col items-center justify-center py-4 text-center">
-            <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-                <AlertCircle className="w-6 h-6 text-amber-600" />
-            </div>
-            <p className="text-sm text-slate-600">
-                Por favor, inicia sesión nuevamente para continuar operando.
-            </p>
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100">
+            <AlertCircle className="h-6 w-6 text-amber-600" aria-hidden="true" />
+          </div>
+          <p className="text-sm text-muted-foreground">Iniciá sesión nuevamente para continuar operando.</p>
         </div>
       </Modal>
     </div>

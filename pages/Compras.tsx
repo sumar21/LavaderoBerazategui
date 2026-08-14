@@ -17,6 +17,11 @@ import { ViewOrderModal } from '../components/compras/ViewOrderModal';
 import { PurchaseOrder, OrderItem, OrderStatus, Provider, Article } from '@/types';
 import { configService } from '../services/configService';
 import { notify } from '../components/ui/Notice';
+import { Loader } from '../components/ui/Loader';
+import { getSessionUser } from '../services/session';
+import { PageHeader } from '../components/ui/PageHeader';
+import { StatusBadge } from '../components/ui/StatusBadge';
+import { capitalizeFirst } from '../utils/text';
 
 // Helper for sorting orders
 const sortOrders = (orders: PurchaseOrder[]) => {
@@ -48,36 +53,8 @@ const sortOrders = (orders: PurchaseOrder[]) => {
   });
 };
 
-// Helper for status colors
-const getStatusBadge = (status: OrderStatus | string) => {
-  if (!status) return <Badge variant="secondary">Desconocido</Badge>;
-  
-  const s = String(status).toUpperCase();
-  
-  if (s.includes('PRESUPUESTO')) {
-    return <Badge variant="warning">Esperando Presupuesto</Badge>;
-  }
-  if (s.includes('PENDIENTE') && s.includes('APROBACION') || s === 'PENDIENTE' || s === 'PENDIENTE_APROBACION') {
-    return <Badge variant="purple">Pendiente Aprobación</Badge>;
-  }
-  if (s.includes('APROBADA') || s.includes('APROBADO')) {
-    return <Badge variant="default">Aprobada</Badge>;
-  }
-  if (s.includes('RECHAZADA') || s.includes('RECHAZADO')) {
-    return <Badge variant="danger">Rechazada</Badge>;
-  }
-  if (s.includes('INGRESO')) {
-    return <Badge variant="indigo">Pendiente Ingreso</Badge>;
-  }
-  if (s.includes('RECEPCION') || s.includes('RECEPCIÓN')) {
-    return <Badge variant="orange">En Recepción</Badge>;
-  }
-  if (s.includes('COMPLETADA') || s.includes('COMPLETADO')) {
-    return <Badge variant="success">Completada</Badge>;
-  }
-  
-  return <Badge variant="secondary">{status}</Badge>;
-};
+/** StatusBadge now resolves the raw API status itself — see resolveStatus. */
+const getStatusBadge = (status: OrderStatus | string) => <StatusBadge status={String(status ?? '')} />;
 
 interface ComprasProps {
   orders: PurchaseOrder[];
@@ -89,7 +66,7 @@ interface ComprasProps {
 export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, isRefreshing }) => {
   // Local state for UI only (Search, Modals, Forms)
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProvider, setSelectedProvider] = useState<string>('all');
+  const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
@@ -212,19 +189,8 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
 
     const provider = getProvider(tempOrderData);
     
-    // Get user data for ID generation
-    const userDataStr = localStorage.getItem('user_data');
-    let username = 'USR';
-    let usuarioApp = 'USR';
-    if (userDataStr) {
-      try {
-        const userData = JSON.parse(userDataStr);
-        username = userData.username || userData.email || userData.name || 'USR';
-        usuarioApp = userData.usuarioApp || username;
-      } catch (e) {
-        console.error('Error parsing user data', e);
-      }
-    }
+    // Used for the OC id and for stamping who created the record.
+    const { name: username, usuarioApp } = getSessionUser();
 
     const { purchaseService, generateOCId } = await import('../services/purchaseService');
     const newId = generateOCId(username);
@@ -482,14 +448,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
       const order = orders.find(o => o.id === orderId);
       const apiId = order?.sharepointId || orderId;
 
-      const userDataStr = localStorage.getItem('user_data');
-      let usuarioApp = 'USR';
-      if (userDataStr) {
-        try {
-          const userData = JSON.parse(userDataStr);
-          usuarioApp = userData.usuarioApp || userData.username || userData.email || 'USR';
-        } catch (e) {}
-      }
+      const usuarioApp = getSessionUser().usuarioApp;
       
       // Calculate totals based on new prices, quantities, ignoring removed items
       let totalAmount = 0;
@@ -597,18 +556,10 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
       const apiId = order?.sharepointId || orderId;
       const details = await purchaseService.getDetallesOC(order.id);
 
-      const userDataStr = localStorage.getItem('user_data');
-      let usuarioApp = 'USR';
-      let userEmail = 'unknown@sumardigital.com';
-      let username = 'USR';
-      if (userDataStr) {
-        try {
-          const userData = JSON.parse(userDataStr);
-          username = userData.username || userData.email || userData.name || 'USR';
-          usuarioApp = userData.usuarioApp || username;
-          userEmail = userData.email || usuarioApp;
-        } catch (e) {}
-      }
+      const sessionUser = getSessionUser();
+      const username = sessionUser.name;
+      const usuarioApp = sessionUser.usuarioApp;
+      const userEmail = sessionUser.email || usuarioApp;
 
       const now = new Date();
       const dd = String(now.getDate()).padStart(2, '0');
@@ -781,14 +732,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
       const { purchaseService } = await import('../services/purchaseService');
       const apiId = orderToDelete.sharepointId || orderToDelete.id;
 
-      const userDataStr = localStorage.getItem('user_data');
-      let usuarioApp = 'USR';
-      if (userDataStr) {
-        try {
-          const userData = JSON.parse(userDataStr);
-          usuarioApp = userData.usuarioApp || userData.username || userData.email || 'USR';
-        } catch (e) {}
-      }
+      const usuarioApp = getSessionUser().usuarioApp;
 
       await purchaseService.updateOrdenCompra(apiId, {
         Status: 'Baja',
@@ -811,7 +755,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
     const matchesSearch = providerName.toLowerCase().includes(searchTerm.toLowerCase()) || 
            o.id.toString().includes(searchTerm);
     
-    const matchesProvider = selectedProvider === 'all' || o.providerId === selectedProvider;
+    const matchesProvider = selectedProviders.length === 0 || selectedProviders.includes(o.providerId);
     
     const matchesStatus = selectedStatus.length === 0 || selectedStatus.includes(o.status);
 
@@ -823,15 +767,13 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
   const statusOptions = uniqueStatuses.map(status => ({ value: status, label: status }));
 
   return (
-    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 bg-slate-50/50 overflow-y-auto md:overflow-hidden">
+    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 bg-muted/50 overflow-y-auto md:overflow-hidden">
       {/* Header */}
-      <div className="px-4 sm:px-8 py-4 sm:py-6 sticky top-0 z-10 bg-slate-50/80 backdrop-blur-md border-b border-slate-200/60 shrink-0">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Gestión de Compras</h2>
-            <p className="text-slate-500 text-xs sm:text-sm mt-1">Control de órdenes y proveedores</p>
-          </div>
-          
+      <div className="shrink-0 border-b border-border bg-muted px-4 py-4 sm:px-8">
+        <PageHeader
+          title="Gestión de Compras"
+          subtitle="Control de órdenes y proveedores"
+          actions={
           <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3 w-full lg:w-auto items-center">
              <div className="hidden lg:flex flex-1 sm:w-40 min-w-[140px]">
                 <MultiSelect
@@ -843,11 +785,11 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
              </div>
 
              <div className="hidden lg:flex flex-1 sm:w-64 min-w-[160px]">
-                 <Combobox
-                    options={[{ value: 'all', label: 'Todos los proveedores' }, ...providers.map(p => ({ value: p.id, label: p.name }))]}
-                    value={selectedProvider}
-                    onChange={setSelectedProvider}
-                    placeholder="Proveedor"
+                 <MultiSelect
+                     options={providers.map(p => ({ value: p.id, label: p.name }))}
+                     value={selectedProviders}
+                     onChange={setSelectedProviders}
+                     placeholder="Filtrar Proveedores"
                  />
              </div>
              
@@ -857,10 +799,10 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                  size="icon"
                  onClick={fetchData}
                  disabled={isLoading}
-                 className="rounded-xl bg-white text-slate-700 border-slate-200 shadow-sm hover:bg-slate-50 hover:text-blue-600 transition-colors shrink-0"
+                 className="rounded-md bg-card text-foreground border-border shadow-sm hover:bg-accent hover:text-brand transition-colors shrink-0"
                  title="Actualizar datos"
                >
-                 <RefreshCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
+                 <RefreshCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-brand' : ''}`} />
                </Button>
 
                {/* Mobile Filter Button & Popover */}
@@ -869,7 +811,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                    variant="outline"
                    size="icon"
                    onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
-                   className={`rounded-xl bg-white text-slate-700 border-slate-200 shadow-sm hover:bg-slate-50 hover:text-blue-600 transition-colors shrink-0 ${isMobileFiltersOpen ? 'ring-2 ring-blue-500/20 border-blue-500 text-blue-600' : ''}`}
+                   className={`rounded-md bg-card text-foreground border-border shadow-sm hover:bg-accent hover:text-brand transition-colors shrink-0 ${isMobileFiltersOpen ? 'ring-2 ring-ring/20 border-brand text-brand' : ''}`}
                    title="Filtros"
                  >
                    <Filter className="w-4 h-4" />
@@ -881,16 +823,16 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                        className="fixed inset-0 z-40"
                        onClick={() => setIsMobileFiltersOpen(false)}
                      />
-                     <div className="absolute top-full left-0 mt-3 w-[260px] sm:w-72 bg-white rounded-xl shadow-xl border border-slate-200 z-50 animate-in fade-in zoom-in-95 origin-top-left">
+                     <div className="absolute top-full left-0 mt-3 w-[260px] sm:w-72 bg-card rounded-md shadow-xl border border-border z-50 animate-in fade-in zoom-in-95 origin-top-left">
                        {/* Flecha apuntando al icono */}
-                       <div className="absolute -top-[6px] left-[16px] w-3 h-3 bg-white border-t border-l border-slate-200 transform rotate-45 rounded-tl-[2px]"></div>
+                       <div className="absolute -top-[6px] left-[16px] w-3 h-3 bg-card border-t border-l border-border transform rotate-45 rounded-tl-[2px]"></div>
                        
-                       <div className="relative z-10 bg-white rounded-xl">
-                         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                           <h3 className="font-semibold text-slate-800">Filtrar</h3>
+                       <div className="relative z-10 bg-card rounded-md">
+                         <div className="p-4 border-b border-border flex items-center justify-between">
+                           <h3 className="font-semibold text-foreground">Filtrar</h3>
                            <button 
                              onClick={() => setIsMobileFiltersOpen(false)}
-                             className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition-colors"
+                             className="text-muted-foreground hover:text-foreground p-1 rounded-md hover:bg-accent transition-colors"
                            >
                              <X className="w-4 h-4" />
                            </button>
@@ -898,11 +840,11 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                          <div className="p-4 space-y-4">
                            <div className="space-y-2">
                              <div className="flex items-center justify-between">
-                               <label className="text-sm font-medium text-slate-700">Estado</label>
+                               <label className="text-sm font-medium text-foreground">Estado</label>
                                {selectedStatus.length > 0 && (
                                  <button 
                                    onClick={() => setSelectedStatus([])}
-                                   className="text-xs text-slate-500 hover:text-slate-700"
+                                   className="text-xs text-muted-foreground hover:text-foreground"
                                  >
                                    Limpiar
                                  </button>
@@ -917,20 +859,20 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                            </div>
                            <div className="space-y-2">
                              <div className="flex items-center justify-between">
-                               <label className="text-sm font-medium text-slate-700">Proveedor</label>
-                               {selectedProvider !== 'all' && (
+                               <label className="text-sm font-medium text-foreground">Proveedor</label>
+                               {selectedProviders.length > 0 && (
                                  <button 
-                                   onClick={() => setSelectedProvider('all')}
-                                   className="text-xs text-slate-500 hover:text-slate-700"
+                                   onClick={() => setSelectedProviders([])}
+                                   className="text-xs text-muted-foreground hover:text-foreground"
                                  >
                                    Limpiar
                                  </button>
                                )}
                              </div>
-                             <Combobox
-                                 options={[{ value: 'all', label: 'Todos los proveedores' }, ...providers.map(p => ({ value: p.id, label: p.name }))]}
-                                 value={selectedProvider}
-                                 onChange={setSelectedProvider}
+                             <MultiSelect
+                                 options={providers.map(p => ({ value: p.id, label: p.name }))}
+                                 value={selectedProviders}
+                                 onChange={setSelectedProviders}
                                  placeholder="Seleccionar"
                              />
                            </div>
@@ -942,10 +884,10 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                </div>
 
                <div className="relative flex-1 sm:w-64 group">
-                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-brand transition-colors" />
                  <Input 
                    placeholder="Buscar..." 
-                   className="pl-10 bg-white shadow-sm border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 rounded-xl w-full"
+                   className="pl-10 bg-card shadow-sm border-border focus:border-primary focus:ring-ring/20 rounded-md w-full"
                    value={searchTerm}
                    onChange={(e) => setSearchTerm(e.target.value)}
                  />
@@ -954,32 +896,31 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
              
              <Button 
                 onClick={() => setIsCreateModalOpen(true)}
-                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 rounded-xl px-6 py-2.5 flex items-center justify-center gap-2 transition-all active:scale-95"
+                className="w-full sm:w-auto bg-brand hover:bg-brand/90 text-white shadow-sm rounded-md px-6 py-2.5 flex items-center justify-center gap-2 transition-all active:scale-95"
              >
                <Plus className="w-4 h-4" />
                <span className="hidden sm:inline">Nueva Orden</span>
                <span className="sm:hidden">Nueva OC</span>
              </Button>
           </div>
-        </div>
+          }
+        />
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 px-4 sm:px-8 pb-8 pt-2 overflow-y-auto custom-scrollbar">
+      <div className="flex min-h-0 flex-1 flex-col px-4 sm:px-8 pb-4 pt-2 md:overflow-hidden overflow-y-auto">
         {(isLoading || isRefreshing) ? (
-          <div className="flex flex-col items-center justify-center h-full min-h-[400px] animate-in fade-in zoom-in-95 duration-500">
-             <RefreshCcw className="w-12 h-12 mb-4 animate-spin text-blue-500" />
-             <h3 className="text-xl font-bold text-slate-900 tracking-tight">Cargando órdenes...</h3>
-             <p className="text-slate-500 mt-2 text-center max-w-xs">Por favor espere mientras actualizamos la información.</p>
+          <div className="flex h-full min-h-[400px] items-center justify-center">
+            <Loader text="Cargando órdenes…" />
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[400px] animate-in fade-in zoom-in-95 duration-500">
-             <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mb-6 shadow-sm ring-1 ring-slate-100">
-                 <FileText className="w-10 h-10 text-slate-400" />
+             <div className="w-20 h-20 bg-muted rounded-md flex items-center justify-center mb-6 shadow-sm ring-1 ring-border">
+                 <FileText className="w-10 h-10 text-muted-foreground" />
              </div>
-             <h3 className="text-xl font-bold text-slate-900 tracking-tight">No hay órdenes</h3>
-             <p className="text-slate-500 mt-2 text-center max-w-xs">No se encontraron órdenes de compra con los filtros actuales.</p>
-             <Button onClick={() => setIsCreateModalOpen(true)} className="mt-6 rounded-xl bg-blue-600 text-white px-6 py-2.5 shadow-lg shadow-blue-200">
+             <h3 className="text-xl font-bold text-foreground tracking-tight">No hay órdenes</h3>
+             <p className="text-muted-foreground mt-2 text-center max-w-xs">No se encontraron órdenes de compra con los filtros actuales.</p>
+             <Button onClick={() => setIsCreateModalOpen(true)} className="mt-6 rounded-md bg-brand text-white px-6 py-2.5 shadow-sm">
                <Plus className="w-4 h-4 mr-2" />
                Generar Nueva OC
              </Button>
@@ -987,19 +928,19 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden md:block bg-white rounded-2xl shadow-xl shadow-slate-200/60 ring-1 ring-slate-900/5 overflow-hidden min-h-[500px]">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/50">
-                    <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Orden</th>
-                    <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Fecha & Proveedor</th>
-                    <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Items</th>
-                    <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Estado</th>
-                    <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Avance</th>
-                    <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Acciones</th>
+            <div className="hidden md:flex min-h-0 flex-1 flex-col bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto">
+              <table className="w-full text-left text-[13px]">
+                <thead className="sticky top-0 z-20 bg-muted border-b border-border">
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Orden</th>
+                    <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Fecha & Proveedor</th>
+                    <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Items</th>
+                    <th className="h-12 px-4 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Estado</th>
+                    <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Avance</th>
+                    <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                   {filteredOrders.map((order) => {
                     const totalItems = order.items.reduce((acc, i) => acc + i.quantity, 0);
                     const totalReceived = order.items.reduce((acc, i) => acc + (i.receivedQuantity || 0), 0);
@@ -1009,58 +950,58 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                     }
                     
                     return (
-                      <tr key={order.id} className="hover:bg-blue-50/30 transition-all duration-200 group">
-                        <td className="px-6 py-4">
-                          <span className="inline-block bg-blue-50 text-blue-700 font-mono font-bold px-2 py-1 rounded text-xs">
+                      <tr key={order.id} className="hover:bg-brand/10/30 transition-all duration-200 group">
+                        <td className="h-16 px-4 py-3">
+                          <span className="inline-block bg-brand/10 text-brand font-bold px-2 py-1 rounded text-xs">
                               #{order.sharepointId || order.id}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="h-16 px-4 py-3">
                            <div className="flex flex-col">
-                              <span className="font-semibold text-slate-900 text-sm">{order.providerName}</span>
+                              <span className="font-semibold text-foreground text-sm">{capitalizeFirst(order.providerName)}</span>
                               <div className="flex items-center gap-1.5 mt-1">
-                                  <Calendar className="w-3 h-3 text-slate-400" />
-                                  <span className="text-xs text-slate-500">{order.date}</span>
+                                  <Calendar className="w-3 h-3 text-muted-foreground" />
+                                  <span className="text-xs text-muted-foreground">{order.date}</span>
                               </div>
                            </div>
                         </td>
 
-                        <td className="px-6 py-4 text-right">
-                          <span className="font-bold text-slate-700">{totalItems}</span> <span className="text-slate-400 text-xs">un.</span>
+                        <td className="h-16 px-4 py-3 text-right">
+                          <span className="font-bold text-foreground">{totalItems}</span> <span className="text-muted-foreground text-xs">un.</span>
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="h-16 px-4 py-3 text-center">
                           {getStatusBadge(order.status)}
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="h-16 px-4 py-3 text-right">
                            {order.status.toUpperCase() === 'COMPLETADA' || order.status.toUpperCase() === 'APROBADA' || order.status.toUpperCase() === 'EN RECEPCION' || order.status.toUpperCase() === 'PENDIENTE INGRESO' ? (
                                <div className="flex flex-col items-end gap-1">
-                                   <div className="w-24 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                   <div className="w-24 bg-muted rounded-full h-1.5 overflow-hidden">
                                        <div 
-                                          className={`h-1.5 rounded-full ${progress === 100 ? 'bg-green-500' : 'bg-blue-600'}`} 
+                                          className={`h-1.5 rounded-full ${progress === 100 ? 'bg-emerald-500' : 'bg-brand'}`} 
                                           style={{ width: `${progress}%` }} 
                                        />
                                    </div>
-                                   <span className="text-[10px] font-bold text-slate-500">{progress}%</span>
+                                   <span className="text-[10px] font-bold text-muted-foreground">{progress}%</span>
                                </div>
                            ) : (
-                               <span className="text-slate-300 text-xs">-</span>
+                               <span className="text-muted-foreground text-xs">-</span>
                            )}
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                        <td className="h-16 px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
                               {order.status === 'Presupuesto' && (
                                   <>
                                       <button 
                                           onClick={() => handleOpenBudgetModal(order)}
                                           title="Cargar Presupuesto"
-                                          className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                          className="p-2 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                                       >
                                           <DollarSign className="w-4 h-4" />
                                       </button>
                                       <button 
                                           onClick={() => handleResendClick(order)}
                                           title="Reenviar solicitud"
-                                          className="p-2 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                          className="p-2 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
                                       >
                                           <Send className="w-4 h-4" />
                                       </button>
@@ -1070,7 +1011,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                                             setIsDeleteModalOpen(true);
                                           }}
                                           title="Eliminar Orden"
-                                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                          className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                       >
                                           <Trash2 className="w-4 h-4" />
                                       </button>
@@ -1081,7 +1022,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                                   <button 
                                       onClick={() => handleOpenReceptionModal(order)}
                                       title="Ingresar Remito (Recepción)"
-                                      className="p-2 text-slate-400 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                                      className="p-2 text-muted-foreground hover:text-brand hover:bg-brand/10 rounded-lg transition-colors"
                                   >
                                       <Truck className="w-4 h-4" />
                                   </button>
@@ -1092,7 +1033,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                                       setSelectedOrder(order);
                                       setIsViewModalOpen(true);
                                   }}
-                                  className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                  className="p-2 text-muted-foreground hover:text-brand hover:bg-brand/10 rounded-lg transition-colors"
                                   title="Ver detalles"
                               >
                                   <Eye className="w-4 h-4" />
@@ -1104,6 +1045,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                 </tbody>
               </table>
             </div>
+            </div>
 
             {/* Mobile Card View */}
             <div className="md:hidden space-y-3">
@@ -1113,11 +1055,11 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                 let progress = Math.floor((totalReceived / totalItems) * 100) || 0;
 
                 return (
-                  <div key={order.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
+                  <div key={order.id} className="bg-card rounded-lg border border-border shadow-sm p-4 space-y-3">
                     <div className="flex justify-between items-start">
                       <div className="flex flex-col">
-                        <span className="font-mono font-bold text-blue-600 text-sm">#{order.sharepointId || order.id}</span>
-                        <span className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
+                        <span className="font-bold text-brand text-sm">#{order.sharepointId || order.id}</span>
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
                           <Calendar className="w-3 h-3" /> {order.date}
                         </span>
                       </div>
@@ -1128,35 +1070,35 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
 
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Proveedor</span>
-                        <span className="text-sm font-semibold text-slate-900">{order.providerName}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Proveedor</span>
+                        <span className="text-sm font-semibold text-foreground">{capitalizeFirst(order.providerName)}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Items</span>
-                        <span className="text-sm font-bold text-slate-700">{totalItems} <span className="text-[10px] text-slate-400 font-normal">un.</span></span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Items</span>
+                        <span className="text-sm font-bold text-foreground">{totalItems} <span className="text-[10px] text-muted-foreground font-medium">un.</span></span>
                       </div>
                       
                       {(order.status.toUpperCase() === 'COMPLETADA' || order.status.toUpperCase() === 'APROBADA' || order.status.toUpperCase() === 'EN RECEPCION' || order.status.toUpperCase() === 'PENDIENTE INGRESO') && (
                         <div className="flex items-center justify-between pt-1">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avance</span>
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Avance</span>
                           <div className="flex items-center gap-2">
-                            <div className="w-20 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                            <div className="w-20 bg-muted rounded-full h-1.5 overflow-hidden">
                               <div 
-                                className={`h-1.5 rounded-full ${progress === 100 ? 'bg-green-500' : 'bg-blue-600'}`} 
+                                className={`h-1.5 rounded-full ${progress === 100 ? 'bg-emerald-500' : 'bg-brand'}`} 
                                 style={{ width: `${progress}%` }} 
                               />
                             </div>
-                            <span className="text-[10px] font-bold text-slate-500">{progress}%</span>
+                            <span className="text-[10px] font-bold text-muted-foreground">{progress}%</span>
                           </div>
                         </div>
                       )}
                     </div>
 
-                    <div className="pt-3 border-t border-slate-50 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    <div className="pt-3 border-t border-border flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="flex-1 rounded-xl text-xs gap-2 min-w-[100px]"
+                        className="flex-1 rounded-md text-xs gap-2 min-w-[100px]"
                         onClick={() => {
                             setSelectedOrder(order);
                             setIsViewModalOpen(true);
@@ -1171,7 +1113,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="flex-1 rounded-xl text-xs gap-2 text-emerald-600 border-emerald-100 bg-emerald-50/50 min-w-[100px]"
+                            className="flex-1 rounded-md text-xs gap-2 text-emerald-600 border-emerald-100 bg-emerald-50/50 min-w-[100px]"
                             onClick={() => handleOpenBudgetModal(order)}
                           >
                             <DollarSign className="w-3.5 h-3.5" />
@@ -1180,7 +1122,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="flex-1 rounded-xl text-xs gap-2 text-indigo-600 border-indigo-100 bg-indigo-50/50 min-w-[100px]"
+                            className="flex-1 rounded-md text-xs gap-2 text-brand border-indigo-100 bg-brand/10/50 min-w-[100px]"
                             onClick={() => handleResendClick(order)}
                           >
                             <Send className="w-3.5 h-3.5" />
@@ -1193,7 +1135,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="flex-1 rounded-xl text-xs gap-2 text-blue-700 border-blue-100 bg-blue-50/50 min-w-[100px]"
+                          className="flex-1 rounded-md text-xs gap-2 text-brand border-brand/20 bg-brand/10/50 min-w-[100px]"
                           onClick={() => handleOpenReceptionModal(order)}
                         >
                           <Truck className="w-3.5 h-3.5" />
@@ -1205,7 +1147,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          className="rounded-xl text-xs text-red-600 border-red-100 bg-red-50/50 px-3"
+                          className="rounded-md text-xs text-red-600 border-red-100 bg-red-50/50 px-3"
                           onClick={() => {
                             setOrderToDelete(order);
                             setIsDeleteModalOpen(true);

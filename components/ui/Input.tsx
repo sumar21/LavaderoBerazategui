@@ -1,33 +1,49 @@
-
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useId } from 'react';
+import { cn } from './UIComponents';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
 }
 
+/**
+ * Kit input (DESIGN.md §3.3) plus the optional label/error the app relies on.
+ * Label styling follows the kit's field-label convention; errors carry
+ * `aria-invalid` + `role="alert"` per golden rule 24.
+ */
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className = '', label, error, ...props }, ref) => {
+  ({ className, label, error, id, ...props }, ref) => {
+    const autoId = useId();
+    const inputId = id ?? autoId;
+    const errorId = `${inputId}-error`;
+
     return (
       <div className="w-full">
-        {label && <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">{label}</label>}
+        {label && (
+          <label htmlFor={inputId} className="text-xs font-medium text-muted-foreground mb-1 block">
+            {label}
+          </label>
+        )}
         <input
+          id={inputId}
           ref={ref}
-          className={`
-            flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900
-            placeholder:text-slate-400 
-            focus:outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/20
-            disabled:cursor-not-allowed disabled:opacity-50
-            transition-all duration-200 shadow-sm hover:border-slate-400
-            appearance-none
-            ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}
-            ${className}
-          `}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          className={cn(
+            // h-11 on touch, back to the kit's h-10 from md up (§5.13)
+            'flex h-11 md:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+            error && 'border-destructive focus-visible:ring-destructive',
+            className
+          )}
           {...props}
         />
-        {error && <p className="mt-1 text-xs text-red-500 font-medium ml-1">{error}</p>}
+        {error && (
+          <p id={errorId} role="alert" className="mt-1 text-xs font-medium text-destructive">
+            {error}
+          </p>
+        )}
       </div>
     );
   }
 );
-Input.displayName = "Input";
+Input.displayName = 'Input';

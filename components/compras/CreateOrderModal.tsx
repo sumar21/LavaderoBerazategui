@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
@@ -8,6 +8,7 @@ import { Combobox } from '../ui/Combobox';
 import { OrderItem, Provider, Article } from '@/types';
 import { QuickAddArticleModal } from './QuickAddArticleModal';
 import { notify } from '../ui/Notice';
+import { capitalizeFirst } from '../../utils/text';
 
 interface CreateOrderModalProps {
   isOpen: boolean;
@@ -118,6 +119,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       title="Generar nueva OC"
       description="Complete los datos para crear una solicitud de compra."
       maxWidth="2xl"
+      loading={isLoading}
       footer={
         <>
           <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
@@ -127,16 +129,10 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
         </>
       }
     >
-      <div className="space-y-6 relative">
-        {isLoading && (
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center rounded-xl">
-                <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-2" />
-                <span className="text-sm font-medium text-slate-600">Cargando datos...</span>
-            </div>
-        )}
+      <div className="space-y-6">
         <div className="space-y-1 relative">
            <div className="flex items-center justify-between">
-               <label className="text-sm font-medium text-slate-700">Proveedor</label>
+               <label className="text-sm font-medium text-foreground">Proveedor</label>
                {items.length > 0 && (
                    <span className="text-[10px] text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
                        Bloqueado (elimine los artículos para cambiar)
@@ -152,8 +148,8 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
            />
         </div>
 
-        <div className="bg-slate-50/80 p-5 rounded-xl border border-slate-100 space-y-4 shadow-sm">
-           <h4 className="text-sm font-semibold text-slate-800 flex items-center justify-between">
+        <div className="bg-muted/80 p-5 rounded-md border border-border space-y-4 shadow-sm">
+           <h4 className="text-sm font-semibold text-foreground flex items-center justify-between">
               <span>Agregar Artículos</span>
               <div className="flex items-center gap-3">
                   <button 
@@ -165,7 +161,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                         setIsQuickAddOpen(true);
                     }}
                     className={`text-xs font-medium underline flex items-center gap-1 ${
-                        providerId ? 'text-green-600 hover:text-green-700' : 'text-slate-400 cursor-not-allowed no-underline'
+                        providerId ? 'text-emerald-600 hover:text-emerald-700' : 'text-muted-foreground cursor-not-allowed no-underline'
                     }`}
                   >
                     <Plus className="w-3 h-3" />
@@ -224,21 +220,21 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
            <div className="mt-4 max-h-[50vh] overflow-y-auto space-y-2 pr-1 custom-scrollbar">
               {items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-6 text-slate-400 border-2 border-dashed border-slate-200 rounded-lg bg-white/50">
+                <div className="flex flex-col items-center justify-center py-6 text-muted-foreground border-2 border-dashed border-border rounded-lg bg-card/50">
                     <span className="text-xs italic text-center px-4">
                       {providerId ? "Busca un artículo y presiona Enter o (+) para agregarlo a la orden." : "Selecciona un proveedor para comenzar."}
                     </span>
                 </div>
               ) : (
                 items.map((item, idx) => (
-                  <div key={item.id + '-' + idx} className="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200 text-sm shadow-sm hover:border-blue-200 transition-colors">
+                  <div key={item.id + '-' + idx} className="flex justify-between items-center bg-card p-3 rounded-lg border border-border text-sm shadow-sm hover:border-brand/20 transition-colors">
                      <div className="flex-1">
-                        <span className="font-medium text-slate-900 block">{item.description}</span>
-                        <span className="text-xs text-slate-500 font-mono">{item.sku}</span>
+                        <span className="font-medium text-foreground block">{capitalizeFirst(item.description)}</span>
+                        <span className="text-xs text-muted-foreground">{item.sku}</span>
                      </div>
                      <div className="flex items-center gap-4">
-                        <span className="font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded text-xs">{item.quantity} un.</span>
-                        <button onClick={() => handleRemoveItem(item.id)} className="text-slate-400 hover:text-red-500 transition-colors p-1 hover:bg-red-50 rounded" title="Quitar">
+                        <span className="font-bold text-foreground bg-muted px-2 py-1 rounded text-xs">{item.quantity} un.</span>
+                        <button onClick={() => handleRemoveItem(item.id)} className="text-muted-foreground hover:text-red-500 transition-colors p-1 hover:bg-red-50 rounded" title="Quitar">
                           <Trash2 className="w-4 h-4" />
                         </button>
                      </div>

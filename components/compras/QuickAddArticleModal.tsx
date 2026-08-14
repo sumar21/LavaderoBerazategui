@@ -7,6 +7,7 @@ import { Provider, Article } from '@/types';
 import { configService } from '../../services/configService';
 import { Loader2, Plus, Trash2, Package } from 'lucide-react';
 import { notify } from '../ui/Notice';
+import { capitalizeFirst } from '../../utils/text';
 
 interface QuickAddArticleModalProps {
   isOpen: boolean;
@@ -174,8 +175,8 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
             onChange={setProviderIds}
         />
         
-        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-           <h4 className="text-sm font-semibold text-slate-800 mb-3">Agregar al listado</h4>
+        <div className="bg-muted p-4 rounded-md border border-border">
+           <h4 className="text-sm font-semibold text-foreground mb-3">Agregar al listado</h4>
            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
               <div className="md:col-span-3">
                  <Input 
@@ -229,8 +230,8 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
                   <button 
                       className={`w-full h-[42px] px-0 flex justify-center items-center rounded-lg transition-colors shadow-sm ${
                         !isFormValidToStage || isSaving 
-                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-70' 
-                            : 'bg-slate-800 text-white hover:bg-slate-700'
+                            ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-70' 
+                            : 'bg-primary text-primary-foreground hover:bg-primary/90'
                       }`}
                       onClick={handleStageArticle} 
                       disabled={!isFormValidToStage || isSaving}
@@ -243,26 +244,53 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
         </div>
 
         {stagedArticles.length > 0 ? (
-           <div className="border border-slate-200 rounded-lg overflow-hidden max-h-[40vh] overflow-y-auto">
-               <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-100 text-slate-600 font-semibold sticky top-0 z-10 shadow-sm border-b border-slate-200">
+          <>
+           {/* Mobile: the 5-column table cannot fit a phone, so the same rows
+               become cards — the pattern every other grid in the app uses (§5.4). */}
+           <ul className="md:hidden space-y-2 max-h-[40vh] overflow-y-auto">
+              {stagedArticles.map(a => (
+                <li key={a.tempId} className="rounded-lg border border-border bg-card p-3 shadow-sm">
+                   <div className="flex items-start gap-3">
+                      <div className="min-w-0 flex-1">
+                         <p className="truncate text-[13px] font-medium text-foreground">{capitalizeFirst(a.name)}</p>
+                         <p className="truncate text-[11px] text-muted-foreground">SKU: {a.code}</p>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveStaged(a.tempId)}
+                        aria-label={`Quitar ${a.name}`}
+                        className="shrink-0 rounded-md border border-border bg-card p-2 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600"
+                      >
+                         <Trash2 className="w-4 h-4" />
+                      </button>
+                   </div>
+                   <div className="mt-2 flex items-center justify-between gap-2 border-t border-border pt-2">
+                      <span className="rounded bg-muted px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{a.category || '-'}</span>
+                      <span className="text-[13px] font-bold tabular-nums text-foreground">${a.unitPrice.toFixed(2)}</span>
+                   </div>
+                </li>
+              ))}
+           </ul>
+
+           <div className="hidden md:block border border-border rounded-lg overflow-hidden max-h-[40vh] overflow-y-auto">
+               <table className="w-full text-left text-[13px]">
+                  <thead className="sticky top-0 z-20 bg-muted border-b border-border font-semibold">
                      <tr>
-                         <th className="px-4 py-2">Categoría</th>
-                         <th className="px-4 py-2">SKU</th>
-                         <th className="px-4 py-2">Artículo</th>
-                         <th className="px-4 py-2 text-right">Precio Unit.</th>
-                         <th className="px-3 py-2 w-10"></th>
+                         <th className="px-4 py-2 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Categoría</th>
+                         <th className="px-4 py-2 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">SKU</th>
+                         <th className="px-4 py-2 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
+                         <th className="px-4 py-2 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio Unit.</th>
+                         <th className="px-3 py-2 w-10 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap"></th>
                      </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white">
+                  <tbody className="divide-y divide-border bg-card">
                      {stagedArticles.map((a, idx) => (
-                         <tr key={a.tempId} className="hover:bg-slate-50 transition-colors">
-                             <td className="px-4 py-2"><span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded uppercase font-bold tracking-wider text-slate-600">{a.category || '-'}</span></td>
-                             <td className="px-4 py-2 font-mono text-xs text-slate-500 font-semibold">{a.code}</td>
-                             <td className="px-4 py-2 font-medium text-slate-900">{a.name}</td>
-                             <td className="px-4 py-2 text-right font-mono text-slate-700 font-bold">${a.unitPrice.toFixed(2)}</td>
+                         <tr key={a.tempId} className="hover:bg-accent transition-colors">
+                             <td className="px-4 py-2"><span className="text-[10px] bg-muted px-2 py-0.5 rounded uppercase font-bold tracking-wider text-muted-foreground">{a.category || '-'}</span></td>
+                             <td className="px-4 py-2 text-[11px] text-muted-foreground font-semibold">{a.code}</td>
+                             <td className="px-4 py-2 font-medium text-foreground">{capitalizeFirst(a.name)}</td>
+                             <td className="px-4 py-2 text-right text-foreground font-bold">${a.unitPrice.toFixed(2)}</td>
                              <td className="px-3 py-2 text-center">
-                                 <button onClick={() => handleRemoveStaged(a.tempId)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors shadow-sm bg-white border border-slate-100">
+                                 <button onClick={() => handleRemoveStaged(a.tempId)} className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded transition-colors shadow-sm bg-card border border-border">
                                      <Trash2 className="w-3.5 h-3.5" />
                                  </button>
                              </td>
@@ -271,11 +299,12 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
                   </tbody>
                </table>
            </div>
+          </>
         ) : (
-           <div className="flex flex-col items-center justify-center py-10 bg-white border-2 border-dashed border-slate-200 rounded-xl">
-               <Package className="w-10 h-10 text-slate-200 mb-3" />
-               <p className="text-sm font-medium text-slate-500">No hay artículos en la lista.</p>
-               <p className="text-xs text-slate-400 mt-1 max-w-xs text-center">Complete los datos arriba y presione el botón "+" o la tecla Enter para ir añadiéndolos.</p>
+           <div className="flex flex-col items-center justify-center py-10 bg-card border-2 border-dashed border-border rounded-md">
+               <Package className="w-10 h-10 text-muted-foreground mb-3" />
+               <p className="text-sm font-medium text-muted-foreground">No hay artículos en la lista.</p>
+               <p className="text-xs text-muted-foreground mt-1 max-w-xs text-center">Complete los datos arriba y presione el botón "+" o la tecla Enter para ir añadiéndolos.</p>
            </div>
         )}
       </div>

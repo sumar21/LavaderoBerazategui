@@ -10,6 +10,9 @@ import { QuickAddArticleModal } from '../components/compras/QuickAddArticleModal
 import { Provider, Article } from '@/types';
 import { configService } from '../services/configService';
 import { notify } from '../components/ui/Notice';
+import { Loader } from '../components/ui/Loader';
+import { PageHeader } from '../components/ui/PageHeader';
+import { capitalizeFirst } from '../utils/text';
 
 type ConfigTab = 'PROVEEDORES' | 'ARTICULOS';
 
@@ -22,9 +25,14 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync state if prop changes (Sidebar navigation)
+  // Sync state if prop changes (Sidebar navigation).
+  // Switching tabs also clears the search and refetches: the previous tab's
+  // filter does not apply to the new list, and leaving it on made the page look
+  // empty. The component is not remounted, so nothing else would reset it.
   useEffect(() => {
     setActiveTab(initialTab);
+    setSearchTerm('');
+    fetchData();
   }, [initialTab]);
 
   // --- STATE DATA ---
@@ -284,119 +292,117 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
 
   const formatCurrency = (val: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(val);
 
-  // Helper to get provider names string
+  /**
+   * Resolved provider names for an article. Each name is capitalised on its
+   * own — capitalising the joined string would only reach the first provider.
+   */
+  const providerNames = (ids?: string[]): string =>
+      (ids ?? []).map(id => capitalizeFirst(providers.find(p => p.id === id)?.name)).filter(Boolean).join(', ');
+
   const getProviderNames = (ids: string[]) => {
-      if (!ids || ids.length === 0) return <span className="text-slate-300 italic">Sin asignar</span>;
-      return ids.map(id => providers.find(p => p.id === id)?.name).filter(Boolean).join(", ");
+      const names = providerNames(ids);
+      if (!names) return <span className="text-muted-foreground italic">Sin asignar</span>;
+      return names;
   };
 
   return (
-    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 bg-slate-50/50 overflow-hidden">
+    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 bg-muted/50 overflow-hidden">
       
       {/* HEADER & SWITCH */}
-      <div className="px-4 md:px-8 py-4 md:py-6 sticky top-0 z-10 bg-slate-50/80 backdrop-blur-md border-b border-slate-200/60 shrink-0">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-               <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight">
-                   {activeTab === 'PROVEEDORES' ? 'Administración Proveedores' : 'Configuración Artículos'}
-               </h2>
-               <p className="text-slate-500 text-xs md:text-sm mt-0.5 md:mt-1">Gestión de datos maestros del sistema</p>
-            </div>
-          </div>
+      <div className="shrink-0 border-b border-border bg-muted px-4 py-4 md:px-8">
+        <PageHeader
+          title={activeTab === 'PROVEEDORES' ? 'Administración Proveedores' : 'Configuración Artículos'}
+          subtitle="Gestión de datos maestros del sistema"
+          actions={
+            <>
+              <div className="relative min-w-[7rem] flex-1 sm:w-64 sm:flex-none">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                <Input
+                  placeholder="Buscar..."
+                  className="h-10 bg-card pl-9"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 w-full items-center">
-             <div className="relative flex-1 w-full group">
-               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-               <Input 
-                 placeholder="Buscar..." 
-                 className="pl-10 w-full"
-                 value={searchTerm}
-                 onChange={(e) => setSearchTerm(e.target.value)}
-               />
-             </div>
-             
-             <div className="flex gap-2 w-full sm:w-auto">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={fetchData}
-                  disabled={isLoading}
-                  className="rounded-xl bg-white text-slate-700 border-slate-200 shadow-sm hover:bg-slate-50 hover:text-blue-600 transition-colors"
-                  title="Actualizar datos"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
-                </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={fetchData}
+                disabled={isLoading}
+                className="h-10 w-10 shrink-0 bg-card"
+                title="Actualizar datos"
+              >
+                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              </Button>
 
-                <Button variant="primary" className="flex-1 sm:flex-none rounded-xl shadow-lg shadow-blue-900/20" onClick={handleOpenNewItemModal}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  <span className="whitespace-nowrap">{activeTab === 'PROVEEDORES' ? 'Nuevo Proveedor' : 'Nuevo Artículo'}</span>
-                </Button>
-             </div>
-          </div>
-        </div>
+              <Button className="h-10 shrink-0" onClick={handleOpenNewItemModal}>
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+                <span className="whitespace-nowrap">{activeTab === 'PROVEEDORES' ? 'Nuevo Proveedor' : 'Nuevo Artículo'}</span>
+              </Button>
+            </>
+          }
+        />
       </div>
 
       {/* CONTENT AREA */}
-      <div className="flex-1 overflow-auto px-4 md:px-8 pb-8 pt-2 custom-scrollbar">
+      <div className="flex min-h-0 flex-1 flex-col px-4 md:px-8 pb-4 pt-2 md:overflow-hidden overflow-y-auto">
          {isLoading ? (
-            <div className="flex flex-col items-center justify-center h-full min-h-[400px] animate-in fade-in zoom-in-95 duration-500">
-                <RefreshCw className="w-12 h-12 mb-4 animate-spin text-blue-500" />
-                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Cargando configuración...</h3>
-                <p className="text-slate-500 mt-2 text-center max-w-xs">Por favor espere mientras actualizamos los datos.</p>
-            </div>
+            <div className="flex h-full min-h-[400px] items-center justify-center">
+            <Loader text="Cargando configuración…" />
+          </div>
          ) : (activeTab === 'PROVEEDORES' && filteredProviders.length === 0) ? (
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] animate-in fade-in zoom-in-95 duration-500">
-                <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mb-6 shadow-sm ring-1 ring-slate-100">
-                    <Users className="w-10 h-10 text-slate-400" />
+                <div className="w-20 h-20 bg-muted rounded-md flex items-center justify-center mb-6 shadow-sm ring-1 ring-border">
+                    <Users className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Sin proveedores</h3>
-                <p className="text-slate-500 mt-2 text-center max-w-xs">No se encontraron proveedores con los filtros actuales.</p>
-                <Button variant="primary" className="mt-6 rounded-xl shadow-lg shadow-blue-900/20" onClick={() => handleOpenModal()}>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">Sin proveedores</h3>
+                <p className="text-muted-foreground mt-2 text-center max-w-xs">No se encontraron proveedores con los filtros actuales.</p>
+                <Button variant="default" className="mt-6 rounded-md" onClick={() => handleOpenModal()}>
                     <Plus className="w-4 h-4 mr-2" />
                     Nuevo Proveedor
                 </Button>
             </div>
          ) : (activeTab === 'ARTICULOS' && filteredArticles.length === 0) ? (
             <div className="flex flex-col items-center justify-center h-full min-h-[400px] animate-in fade-in zoom-in-95 duration-500">
-                <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mb-6 shadow-sm ring-1 ring-slate-100">
-                    <Package className="w-10 h-10 text-slate-400" />
+                <div className="w-20 h-20 bg-muted rounded-md flex items-center justify-center mb-6 shadow-sm ring-1 ring-border">
+                    <Package className="w-10 h-10 text-muted-foreground" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 tracking-tight">Sin artículos</h3>
-                <p className="text-slate-500 mt-2 text-center max-w-xs">No se encontraron artículos con los filtros actuales.</p>
-                <Button variant="primary" className="mt-6 rounded-xl shadow-lg shadow-blue-900/20" onClick={handleOpenNewItemModal}>
+                <h3 className="text-xl font-bold text-foreground tracking-tight">Sin artículos</h3>
+                <p className="text-muted-foreground mt-2 text-center max-w-xs">No se encontraron artículos con los filtros actuales.</p>
+                <Button variant="default" className="mt-6 rounded-md" onClick={handleOpenNewItemModal}>
                     <Plus className="w-4 h-4 mr-2" />
                     Nuevo Artículo
                 </Button>
             </div>
          ) : (
-             <div className="bg-white md:rounded-2xl shadow-xl shadow-slate-200/60 md:ring-1 md:ring-slate-900/5 overflow-hidden min-h-[500px]">
+             <div className="flex min-h-0 flex-1 flex-col bg-card md:rounded-lg border border-border shadow-sm md:overflow-hidden">
                 {activeTab === 'PROVEEDORES' ? (
                     <>
                     {/* MOBILE CARDS VIEW */}
-                    <div className="md:hidden divide-y divide-slate-100">
+                    <div className="md:hidden divide-y divide-border">
                         {filteredProviders.map((prov) => (
-                            <div key={prov.id} className="p-4 bg-white active:bg-slate-50 transition-colors">
+                            <div key={prov.id} className="p-4 bg-card active:bg-muted transition-colors">
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                        <h4 className="font-bold text-slate-900">{prov.name}</h4>
-                                        <p className="text-xs text-slate-500 mt-0.5">{prov.segment}</p>
+                                        <h4 className="font-bold text-foreground">{capitalizeFirst(prov.name)}</h4>
+                                        <p className="text-xs text-muted-foreground mt-0.5">{prov.segment}</p>
                                     </div>
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800 uppercase">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-muted text-foreground uppercase">
                                         {prov.paymentCondition}
                                     </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-2 mb-3">
                                     <div className="flex flex-col">
-                                        <span className="text-[10px] uppercase font-bold text-slate-400">Teléfono</span>
-                                        <span className="text-xs text-slate-600 font-mono">{prov.phone || '-'}</span>
+                                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Teléfono</span>
+                                        <span className="text-xs text-muted-foreground">{prov.phone || '-'}</span>
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-[10px] uppercase font-bold text-slate-400">Mail</span>
-                                        <span className="text-xs text-slate-600 truncate">{prov.email || '-'}</span>
+                                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Mail</span>
+                                        <span className="text-xs text-muted-foreground truncate">{prov.email || '-'}</span>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-50">
+                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                                     <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => handleOpenModal(prov)}>
                                         <Edit className="w-3.5 h-3.5 mr-1.5" />
                                         Editar
@@ -411,35 +417,36 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                     </div>
 
                     {/* PROVEEDORES TABLE (Desktop) */}
-                    <table className="w-full text-left hidden md:table">
-                        <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50/50">
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Proveedor</th>
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Segmento</th>
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Teléfono</th>
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Mail</th>
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Condición</th>
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Acciones</th>
+                    <div className="hidden min-h-0 flex-1 overflow-auto md:block">
+                    <table className="w-full text-left hidden md:table text-[13px]">
+                        <thead className="sticky top-0 z-20 bg-muted border-b border-border">
+                            <tr className="border-b border-border bg-muted/50">
+                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Proveedor</th>
+                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Segmento</th>
+                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Teléfono</th>
+                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Mail</th>
+                                <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Condición</th>
+                                <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
+                        <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                             {filteredProviders.map((prov) => (
-                                <tr key={prov.id} className="hover:bg-blue-50/30 transition-all duration-200 group">
-                                    <td className="px-6 py-4 font-semibold text-slate-900 text-sm">{prov.name}</td>
-                                    <td className="px-6 py-4 text-slate-600 text-sm">{prov.segment}</td>
-                                    <td className="px-6 py-4 text-slate-500 text-sm font-mono">{prov.phone}</td>
-                                    <td className="px-6 py-4 text-slate-500 text-sm">{prov.email}</td>
-                                    <td className="px-6 py-4 text-right">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800">
+                                <tr key={prov.id} className="hover:bg-brand/10/30 transition-all duration-200 group">
+                                    <td className="h-16 px-4 py-3 font-semibold text-foreground">{capitalizeFirst(prov.name)}</td>
+                                    <td className="h-16 px-4 py-3 text-muted-foreground">{prov.segment}</td>
+                                    <td className="h-16 px-4 py-3 text-muted-foreground">{prov.phone}</td>
+                                    <td className="h-16 px-4 py-3 text-muted-foreground">{prov.email}</td>
+                                    <td className="h-16 px-4 py-3 text-right">
+                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-foreground">
                                             {prov.paymentCondition}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="h-16 px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-1">
-                                            <button onClick={() => handleOpenModal(prov)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                            <button onClick={() => handleOpenModal(prov)} className="p-2 text-muted-foreground hover:text-brand hover:bg-brand/10 rounded-lg transition-colors">
                                                 <Edit className="w-4 h-4" />
                                             </button>
-                                            <button onClick={() => handleDeleteClick(prov)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                            <button onClick={() => handleDeleteClick(prov)} className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -448,35 +455,36 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                             ))}
                         </tbody>
                     </table>
+                    </div>
                     </>
                 ) : (
                     <>
                     {/* MOBILE CARDS VIEW */}
-                    <div className="md:hidden divide-y divide-slate-100">
+                    <div className="md:hidden divide-y divide-border">
                         {filteredArticles.map((art) => (
-                            <div key={art.id} className="p-4 bg-white active:bg-slate-50 transition-colors">
+                            <div key={art.id} className="p-4 bg-card active:bg-muted transition-colors">
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
-                                        <h4 className="font-bold text-slate-900">{art.name}</h4>
-                                        <p className="text-[10px] font-mono text-slate-400 mt-0.5">ID: {art.id} | {art.code}</p>
+                                        <h4 className="font-bold text-foreground">{capitalizeFirst(art.name)}</h4>
+                                        <p className="text-[10px] text-muted-foreground mt-0.5">ID: {art.id} | {art.code}</p>
                                     </div>
-                                    <span className="text-sm font-bold text-slate-900">
+                                    <span className="text-sm font-bold text-foreground">
                                         {formatCurrency(art.unitPrice)}
                                     </span>
                                 </div>
                                 <div className="space-y-2 mb-3">
                                     <div className="flex flex-col">
-                                        <span className="text-[10px] uppercase font-bold text-slate-400">Proveedores</span>
-                                        <span className="text-xs text-slate-600 line-clamp-1">{getProviderNames(art.providerIds)}</span>
+                                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Proveedores</span>
+                                        <span className="text-xs text-muted-foreground line-clamp-1">{getProviderNames(art.providerIds)}</span>
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-[10px] uppercase font-bold text-slate-400">Categoría</span>
+                                        <span className="text-[10px] uppercase font-bold text-muted-foreground">Categoría</span>
                                         <div>
-                                            <span className="inline-block bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] border border-slate-200 uppercase font-medium mt-0.5">{art.category}</span>
+                                            <span className="inline-block bg-muted text-muted-foreground px-2 py-0.5 rounded text-[10px] border border-border uppercase font-medium mt-0.5">{art.category}</span>
                                         </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-50">
+                                <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                                     <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => handleOpenModal(art)}>
                                         <Edit className="w-3.5 h-3.5 mr-1.5" />
                                         Editar
@@ -491,37 +499,40 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                     </div>
 
                     {/* ARTICULOS TABLE (Desktop) */}
-                    <table className="w-full text-left hidden md:table">
-                        <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50/50">
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Nro. Art</th>
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Artículo</th>
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Proveedores</th>
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Categoría</th>
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Código</th>
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Precio Unitario</th>
-                                <th className="px-6 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Acciones</th>
+                    <div className="hidden min-h-0 flex-1 overflow-auto md:block">
+                    <table className="w-full text-left hidden md:table text-[13px]">
+                        <thead className="sticky top-0 z-20 bg-muted border-b border-border">
+                            <tr className="border-b border-border bg-muted/50">
+                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Nro. Art</th>
+                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
+                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Proveedores</th>
+                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Categoría</th>
+                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Código</th>
+                                <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio Unitario</th>
+                                <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-50">
+                        <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                             {filteredArticles.map((art) => (
-                                <tr key={art.id} className="hover:bg-blue-50/30 transition-all duration-200 group">
-                                    <td className="px-6 py-4 text-slate-400 text-xs font-mono">{art.id}</td>
-                                    <td className="px-6 py-4 font-semibold text-slate-900 text-sm">{art.name}</td>
-                                    <td className="px-6 py-4 text-sm text-slate-600 max-w-[200px] truncate" title={art.providerIds?.join(', ')}>
+                                <tr key={art.id} className="hover:bg-brand/10/30 transition-all duration-200 group">
+                                    <td className="h-16 px-4 py-3 text-muted-foreground text-[11px]">{art.id}</td>
+                                    <td className="h-16 px-4 py-3 font-semibold text-foreground">{capitalizeFirst(art.name)}</td>
+                                    {/* The tooltip is what the truncation hides, so it must be the
+                                        resolved names — it used to print the raw provider IDs. */}
+                                    <td className="h-16 px-4 py-3 text-muted-foreground max-w-[200px] truncate" title={providerNames(art.providerIds) || undefined}>
                                         {getProviderNames(art.providerIds)}
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs border border-slate-200 uppercase">{art.category}</span>
+                                    <td className="h-16 px-4 py-3">
+                                        <span className="bg-muted text-muted-foreground px-2 py-1 rounded text-xs border border-border uppercase">{art.category}</span>
                                     </td>
-                                    <td className="px-6 py-4 text-slate-500 text-sm font-mono">{art.code}</td>
-                                    <td className="px-6 py-4 text-right font-bold text-slate-700">{formatCurrency(art.unitPrice)}</td>
-                                    <td className="px-6 py-4 text-right">
+                                    <td className="h-16 px-4 py-3 text-muted-foreground">{art.code}</td>
+                                    <td className="h-16 px-4 py-3 text-right font-bold text-foreground">{formatCurrency(art.unitPrice)}</td>
+                                    <td className="h-16 px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-1">
-                                            <button onClick={() => handleOpenModal(art)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                            <button onClick={() => handleOpenModal(art)} className="p-2 text-muted-foreground hover:text-brand hover:bg-brand/10 rounded-lg transition-colors">
                                                 <Edit className="w-4 h-4" />
                                             </button>
-                                            <button onClick={() => handleDeleteClick(art)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                            <button onClick={() => handleDeleteClick(art)} className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -530,6 +541,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                             ))}
                         </tbody>
                     </table>
+                    </div>
                     </>
                 )}
              </div>
@@ -576,17 +588,17 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                             onChange={e => setProviderForm({...providerForm, phone: e.target.value})}
                         />
                         <div>
-                             <label className="block text-sm font-semibold text-slate-700 mb-1.5 ml-1">Moneda</label>
+                             <label className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Moneda</label>
                              <div className="relative">
                                  <select 
-                                    className="flex h-10 w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 shadow-sm transition-all duration-200 hover:border-slate-400 cursor-pointer"
+                                    className="flex h-10 w-full appearance-none rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-ring shadow-sm transition-all duration-200 hover:border-ring cursor-pointer"
                                     value={providerForm.currency}
                                     onChange={e => setProviderForm({...providerForm, currency: e.target.value as any})}
                                  >
                                     <option value="ARS">ARS - Peso Argentino</option>
                                     <option value="USD">USD - Dólar Estadounidense</option>
                                  </select>
-                                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground">
                                     <ChevronDown className="h-4 w-4" />
                                  </div>
                              </div>
@@ -650,13 +662,13 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
         footer={
             <>
                 <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>Cancelar</Button>
-                <Button variant="danger" onClick={handleConfirmDelete}>
+                <Button variant="destructive" onClick={handleConfirmDelete}>
                     {activeTab === 'PROVEEDORES' ? 'Eliminar Proveedor' : 'Eliminar Artículo'}
                 </Button>
             </>
         }
       >
-        <div className="flex items-center gap-4 text-slate-600 bg-red-50 p-5 rounded-xl border border-red-100">
+        <div className="flex items-center gap-4 text-muted-foreground bg-red-50 p-5 rounded-md border border-red-100">
             <div className="bg-red-100 p-2 rounded-full shrink-0">
                 <AlertCircle className="text-red-600 w-6 h-6" />
             </div>

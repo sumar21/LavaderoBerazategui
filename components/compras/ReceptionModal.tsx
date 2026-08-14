@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { PurchaseOrder } from '@/types';
 import { notify } from '../ui/Notice';
+import { capitalizeFirst } from '../../utils/text';
 
 interface ReceptionModalProps {
   isOpen: boolean;
@@ -151,10 +152,12 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
         title="Ingresar Mercadería"
         description={`Ingrese las cantidades recibidas para la OC #${order.sharepointId}`}
         maxWidth="4xl" // Más ancho para que entre más info
+        loading={isLoading}
+        loadingText="Registrando recepción…"
         footer={
             <>
                 <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
-                <Button onClick={handleSave} variant="primary" disabled={!remito.trim() || isLoading}>
+                <Button onClick={handleSave} variant="default" disabled={!remito.trim() || isLoading}>
                     {isLoading ? (
                         <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -167,18 +170,12 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
             </>
         }
       >
-        <div className="flex flex-col md:h-[65vh] space-y-6 p-1 relative">
-             {isLoading && (
-                 <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center rounded-xl">
-                     <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-2" />
-                     <span className="text-sm font-medium text-slate-600">Guardando recepción...</span>
-                 </div>
-             )}
-             <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-start gap-3 shrink-0">
-                <div className="p-2 bg-blue-100 rounded-full">
-                   <Truck className="w-4 h-4 text-blue-700" />
+        <div className="flex flex-col md:h-[65vh] space-y-6 p-1">
+             <div className="bg-brand/10 border border-brand/20 p-4 rounded-md flex items-start gap-3 shrink-0">
+                <div className="p-2 bg-brand/10 rounded-full">
+                   <Truck className="w-4 h-4 text-brand" />
                 </div>
-                <div className="text-sm text-blue-900 mt-1">
+                <div className="text-sm text-brand mt-1">
                    <p className="font-semibold">Recepción Parcial o Total</p>
                    <p className="opacity-80">Ingrese la cantidad que llegó físicamente en este envío. Si completa el total, la orden se cerrará automáticamente.</p>
                 </div>
@@ -188,20 +185,20 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                  <div className="flex-1 flex flex-col gap-4 h-full min-w-0">
                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 shrink-0">
                          <div>
-                             <label className="block text-sm font-medium text-slate-700 mb-1">Nro. Remito <span className="text-red-500">*</span></label>
+                             <label className="block text-sm font-medium text-foreground mb-1">Nro. Remito <span className="text-red-500">*</span></label>
                              <input 
                                  type="text"
-                                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                                 className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-ring outline-none"
                                  placeholder="Ej: REM-00123"
                                  value={remito}
                                  onChange={(e) => setRemito(e.target.value)}
                              />
                          </div>
                          <div>
-                             <label className="block text-sm font-medium text-slate-700 mb-1">Lote</label>
+                             <label className="block text-sm font-medium text-foreground mb-1">Lote</label>
                              <input 
                                  type="text"
-                                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                                 className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-ring outline-none"
                                  placeholder="Ej: LOTE-001"
                                  value={lote}
                                  onChange={(e) => setLote(e.target.value)}
@@ -209,9 +206,9 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                          </div>
                      </div>
 
-                     <div className="border rounded-xl overflow-hidden border-slate-200 shadow-sm flex-1 min-h-0 overflow-y-auto custom-scrollbar relative">
+                     <div className="border rounded-md overflow-hidden border-border shadow-sm flex-1 min-h-0 overflow-y-auto custom-scrollbar relative">
                          {/* MOBILE VIEW (Cards) */}
-                         <div className="md:hidden divide-y divide-slate-100">
+                         <div className="md:hidden divide-y divide-border">
                              {order.items.map((item, idx) => {
                                  const prevReceived = item.receivedQuantity || 0;
                                  const pending = item.quantity - prevReceived;
@@ -220,11 +217,11 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                  const currentInput = currentReceptionInput[item.sku] ?? '';
 
                                  return (
-                                     <div key={idx} className={`p-4 ${isComplete ? 'bg-slate-50/50' : 'bg-white'}`}>
+                                     <div key={idx} className={`p-4 ${isComplete ? 'bg-muted/50' : 'bg-card'}`}>
                                          <div className="flex justify-between items-start mb-3">
                                              <div>
-                                                 <span className={`block font-bold ${isComplete ? 'text-slate-500 line-through' : 'text-slate-900'}`}>{item.description}</span>
-                                                 <span className="text-xs text-slate-400 font-mono">{item.sku}</span>
+                                                 <span className={`block font-bold ${isComplete ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{capitalizeFirst(item.description)}</span>
+                                                 <span className="text-xs text-muted-foreground">{item.sku}</span>
                                              </div>
                                              {isComplete && (
                                                  <div className="flex justify-center text-emerald-600 font-bold text-[10px] uppercase items-center gap-1 bg-emerald-50 py-1 px-2 rounded-full border border-emerald-100">
@@ -234,29 +231,29 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                          </div>
 
                                          <div className="grid grid-cols-3 gap-2 mb-4">
-                                             <div className="flex flex-col items-center p-2 bg-slate-50 rounded-lg">
-                                                 <span className="text-[10px] uppercase font-bold text-slate-400">Solic.</span>
-                                                 <span className="text-sm font-bold text-slate-700">{item.quantity}</span>
+                                             <div className="flex flex-col items-center p-2 bg-muted rounded-lg">
+                                                 <span className="text-[10px] uppercase font-bold text-muted-foreground">Solic.</span>
+                                                 <span className="text-sm font-bold text-foreground">{item.quantity}</span>
                                              </div>
-                                             <div className="flex flex-col items-center p-2 bg-slate-50 rounded-lg">
-                                                 <span className="text-[10px] uppercase font-bold text-slate-400">Recib.</span>
-                                                 <span className="text-sm font-bold text-slate-700">{prevReceived}</span>
+                                             <div className="flex flex-col items-center p-2 bg-muted rounded-lg">
+                                                 <span className="text-[10px] uppercase font-bold text-muted-foreground">Recib.</span>
+                                                 <span className="text-sm font-bold text-foreground">{prevReceived}</span>
                                              </div>
-                                             <div className="flex flex-col items-center p-2 bg-blue-50 rounded-lg border border-blue-100">
+                                             <div className="flex flex-col items-center p-2 bg-brand/10 rounded-lg border border-brand/20">
                                                  <span className="text-[10px] uppercase font-bold text-blue-400">Pend.</span>
-                                                 <span className="text-sm font-bold text-blue-700">{pending}</span>
+                                                 <span className="text-sm font-bold text-brand">{pending}</span>
                                              </div>
                                          </div>
 
                                          {!isComplete && (
                                              <div className="flex items-center gap-3">
                                                  <div className="flex-1">
-                                                     <label className="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Ingresar Cantidad</label>
+                                                     <label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Ingresar Cantidad</label>
                                                      <input 
                                                          type="number"
                                                          min="0"
                                                          max={pending}
-                                                         className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors"
+                                                         className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-ring outline-none transition-colors"
                                                          placeholder="0"
                                                          value={currentInput}
                                                          onChange={(e) => {
@@ -272,7 +269,7 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                                      />
                                                  </div>
                                                  <div className="shrink-0 flex flex-col items-center">
-                                                     <label className="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Foto</label>
+                                                     <label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Foto</label>
                                                      <div className="relative">
                                                          <input
                                                              type="file"
@@ -283,7 +280,7 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                                          />
                                                          <label 
                                                              htmlFor={`file-mobile-${item.sku}`}
-                                                             className={`h-10 w-10 rounded-lg cursor-pointer transition-colors flex items-center justify-center ${hasImage ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                                                             className={`h-10 w-10 rounded-lg cursor-pointer transition-colors flex items-center justify-center ${hasImage ? 'bg-brand/10 text-brand' : 'bg-muted text-muted-foreground hover:bg-muted'}`}
                                                          >
                                                              <Camera className="w-5 h-5" />
                                                          </label>
@@ -298,11 +295,11 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                                      </div>
                                                  </div>
                                                  <div className="shrink-0 flex flex-col items-center">
-                                                     <label className="text-[10px] uppercase font-bold text-slate-500 mb-1 block">Todo</label>
+                                                     <label className="text-[10px] uppercase font-bold text-muted-foreground mb-1 block">Todo</label>
                                                      <div className="h-10 flex items-center">
                                                          <input
                                                              type="checkbox"
-                                                             className="h-6 w-6 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                             className="h-6 w-6 rounded border-border text-brand focus:ring-ring cursor-pointer"
                                                              checked={currentInput === String(pending) && pending > 0}
                                                              onChange={(e) => {
                                                                  if (e.target.checked) {
@@ -322,17 +319,17 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                          </div>
 
                          {/* DESKTOP VIEW (Table) */}
-                         <table className="w-full text-sm table-fixed hidden md:table">
-                             <thead className="bg-slate-50 border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                         <table className="w-full table-fixed hidden md:table text-[13px]">
+                             <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                                  <tr>
-                                     <th className="px-4 py-3 text-left font-semibold text-slate-700">Artículo</th>
-                                     <th className="px-2 py-3 text-center font-semibold text-slate-700 w-20">Solic.</th>
-                                     <th className="px-2 py-3 text-center font-semibold text-slate-700 w-20">Recib.</th>
-                                     <th className="px-2 py-3 text-center font-semibold text-slate-700 w-24">Ingreso</th>
-                                     <th className="px-2 py-3 text-center font-semibold text-slate-700 w-10">Img</th><th className="px-2 py-3 text-center font-semibold text-slate-700 w-16">Todo</th>
+                                     <th className="px-4 py-3 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
+                                     <th className="px-2 py-3 text-center w-20 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Solic.</th>
+                                     <th className="px-2 py-3 text-center w-20 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Recib.</th>
+                                     <th className="px-2 py-3 text-center w-24 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Ingreso</th>
+                                     <th className="px-2 py-3 text-center w-10 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Img</th><th className="px-2 py-3 text-center w-16 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Todo</th>
                                  </tr>
                              </thead>
-                             <tbody className="divide-y divide-slate-100">
+                             <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                                  {order.items.map((item, idx) => {
                                      const prevReceived = item.receivedQuantity || 0;
                                      const pending = item.quantity - prevReceived;
@@ -341,20 +338,20 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                      const hasImage = !!itemImages[item.sku];
 
                                      return (
-                                         <tr key={idx} className={`bg-white transition-colors ${isComplete ? 'bg-slate-50/50' : 'hover:bg-slate-50'}`}>
+                                         <tr key={idx} className={`bg-card transition-colors ${isComplete ? 'bg-muted/50' : 'hover:bg-accent'}`}>
                                              <td className="px-4 py-3">
-                                                 <span className={`block font-medium ${isComplete ? 'text-slate-500 line-through' : 'text-slate-900'}`}>{item.description}</span>
-                                                 <span className="text-xs text-slate-400 font-mono">{item.sku}</span>
+                                                 <span className={`block font-medium ${isComplete ? 'text-muted-foreground line-through' : 'text-foreground'}`}>{capitalizeFirst(item.description)}</span>
+                                                 <span className="text-xs text-muted-foreground">{item.sku}</span>
                                              </td>
-                                             <td className="px-2 py-3 text-center text-slate-900 font-medium">{item.quantity}</td>
-                                             <td className="px-2 py-3 text-center text-slate-600">{prevReceived}</td>
+                                             <td className="px-2 py-3 text-center text-foreground font-medium">{item.quantity}</td>
+                                             <td className="px-2 py-3 text-center text-muted-foreground">{prevReceived}</td>
                                              <td className="px-2 py-3">
                                                  {!isComplete ? (
                                                      <input 
                                                          type="number"
                                                          min="0"
                                                          max={pending}
-                                                         className="w-full text-center border border-slate-300 rounded-lg px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors appearance-none"
+                                                         className="w-full text-center border border-border rounded-lg px-2 py-1.5 text-sm focus:border-primary focus:ring-1 focus:ring-ring outline-none transition-colors appearance-none"
                                                          placeholder="0"
                                                          value={currentInput}
                                                          onChange={(e) => {
@@ -386,7 +383,7 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                                          />
                                                          <label 
                                                              htmlFor={`file-${item.sku}`}
-                                                             className={`p-1.5 rounded-lg cursor-pointer transition-colors inline-flex ${hasImage ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                                                             className={`p-1.5 rounded-lg cursor-pointer transition-colors inline-flex ${hasImage ? 'bg-brand/10 text-brand' : 'bg-muted text-muted-foreground hover:bg-muted'}`}
                                                              title="Adjuntar foto del producto"
                                                          >
                                                              <Camera className="w-4 h-4" />
@@ -406,7 +403,7 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                                 {!isComplete && (
                                                     <input
                                                         type="checkbox"
-                                                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                                        className="h-4 w-4 rounded border-border text-brand focus:ring-ring cursor-pointer"
                                                         checked={currentInput === String(pending) && pending > 0}
                                                         onChange={(e) => {
                                                             if (e.target.checked) {
@@ -429,8 +426,8 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
 
                  {/* Remito Image Section */}
                  <div className="lg:w-72 shrink-0 flex flex-col h-full">
-                     <label className="block text-sm font-medium text-slate-700 mb-2 shrink-0">Foto del Remito</label>
-                     <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 flex flex-col items-center justify-center text-center flex-1 min-h-[200px] bg-slate-50 hover:bg-slate-100 transition-colors relative">
+                     <label className="block text-sm font-medium text-foreground mb-2 shrink-0">Foto del Remito</label>
+                     <div className="border-2 border-dashed border-border rounded-md p-4 flex flex-col items-center justify-center text-center flex-1 min-h-[200px] bg-muted hover:bg-accent transition-colors relative">
                          {remitoImage ? (
                              <div className="relative w-full h-full">
                                  <img src={remitoImage} alt="Remito" className="w-full h-full object-contain rounded-lg" />
@@ -451,11 +448,11 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                      onChange={(e) => handleImageUpload(e, 'Remito')}
                                  />
                                  <label htmlFor="remito-upload" className="cursor-pointer flex flex-col items-center w-full h-full justify-center">
-                                     <div className="p-3 bg-white rounded-full shadow-sm mb-3">
-                                         <Camera className="w-6 h-6 text-slate-400" />
+                                     <div className="p-3 bg-card rounded-full shadow-sm mb-3">
+                                         <Camera className="w-6 h-6 text-muted-foreground" />
                                      </div>
-                                     <span className="text-sm text-slate-600 font-medium">Subir foto del remito</span>
-                                     <span className="text-xs text-slate-400 mt-1">Click para adjuntar</span>
+                                     <span className="text-sm text-muted-foreground font-medium">Subir foto del remito</span>
+                                     <span className="text-xs text-muted-foreground mt-1">Click para adjuntar</span>
                                  </label>
                              </>
                          )}

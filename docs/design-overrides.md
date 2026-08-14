@@ -1,55 +1,100 @@
-# TopRentals — Divergencias del Sumar UI Kit
+# Lavadero Berazategui — Divergencias del Sumar UI Kit
 
-`docs/DESIGN.md` es el **Sumar UI Kit canónico**, extraído de Kautapen Group y vendored
-acá como **referencia read-only** (`docs/DESIGN.md:3`). No se edita: su valor es ser un
-espejo exacto del kit del estudio, así una app nueva que lo siga se ve indistinguible.
+`docs/DESIGN.md` es el **Sumar UI Kit canónico**, vendoreado acá como **referencia
+read-only** (`docs/DESIGN.md:3`). No se edita: su valor es ser un espejo exacto del kit
+del estudio.
 
-Este archivo registra dónde **TopRentals se desvía a propósito** del kit. Regla general:
-al crear o modificar UI, **DESIGN.md manda salvo lo listado acá**. Cada override abajo tiene
-qué dice el kit, qué hace TopRentals, dónde vive el cambio real y por qué.
-
----
-
-## 1. Color de marca — navy, no wine
-
-- **Kit**: brand token = wine `#800020`; escala `WINE_SHADES` para series de charts
-  (`docs/DESIGN.md:305`, `docs/DESIGN.md:310`).
-- **TopRentals**: navy `#23313E` (`--brand: 208 27% 19%`). Es el ÚNICO color de marca.
-- **Dónde vive el override**: `index.css` (token `--brand`) y `CLAUDE.md` (sección Diseño / UI).
-  Sin sobrescritura del `.md` del kit — solo del token.
-- **Por qué**: cada cliente cambia únicamente el color de marca; el kit lo prevé como el
-  único parámetro por-cliente (`docs/DESIGN.md:305`).
-
-## 2. Dashboards y charts — método `dataviz`, no el catálogo §10
-
-- **Kit**: el catálogo de charts (§4.6 y §10 de `docs/DESIGN.md`) recomienda **donut/pie con
-  label central** para proporciones (`docs/DESIGN.md:1771`) y colorear series con multi-tint
-  `shade(i)` / `<Cell fill={shade(i)} />` (`docs/DESIGN.md:1768`).
-- **TopRentals**: los dashboards siguen el método de la skill `dataviz`. El **trabajo elige la forma**:
-  - **Magnitud** (comparar valores, ej. días promedio de resolución) → **barra horizontal ordenada**,
-    single hue navy. Nada de multi-tint `shade(i)` sobre categorías nominales (anti-patrón: double-encodea
-    largo de barra como color).
-  - **Part-to-whole** (share por edificio/torre/artículo) → **donut** (o barra apilada 100% en el hero)
-    agrupado a **top-5 + "Otros"** (≤ 6 gajos), con una **paleta categórica jewel afinada al navy**
-    — multi-hue *distinto* (ocean-blue / terracotta / emerald / amber / wine + slate "Otros"), que NO es
-    el multi-tint `shade(i)` prohibido. Nota: los tonos "apagados" fallan el piso de chroma del validador
-    (un daltónico no separa hues casi-grises), por eso son profundos-pero-ricos, no desaturados. Total al
-    centro, % directos + leyenda (identidad nunca solo por color; releva el WARN de contraste),
-    `paddingAngle` = gap de superficie. **Los promedios NO son part-to-whole** (no suman a un total) →
-    barra, nunca torta.
-  - **Cambio en el tiempo** → **línea** (una serie navy, crosshair al hover).
-  - **Validar la paleta con `scripts/checks/validate_palette.js` antes de shipear** (vendoreado del skill
-    `dataviz` para que el equipo pueda re-correrlo): `node scripts/checks/validate_palette.js "<hex,hex,…>" --mode light --surface "#ffffff"`.
-    Los 5 hues del donut (`#215f9c,#cc5a2f,#12906c,#c78f1a,#9a487a`) pasan los gates duros en blanco
-    (CVD adyacente ΔE 9.7, normal-vision 20.5; el amber queda en WARN de contraste, relevado por labels + leyenda).
-- **Dónde vive el override**: `components/dashboard/DashboardView.tsx` — componentes `MagnitudeBar`
-  (barras), `Donut` y `StackedShareBar` (part-to-whole), `TrendLine` + `Sparkline` (evolución) y `HeroCard`;
-  más el delta mes-a-mes **neutro** (`deltaChip` en `utils/dashboardStats.ts`, flecha sin color). La regla está en
-  `CLAUDE.md` (sección Diseño / UI).
-- **Por qué**: convención de equipo — todos los dashboards se hacen con `dataviz`. El catálogo
-  del kit precede a esa decisión; se mantiene el kit intacto y se pisa acá.
+Este archivo registra dónde **Lavadero Berazategui se desvía a propósito**. Regla general:
+al crear o modificar UI, **DESIGN.md manda salvo lo listado acá**. Cada override tiene qué
+dice el kit, qué hacemos nosotros, dónde vive el cambio y por qué.
 
 ---
 
-> Si aparece una divergencia nueva respecto del kit, se agrega como un bloque más en este
-> archivo (misma estructura: kit → TopRentals → dónde → por qué), no editando `docs/DESIGN.md`.
+## 1. Color de marca — azul, no wine
+
+- **Kit**: brand token = wine `#800020` (`docs/DESIGN.md:305`).
+- **Nosotros**: azul `#173F8C` (`--brand: 219 72% 32%`). Es el ÚNICO color de marca.
+- **Dónde vive**: `index.css` (token `--brand`) y `api/templates/emails.ts` (constante `BRAND`).
+  Son los dos únicos lugares, como pide la regla de oro 2 (el tercero, `dashboard/shared.tsx`,
+  no aplica: esta app todavía no tiene charts).
+- **Por qué**: es el azul de la identidad del cliente, ya presente en el logo y en los mails.
+
+## 2. Tailwind 4, no Tailwind 3
+
+- **Kit**: asume Tailwind 3 con `tailwind.config.js`, `@tailwind base/components/utilities`
+  y el plugin `tailwindcss-animate` (`docs/DESIGN.md:193`, `docs/DESIGN.md:1.1`).
+- **Nosotros**: Tailwind 4. Los mismos tokens se declaran con `@theme` en `index.css`, y
+  `tw-animate-css` reemplaza a `tailwindcss-animate`.
+- **Dónde vive**: `index.css`, `package.json`, `vite.config.ts` (plugin `@tailwindcss/vite`).
+- **Por qué**: la app ya corría en v4 y funcionaba. Bajar a v3 es riesgo de build sin ninguna
+  ganancia: los nombres de token y las clases utilitarias del kit son idénticos en ambas
+  versiones — sólo cambia dónde se declaran.
+
+## 3. Sidebar sobre el color de marca (shell de marca)
+
+- **Kit**: el aside es `bg-card` (blanco) con el NavItem activo en `bg-primary` (negro), y la
+  regla de oro 3 dice que `primary` no se toca entre clientes (`docs/DESIGN.md:1562`,
+  `docs/DESIGN.md:1572`, `docs/DESIGN.md:2892`).
+- **Nosotros**: el sidebar usa el **color de marca como fondo** (`bg-sidebar` = `#173F8C`),
+  con texto blanco y el item activo un escalón más claro del mismo hue.
+- **Dónde vive**: tokens `--sidebar*` en `index.css`; `components/Sidebar.tsx`.
+- **Por qué**: es el patrón de las otras apps del estudio con shell de marca (p. ej. RH360,
+  que usa su verde de la misma forma). El resto de los usos de `primary` (botones, focus
+  rings, controles) se mantienen en negro según el kit.
+- **Contraste verificado**: blanco sobre el azul 9.77:1; labels inactivos (`--sidebar-muted`)
+  5.97:1; el item activo se apoya en `52%` de luminosidad — 2.03:1 contra el fondo, que es lo
+  máximo que permite mantener el texto blanco encima en AA (4.83:1). Más claro y el label falla.
+
+## 3b. Sidebar colapsable
+
+- **Kit**: lo pide (`isCollapsed ? "w-16" : "w-64"`, `docs/DESIGN.md:1562`); se documenta acá
+  sólo el detalle propio.
+- **Nosotros**: el estado se persiste en `localStorage` (`sidebar_collapsed`), y un item con
+  submenú, si el rail está colapsado, primero lo expande y después abre el submenú.
+- **Por qué**: un flyout para un único menú con hijos sería un segundo sistema de popovers
+  para un solo caso. En colapsado, los items llevan `title` y el `TooltipHost` global les
+  pone el pill (regla de oro 10).
+
+## 4. Fondo del área de contenido — `bg-muted`, no `bg-secondary/30`
+
+- **Kit**: el área de contenido va sobre `bg-secondary/30` (`docs/DESIGN.md:330`, `docs/DESIGN.md:1568`).
+- **Nosotros**: `bg-muted` sólido.
+- **Dónde vive**: `App.tsx` — el `<main>`.
+- **Por qué**: `secondary` es `#f4f4f5`; al 30% sobre un `background` blanco resuelve a
+  ~`#fbfbfb`, indistinguible del blanco. Las `Card` (que son `bg-card` = blanco puro) se
+  perdían contra el lienzo. Con `bg-muted` sólido las tarjetas recuperan separación sin
+  tocar los tokens.
+
+## 5. Touch targets a 44px en mobile
+
+- **Kit**: controles a `h-9`/`h-10`, y §5.13 reconoce que quedan **por debajo del mínimo
+  táctil de 44px**, dejándolo como deuda a cubrir (`docs/DESIGN.md:2165`).
+- **Nosotros**: los controles primarios son `h-11 md:h-10` — 44px en táctil, altura del kit
+  de `md` para arriba.
+- **Dónde vive**: `components/ui/Button.tsx`, `components/ui/Input.tsx`.
+- **Por qué**: el kit mismo lo recomienda para una app táctil-first, y esta se usa en el
+  piso de la planta desde el celular.
+
+## 6. Loader con el isotipo del cliente
+
+- **Kit**: el `Loader` trae un `<Mountain>` de lucide con el comentario "reemplazar por el
+  ícono/isotipo del cliente" (`docs/DESIGN.md:844`).
+- **Nosotros**: la burbuja del logo (`/favicon.svg`), invertida con
+  `filter: invert(1) hue-rotate(180deg)` para leerse sobre fondo claro.
+- **Dónde vive**: `components/ui/Loader.tsx`.
+- **Por qué**: es exactamente lo que el kit indica hacer; se registra para que quede claro
+  que el `<Mountain>` no se olvidó.
+
+## 7. Escala de z-index propia
+
+- **Kit**: la regla de oro 19 prohíbe los `z-[9999]`/`z-[999999]` del código legacy… pero sus
+  propios snippets de `Toast` y `Tooltip` usan `z-[99999]` y `z-[100000]`
+  (`docs/DESIGN.md:928`, `docs/DESIGN.md:1045`).
+- **Nosotros**: una escala tipada — nav 20 · drawer 50 · modal 60 · confirm 70 · toast 80 · tooltip 90.
+- **Dónde vive**: `components/ui/zLayers.ts`.
+- **Por qué**: se sigue la regla, no el ejemplo. Mismo orden relativo, valores sanos.
+
+---
+
+> Si aparece una divergencia nueva respecto del kit, se agrega como un bloque más acá
+> (misma estructura: kit → nosotros → dónde → por qué), no editando `docs/DESIGN.md`.

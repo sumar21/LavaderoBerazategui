@@ -53,9 +53,7 @@ export const authService = {
   },
 
   async recoverPassword(email: string): Promise<boolean> {
-    const url = 'https://default20435c5a4f504349a09a856bdf1f70.49.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/09815012b246458885575c554b89846e/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ph6gU9LyV9xFxNXbya1J6BdqkTnul25Dy43Ey6EPDsY';
-    
-    const response = await fetch(url, {
+    const response = await fetch('/api/auth/send-credentials', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -68,7 +66,7 @@ export const authService = {
     if (!response.ok) {
         throw new Error(`Error recovering password: ${response.statusText}`);
     }
-    
+
     return true;
   }
 };

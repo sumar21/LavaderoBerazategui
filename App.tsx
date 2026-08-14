@@ -8,12 +8,11 @@ import { Compras } from './pages/Compras';
 import { Aprobaciones } from './pages/Aprobaciones';
 import { Configuracion } from './pages/Configuracion';
 import { Inyecciones } from './pages/Inyecciones'; 
-import { Logo } from './components/ui/Logo';
 import { Modal } from './components/ui/Modal';
 import { Button } from './components/ui/Button';
 import { PurchaseOrder } from '@/types';
 import { permissionsService } from './services/permissions';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Construction } from 'lucide-react';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -204,7 +203,11 @@ export default function App() {
           id: idUnivoco,
           sharepointId: String(oc.id || ''),
           date: oc.Fecha || oc.fecha || '',
-          providerId: providerId, 
+          // The raw OC field sometimes holds the provider NAME instead of its id
+          // (that is why the lookup above also tries `p.proveedor`). Store the
+          // canonical id whenever we resolved one, so filtering by provider —
+          // which compares against the providers list id — actually matches.
+          providerId: provider ? String(provider.id || provider.ID || providerId) : providerId,
           providerName: providerName || 'Desconocido',
           requester: requesterName,
           requesterProfile: getRequesterProfile(requesterName),
@@ -279,7 +282,7 @@ export default function App() {
   const renderContent = () => {
     switch (currentView) {
       case 'home':
-        return <Home onViewChange={setCurrentView} />;
+        return <Home onViewChange={setCurrentView} orders={orders} />;
       case 'stock':
         return <StockOnline />;
       // case 'inyecciones':
@@ -298,73 +301,48 @@ export default function App() {
          return <Configuracion />;
       default:
         return (
-          <div className="flex flex-col items-center justify-center h-full text-slate-400">
-            <div className="text-6xl mb-4 opacity-20">🚧</div>
-            <h2 className="text-xl font-semibold text-slate-600">Módulo en construcción</h2>
-            <p className="mt-2 text-sm text-slate-500">Esta funcionalidad estará disponible pronto.</p>
+          <div className="flex h-full flex-col items-center justify-center p-8 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+              <Construction className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+            </div>
+            <h2 className="text-xl font-semibold text-foreground">Módulo en construcción</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Esta funcionalidad estará disponible pronto.</p>
           </div>
         );
     }
   };
 
   return (
-    <div className="flex h-screen overflow-hidden font-sans text-slate-900 bg-slate-50">
-      <Sidebar 
-        currentView={currentView} 
+    <div className="flex h-screen bg-background text-foreground">
+      <Sidebar
+        currentView={currentView}
         onNavigate={(view) => {
           setCurrentView(view);
           setIsSidebarOpen(false);
-        }} 
-        onLogout={handleLogout} 
+        }}
+        onLogout={handleLogout}
         allowedModules={allowedModules}
         isOpen={isSidebarOpen}
+        onOpen={() => setIsSidebarOpen(true)}
         onClose={() => setIsSidebarOpen(false)}
       />
-      
-      {/* 
-          Main Content Wrapper 
-          Using ml-[220px] to match the exact sidebar width 
-          Background is transparent to show the body dot pattern
-      */}
-      <main className="flex-1 md:ml-[220px] h-screen flex flex-col relative overflow-hidden transition-all duration-300">
-        
-        {/* Session Warning Banner */}
+
+      {/* Content area (§4.5): mt-16 clears the fixed mobile header. */}
+      {/* OVERRIDE: kit says bg-secondary/30, which lands ~#fbfbfb over white and
+          leaves white cards indistinguishable from the canvas. See docs/design-overrides.md. */}
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-muted mt-[calc(4rem+env(safe-area-inset-top))] md:mt-0">
+
         {showSessionWarning && (
-            <div className="bg-amber-500 text-white px-4 py-2 flex items-center justify-center gap-3 shadow-md z-50 animate-in slide-in-from-top duration-300">
-                <AlertTriangle className="w-5 h-5 animate-pulse" />
-                <span className="font-medium text-sm md:text-base text-center">
-                    ¡ATENCIÓN! {minutesRemaining} {minutesRemaining === 1 ? 'Minuto' : 'Minutos'} para que finalice la sesión. Para reiniciar la sesión, cierre y vuelva a iniciar sesión.
-                </span>
-            </div>
+          <div role="alert" className="flex shrink-0 items-center justify-center gap-3 bg-amber-500 px-4 py-2 text-white animate-in slide-in-from-top duration-300">
+            <AlertTriangle className="h-5 w-5 shrink-0 animate-pulse" aria-hidden="true" />
+            <span className="text-center text-sm font-medium md:text-base">
+              ¡ATENCIÓN! {minutesRemaining} {minutesRemaining === 1 ? 'minuto' : 'minutos'} para que finalice la sesión. Para reiniciarla, cerrá y volvé a iniciar sesión.
+            </span>
+          </div>
         )}
 
-        {/* Mobile Header with Ambient Gradients */}
-        <div className="md:hidden bg-[#0B0F19] text-white p-4 flex items-center justify-between shadow-lg z-40 shrink-0 relative overflow-hidden border-b border-slate-800/50">
-            {/* Ambient Glow for Mobile */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute -top-20 -left-20 w-60 h-60 bg-blue-600/20 rounded-full blur-3xl opacity-40"></div>
-                <div className="absolute -bottom-20 -right-20 w-60 h-60 bg-indigo-600/20 rounded-full blur-3xl opacity-40"></div>
-            </div>
-
-            <div className="relative z-10 flex w-full justify-between items-center">
-                <div className="flex items-center gap-3">
-                    <button 
-                      onClick={() => setIsSidebarOpen(true)}
-                      className="p-2 -ml-2 hover:bg-white/10 rounded-xl transition-colors"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-                    </button>
-                    <Logo size="sm" variant="light" />
-                </div>
-                <button className="text-xs font-bold bg-white/10 hover:bg-red-500/20 hover:text-red-400 backdrop-blur-sm border border-white/10 px-4 py-2 rounded-xl transition-all active:scale-95" onClick={handleLogout}>
-                    Salir
-                </button>
-            </div>
-        </div>
-        
-        {/* Content Area - Full Height, No Scroll on this wrapper */}
-        <div className="flex-1 h-full relative overflow-hidden">
-             {renderContent()}
+        <div className="relative min-h-0 flex-1 overflow-hidden">
+          {renderContent()}
         </div>
       </main>
 
@@ -385,7 +363,7 @@ export default function App() {
           </>
         }
       >
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           Tendrás que volver a ingresar tus credenciales para acceder al sistema.
         </p>
       </Modal>

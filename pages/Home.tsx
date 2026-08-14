@@ -1,246 +1,251 @@
-
-import React, { useEffect, useState } from 'react';
-import { 
-    Shirt, 
-    TrendingUp, 
-    AlertTriangle, 
-    Clock, 
-    ArrowRight, 
-    Package,
-    Activity,
-    Truck,
-    ShoppingCart,
-    Droplets
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Shirt, TrendingUp, AlertTriangle, Clock, ArrowRight, ShoppingCart,
+  AlertCircle, Check, PackageSearch, Inbox,
 } from 'lucide-react';
+import { Card, CardContent, cn } from '../components/ui/UIComponents';
+import { KpiCard, type Tone as KpiTone } from '../components/ui/KpiCard';
+import { StatusBadge } from '../components/ui/StatusBadge';
+import { Loader } from '../components/ui/Loader';
 import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
+import { PageHeader } from '../components/ui/PageHeader';
 import { stockService } from '../services/stockService';
-import { purchaseService } from '../services/purchaseService';
-import { productionService } from '../services/productionService';
-import { MovimientoStock, InyeccionPendiente } from '@/types';
+import { Stock, PurchaseOrder } from '@/types';
+import { capitalizeFirst } from '../utils/text';
 
 interface HomeProps {
-    onViewChange?: (view: string) => void;
+  onViewChange?: (view: string) => void;
+  /**
+   * Already-resolved orders from App. Home used to fetch raw ones itself and
+   * print `Proveedor`, which is the provider ID — the name only exists after
+   * App looks it up against the providers list.
+   */
+  orders: PurchaseOrder[];
 }
 
-export const Home: React.FC<HomeProps> = ({ onViewChange }) => {
-  const [totalStock, setTotalStock] = useState(0);
-  const [lowStockCount, setLowStockCount] = useState(0);
-  const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
-  const [recentInjections, setRecentInjections] = useState<InyeccionPendiente[]>([]);
-  const [injectionsActive, setInjectionsActive] = useState(false);
+const QUICK_ACTIONS = [
+  { id: 'stock', label: 'Cargar stock', hint: 'Nuevo ingreso', icon: TrendingUp },
+  { id: 'compras', label: 'Nueva compra', hint: 'Crear orden', icon: ShoppingCart },
+  { id: 'aprobaciones', label: 'Aprobaciones', hint: 'Revisar pendientes', icon: Check },
+];
+
+const LOW_STOCK_THRESHOLD = 50;
+const LIST_SIZE = 5;
+
+/** SharePoint hands back either casing depending on the list. */
+const qtyOf = (item: any) => {
+  const qty = parseFloat(item?.stockFinal || item?.StockFinal || '0');
+  return Number.isNaN(qty) ? 0 : qty;
+};
+
+const SectionHeading: React.FC<{ children: React.ReactNode; action?: React.ReactNode }> = ({ children, action }) => (
+  <div className="mb-3 flex items-center justify-between gap-3">
+    <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <span className="h-3.5 w-1 rounded-full bg-brand" aria-hidden="true" />
+      {children}
+    </h2>
+    {action}
+  </div>
+);
+
+const EmptyRow: React.FC<{ icon: React.ElementType; children: React.ReactNode }> = ({ icon: Icon, children }) => (
+  <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+    <Icon className="h-6 w-6 text-muted-foreground/50" aria-hidden="true" />
+    <p className="text-xs text-muted-foreground">{children}</p>
+  </div>
+);
+
+export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
+  const [stock, setStock] = useState<Stock[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch data with individual error handling to prevent one failure from breaking the entire page
-        const stockPromise = stockService.getStock().catch(err => {
-            console.error("Failed to fetch stock:", err);
-            return [];
-        });
-        
-        const ordersPromise = purchaseService.getOrdenesCompra().catch(err => {
-            console.error("Failed to fetch orders:", err);
-            return [];
-        });
-        
-        const injectionsPromise = productionService.getInyeccionesPendientes().catch(err => {
-            console.error("Failed to fetch injections:", err);
-            return [];
-        });
-
-        const [stock, orders, injections] = await Promise.all([
-          stockPromise,
-          ordersPromise,
-          injectionsPromise
-        ]);
-
-        // Process Stock
-        const activeStock = stock.filter(i => i.status === 'Activo' || i.Status === 'Activo');
-        const calculatedTotalStock = activeStock.reduce((acc, item) => {
-            const qty = parseFloat(item.stockFinal || item.StockFinal || '0');
-            return acc + (isNaN(qty) ? 0 : qty);
-        }, 0);
-        setTotalStock(calculatedTotalStock);
-
-        const calculatedLowStock = activeStock.filter(i => {
-            const qty = parseFloat(i.stockFinal || i.StockFinal || '0');
-            return !isNaN(qty) && qty < 50;
-        }).length;
-        setLowStockCount(calculatedLowStock);
-
-        // Process Orders
-        const pending = orders.filter(o => {
-            const status = o.Status || o.status;
-            return status === 'Pendiente' || status === 'Pendiente Aprobacion';
-        }).length;
-        setPendingOrdersCount(pending);
-
-        // Process Injections
-        setRecentInjections(injections.slice(0, 5));
-        setInjectionsActive(injections.length > 0);
-
-      } catch (error) {
-        console.error("Error fetching home data", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  const timeAgo = (dateStr: string, timeStr: string) => {
-    if (!dateStr) return '';
+  const fetchData = async () => {
+    setIsLoading(true);
+    setError(false);
     try {
-        // Try to parse DD/MM/YYYY
-        const parts = dateStr.split('/');
-        if (parts.length === 3) {
-            const [day, month, year] = parts.map(Number);
-            const now = new Date();
-            const date = new Date(year, month - 1, day);
-            
-            if (timeStr) {
-                const [hours, minutes] = timeStr.split(':').map(Number);
-                date.setHours(hours || 0, minutes || 0);
-            }
-
-            const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-            
-            if (diffInHours < 1) return 'Hace momentos';
-            if (diffInHours < 24) return `Hace ${diffInHours}h`;
-            return `Hace ${Math.floor(diffInHours / 24)}d`;
-        }
-        return dateStr;
-    } catch (e) {
-        return dateStr;
+      setStock(await stockService.getStock());
+    } catch (err) {
+      console.error('Error fetching home data', err);
+      setError(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  useEffect(() => { fetchData(); }, []);
+
+  const stats = useMemo(() => {
+    const active = stock.filter(i => (i.status ?? (i as any).Status) === 'Activo');
+    const low = active
+      .filter(i => qtyOf(i) < LOW_STOCK_THRESHOLD)
+      .sort((a, b) => qtyOf(a) - qtyOf(b));
+
+    return {
+      total: active.reduce((acc, i) => acc + qtyOf(i), 0),
+      low,
+      // Same test Aprobaciones filters by, so the KPI and that screen agree.
+      pending: orders.filter(o => {
+        const s = (o.status ?? '').toUpperCase();
+        return s === 'PENDIENTE' || s.includes('PENDIENTE APROBACION') || s.includes('PENDIENTE_APROBACION') || s.includes('PENDIENTE APROBACIÓN');
+      }).length,
+      // Newest first: IDs are sequential, and dates arrive as dd/mm/yyyy strings.
+      recent: [...orders].sort((a, b) => Number(b.sharepointId ?? 0) - Number(a.sharepointId ?? 0)).slice(0, LIST_SIZE),
+    };
+  }, [stock, orders]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center p-6">
+        <Loader text="Cargando panel…" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center p-6 text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+          <AlertCircle className="h-6 w-6 text-red-500" aria-hidden="true" />
+        </div>
+        <h2 className="text-lg font-semibold">No pudimos cargar el panel</h2>
+        <p className="mb-4 mt-1 text-sm text-muted-foreground">Revisá tu conexión e intentá de nuevo.</p>
+        <Button variant="outline" onClick={fetchData}>Reintentar</Button>
+      </div>
+    );
+  }
+
+  // Built here (not inline) so the tone ternaries keep their union type.
+  const KPIS: Array<{ icon: React.ElementType; label: string; value: React.ReactNode; sub: string; tone: KpiTone; view: string }> = [
+    // Zero is good news on the two alert tiles, so they go green rather than
+    // grey — a colourless KPI reads as "no data", not as "nothing to do".
+    { icon: Shirt, label: 'Stock total', value: stats.total.toLocaleString('es-AR'), sub: 'unidades activas', tone: 'brand', view: 'stock' },
+    { icon: AlertTriangle, label: 'Stock bajo', value: stats.low.length, sub: `menos de ${LOW_STOCK_THRESHOLD} un.`, tone: stats.low.length > 0 ? 'warning' : 'success', view: 'stock' },
+    { icon: Clock, label: 'Aprobaciones', value: stats.pending, sub: stats.pending > 0 ? 'órdenes pendientes' : 'todo al día', tone: stats.pending > 0 ? 'warning' : 'success', view: 'aprobaciones' },
+    { icon: ShoppingCart, label: 'Órdenes', value: orders.length, sub: 'en el sistema', tone: 'info', view: 'compras' },
+  ];
+
   return (
-    <div className="h-full flex flex-col p-3 sm:p-6 space-y-4 sm:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-[1800px] mx-auto overflow-y-auto md:overflow-hidden bg-slate-50">
-      
-      {/* 1. Header (Compact) */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end shrink-0 gap-2">
-        <div>
-           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white border border-slate-200 shadow-sm mb-1 sm:mb-2">
-                <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${isLoading ? 'bg-amber-500' : 'bg-emerald-500'} animate-pulse`}></span>
-                <span className="text-[9px] sm:text-[10px] font-bold text-slate-600 tracking-wide uppercase">
-                    {isLoading ? 'Cargando...' : 'Sistema Operativo'}
-                </span>
-           </div>
-           <h1 className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-none">
-             Panel de Control
-           </h1>
-        </div>
-      </div>
+    <div className="h-full overflow-y-auto p-3 md:p-6">
+      <div className="mx-auto max-w-[1400px] space-y-5">
 
-      {/* 2. KPI Cards (Bento Grid Top) - Fixed Height */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 shrink-0">
-          {/* Stock KPI */}
-          <div 
-            onClick={() => onViewChange?.('stock')}
-            className="group relative bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all cursor-pointer overflow-hidden"
-          >
-              <div className="absolute top-0 right-0 p-3 sm:p-5 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
-                  <Shirt className="w-10 sm:w-20 h-10 sm:h-20 text-blue-600" />
-              </div>
-              <div className="flex flex-col h-full justify-between relative z-10">
-                  <div className="p-1.5 bg-blue-50 w-fit rounded-lg sm:rounded-xl mb-1.5 sm:mb-3">
-                      <Shirt className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-blue-600" />
-                  </div>
-                  <div>
-                      <p className="text-[9px] sm:text-xs font-bold text-slate-500 uppercase tracking-wide">Stock Total</p>
-                      <h3 className="text-base sm:text-2xl font-bold text-slate-900">
-                        {isLoading ? '...' : totalStock.toLocaleString()} <span className="text-[9px] sm:text-xs font-medium text-slate-400">un.</span>
-                      </h3>
-                  </div>
-              </div>
-          </div>
+        <PageHeader title="Panel de control" subtitle="Resumen de stock, compras y aprobaciones." />
 
-          {/* Low Stock Warning */}
-          <div 
-            onClick={() => onViewChange?.('stock')}
-            className="group relative bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all cursor-pointer overflow-hidden"
-          >
-               <div className="absolute top-0 right-0 p-3 sm:p-5 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
-                  <AlertTriangle className="w-10 sm:w-20 h-10 sm:h-20 text-amber-600" />
-              </div>
-              <div className="flex flex-col h-full justify-between relative z-10">
-                  <div className="p-1.5 bg-amber-50 w-fit rounded-lg sm:rounded-xl mb-1.5 sm:mb-3">
-                      <AlertTriangle className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-amber-600" />
-                  </div>
-                  <div>
-                      <p className="text-[9px] sm:text-xs font-bold text-slate-500 uppercase tracking-wide">Alerta Stock</p>
-                      <h3 className="text-base sm:text-2xl font-bold text-slate-900">
-                        {isLoading ? '...' : lowStockCount} <span className="text-[9px] sm:text-xs font-medium text-slate-400">ítems</span>
-                      </h3>
-                  </div>
-              </div>
-          </div>
-
-          {/* Pending Orders */}
-          <div 
-             onClick={() => onViewChange?.('aprobaciones')}
-             className="group relative bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all cursor-pointer overflow-hidden"
-          >
-               <div className="absolute top-0 right-0 p-3 sm:p-5 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
-                  <Clock className="w-10 sm:w-20 h-10 sm:h-20 text-purple-600" />
-              </div>
-              <div className="flex flex-col h-full justify-between relative z-10">
-                  <div className="p-1.5 bg-purple-50 w-fit rounded-lg sm:rounded-xl mb-1.5 sm:mb-3">
-                      <Clock className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-purple-600" />
-                  </div>
-                  <div>
-                      <p className="text-[9px] sm:text-xs font-bold text-slate-500 uppercase tracking-wide">Aprobaciones</p>
-                      <h3 className="text-base sm:text-2xl font-bold text-slate-900">
-                        {isLoading ? '...' : pendingOrdersCount} <span className="text-[9px] sm:text-xs font-medium text-slate-400">pend.</span>
-                      </h3>
-                  </div>
-              </div>
-          </div>
-          
-
-      </div>
-
-      {/* 3. Main Content Grid - Flexible Height */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 flex-1 min-h-0">
-        
-        {/* Actions (Fixed List) */}
-        <div className="flex flex-col gap-3 sm:gap-4 h-full overflow-y-auto custom-scrollbar pb-4">
-            <h3 className="text-[10px] sm:text-sm font-bold text-slate-500 uppercase tracking-widest px-1">Accesos Rápidos</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
-                <button 
-                    onClick={() => onViewChange?.('stock')}
-                    className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-slate-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_4px_20px_rgb(0,0,0,0.05)] hover:border-blue-200 transition-all group text-left"
-                >
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                        <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                    <div className="flex-1">
-                        <h4 className="font-bold text-slate-900 text-xs sm:text-sm">Cargar Stock</h4>
-                        <p className="text-[9px] sm:text-[10px] text-slate-500">Nuevo ingreso</p>
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
-                </button>
-
-                <button 
-                    onClick={() => onViewChange?.('compras')}
-                    className="flex items-center gap-3 sm:gap-4 p-3.5 sm:p-4 bg-white rounded-xl sm:rounded-2xl border border-slate-100 shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_4px_20px_rgb(0,0,0,0.05)] hover:border-indigo-200 transition-all group text-left"
-                >
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                        <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </div>
-                    <div className="flex-1">
-                        <h4 className="font-bold text-slate-900 text-xs sm:text-sm">Nueva Compra</h4>
-                        <p className="text-[9px] sm:text-[10px] text-slate-500">Crear orden</p>
-                    </div>
-                     <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-300 group-hover:text-indigo-500 transition-colors" />
-                </button>
+        {/* KPI row (§5.3), entering one after the other */}
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          {KPIS.map((kpi, i) => (
+            <div key={kpi.label} className="stagger-in" style={{ '--stagger-index': i } as React.CSSProperties}>
+              <KpiCard
+                icon={kpi.icon}
+                label={kpi.label}
+                value={kpi.value}
+                sub={kpi.sub}
+                tone={kpi.tone}
+                onClick={() => onViewChange?.(kpi.view)}
+              />
             </div>
+          ))}
         </div>
 
+        {/* Two working lists — the panel's actual value, not just counters */}
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 stagger-in" style={{ '--stagger-index': 4 } as React.CSSProperties}>
+          <section>
+            <SectionHeading
+              action={
+                stats.low.length > LIST_SIZE ? (
+                  <button type="button" onClick={() => onViewChange?.('stock')} className="text-xs font-medium text-brand hover:underline">
+                    Ver los {stats.low.length}
+                  </button>
+                ) : undefined
+              }
+            >
+              Stock crítico
+            </SectionHeading>
+            <Card>
+              <CardContent className="p-0">
+                {stats.low.length === 0 ? (
+                  <EmptyRow icon={PackageSearch}>Ningún artículo por debajo de {LOW_STOCK_THRESHOLD} unidades.</EmptyRow>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {stats.low.slice(0, LIST_SIZE).map(item => {
+                      const qty = qtyOf(item);
+                      return (
+                        <li key={item.id} className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/60">
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">{capitalizeFirst(item.concat || item.articulo || item.sku)}</p>
+                            <p className="truncate text-[11px] text-muted-foreground">{item.subdeposito || item.sku}</p>
+                          </div>
+                          <span className={cn('shrink-0 text-sm font-bold tabular-nums', qty === 0 ? 'text-red-600' : 'text-amber-600')}>
+                            {qty.toLocaleString('es-AR')}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+
+          <section>
+            <SectionHeading
+              action={
+                <button type="button" onClick={() => onViewChange?.('compras')} className="text-xs font-medium text-brand hover:underline">
+                  Ver todas
+                </button>
+              }
+            >
+              Últimas órdenes
+            </SectionHeading>
+            <Card>
+              <CardContent className="p-0">
+                {stats.recent.length === 0 ? (
+                  <EmptyRow icon={Inbox}>Todavía no hay órdenes de compra.</EmptyRow>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {stats.recent.map(order => (
+                      <li key={order.id} className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/60">
+                        <span className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">#{order.sharepointId}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-[13px] font-medium">{capitalizeFirst(order.providerName) || 'Sin proveedor'}</p>
+                          <p className="truncate text-[11px] text-muted-foreground">{order.date}</p>
+                        </div>
+                        {order.status && <StatusBadge status={order.status} className="shrink-0" />}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            </Card>
+          </section>
+        </div>
+
+        <section className="stagger-in" style={{ '--stagger-index': 5 } as React.CSSProperties}>
+          <SectionHeading>Accesos rápidos</SectionHeading>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {QUICK_ACTIONS.map(action => (
+              <button
+                key={action.id}
+                type="button"
+                onClick={() => onViewChange?.(action.id)}
+                className="group rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <Card className="border-border transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-lg hover:shadow-brand/10 active:scale-[0.99]">
+                  <CardContent className="flex items-center gap-3 p-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand transition-colors group-hover:bg-brand group-hover:text-brand-foreground">
+                      <action.icon className="h-4 w-4" aria-hidden="true" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">{action.label}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">{action.hint}</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                  </CardContent>
+                </Card>
+              </button>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

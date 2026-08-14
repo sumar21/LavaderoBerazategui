@@ -29,8 +29,14 @@ CLIENT_ID=          # Azure AD app registration
 TENANT_ID=
 CLIENT_SECRET=
 JWT_SECRET=         # signing key for the app's own session tokens
+MAIL_SENDER=        # mailbox the app sends from, e.g. info@lavaderoberazategui.com.ar
+MAIL_CC_ORDENES=    # optional; semicolon-separated Cc for purchase order emails
+MAIL_BCC_ORDENES=   # optional; semicolon-separated Bcc for purchase order emails
 PORT=8080           # local API port; Vercel provides its own
 ```
+
+Sending email needs the **`Mail.Send` application permission** on the Azure AD app
+registration, with admin consent granted.
 
 `.env` is gitignored. Never commit it — this repository is public.
 
@@ -57,6 +63,7 @@ To run one side on its own, use `npm run dev:api` or `npm run dev:web`.
 | `npm run build` | Production build of the frontend into `dist/` |
 | `npm run preview` | Serves the built frontend (no API) |
 | `npm run lint` | Typechecks the frontend and the API |
+| `npm run mail:preview` | Renders both email templates to `preview-*.html` and checks them. Sends nothing. |
 
 ## Deployment
 

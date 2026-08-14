@@ -25,13 +25,13 @@ export const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = (
         <div className="bg-red-100 p-3 rounded-full">
             <AlertTriangle className="w-8 h-8 text-red-600" />
         </div>
-        <p className="text-slate-600">
+        <p className="text-muted-foreground">
           La orden pasará a estado <span className="font-bold">"Baja"</span> y no será visible en el gestor principal.
         </p>
       </div>
-      <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+      <div className="flex justify-end gap-3 pt-4 border-t border-border">
         <Button variant="outline" onClick={onClose}>Cancelar</Button>
-        <Button variant="danger" onClick={onConfirm}>Confirmar Baja</Button>
+        <Button variant="destructive" onClick={onConfirm}>Confirmar Baja</Button>
       </div>
     </Modal>
   );

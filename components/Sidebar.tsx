@@ -1,7 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
-import { Home, Shirt, LogOut, ShoppingCart, Check, Settings, ChevronRight, LayoutDashboard, ChevronDown, Package, Users } from 'lucide-react';
+import {
+  Home, Shirt, ShoppingCart, Check, Settings, ChevronDown, Package, Users,
+  LogOut, Menu, X, ChevronLeft, ChevronRight,
+} from 'lucide-react';
 import { Logo } from './ui/Logo';
+import { cn, useModalAnimation } from './ui/UIComponents';
+import { Z } from './ui/zLayers';
+import { useUserProfile } from './useUserProfile';
+import { capitalizeFirst } from '../utils/text';
 
 interface SidebarProps {
   currentView: string;
@@ -10,222 +16,288 @@ interface SidebarProps {
   allowedModules: string[];
   isOpen?: boolean;
   onClose?: () => void;
+  onOpen?: () => void;
 }
 
 interface MenuItem {
-    id: string;
-    label: string;
-    icon: React.ElementType;
-    subItems?: { id: string; label: string; icon?: React.ElementType }[];
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  subItems?: { id: string; label: string; icon?: React.ElementType }[];
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, onLogout, allowedModules, isOpen, onClose }) => {
+const MENU_ITEMS: MenuItem[] = [
+  { id: 'home', label: 'Home', icon: Home },
+  { id: 'stock', label: 'Stock Online', icon: Shirt },
+  { id: 'compras', label: 'Compras', icon: ShoppingCart },
+  { id: 'aprobaciones', label: 'Aprobaciones', icon: Check },
+  {
+    id: 'config',
+    label: 'Configuración',
+    icon: Settings,
+    subItems: [
+      { id: 'config-proveedores', label: 'Proveedores', icon: Users },
+      { id: 'config-articulos', label: 'Artículos', icon: Package },
+    ],
+  },
+];
+
+export const MODULE_LABELS: Record<string, string> = {
+  home: 'Home',
+  stock: 'Stock Online',
+  compras: 'Compras',
+  aprobaciones: 'Aprobaciones',
+  config: 'Configuración',
+  'config-proveedores': 'Proveedores',
+  'config-articulos': 'Artículos',
+};
+
+const COLLAPSE_KEY = 'sidebar_collapsed';
+
+const normalize = (str: string) =>
+  str.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '').toUpperCase();
+
+/**
+ * Nav item on the brand-coloured shell. Active is a lighter step of the same
+ * hue (`sidebar-accent`) plus a left indicator bar; idle labels are a pale tint
+ * that still clears contrast on the blue.
+ */
+const navItemClass = (active: boolean, collapsed: boolean) =>
+  cn(
+    'group relative flex w-full items-center rounded-md text-sm font-medium transition-colors',
+    collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5 md:py-2',
+    active
+      ? 'bg-sidebar-accent text-sidebar-foreground shadow-sm'
+      : 'text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground'
+  );
+
+/** Left indicator bar on the active item. Decorative — state is already conveyed by colour + aria. */
+const ActiveBar: React.FC = () => (
+  <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-sidebar-foreground" aria-hidden="true" />
+);
+
+export const Sidebar: React.FC<SidebarProps> = ({
+  currentView, onNavigate, onLogout, allowedModules, isOpen = false, onClose, onOpen,
+}) => {
   const [openSubMenus, setOpenSubMenus] = useState<string[]>([]);
-  const [userProfile, setUserProfile] = useState<{name: string, role: string} | null>(null);
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === '1');
+  const drawer = useModalAnimation(isOpen);
+  const user = useUserProfile();
 
-  useEffect(() => {
-    const userDataStr = localStorage.getItem('user_data');
-    if (userDataStr) {
-      try {
-        const userData = JSON.parse(userDataStr);
-        setUserProfile({
-          name: userData.name || userData.email || userData.username || 'User',
-          role: userData.perfil || userData.role || 'Usuario'
-        });
-      } catch (e) {
-        console.error('Error parsing user data', e);
-      }
-    }
-  }, []);
+  useEffect(() => { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0'); }, [collapsed]);
 
-  const menuItems: MenuItem[] = [
-    { id: 'home', label: 'Home', icon: Home },
-    { id: 'stock', label: 'Stock Online', icon: Shirt },
-    // { id: 'inyecciones', label: 'Inyecciones', icon: LogOut },
-    { id: 'compras', label: 'Compras', icon: ShoppingCart },
-    { id: 'aprobaciones', label: 'Aprobaciones', icon: Check }, 
-    { 
-        id: 'config', 
-        label: 'Configuración', 
-        icon: Settings,
-        subItems: [
-            { id: 'config-proveedores', label: 'Proveedores', icon: Users },
-            { id: 'config-articulos', label: 'Artículos', icon: Package }
-        ]
-    },
-  ];
-
-  // Filter menu items based on permissions
-  const filteredMenuItems = menuItems.filter(item => {
-    // Always show Home
+  const items = MENU_ITEMS.filter(item => {
     if (item.id === 'home') return true;
-    
-    // Normalize function to remove accents, spaces and convert to uppercase
-    const normalize = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "").toUpperCase();
-
-    const normalizedLabel = normalize(item.label);
-    
-    // Check if any allowed module matches the label
-    const isAllowed = allowedModules.some(m => normalize(m) === normalizedLabel);
-    
-    // Special case for 'Configuración' which might be 'Configuracion' or 'Administracion' in DB
     if (item.id === 'config') {
-        const configAllowed = allowedModules.some(m => normalize(m) === 'CONFIGURACION');
-        const adminAllowed = allowedModules.some(m => normalize(m) === 'ADMINISTRACION');
-        return configAllowed || adminAllowed;
+      return allowedModules.some(m => ['CONFIGURACION', 'ADMINISTRACION'].includes(normalize(m)));
     }
-    
-    return isAllowed;
+    return allowedModules.some(m => normalize(m) === normalize(item.label));
   });
 
-  // Auto-expand menu if current view is a child
   useEffect(() => {
-    filteredMenuItems.forEach(item => {
-        if (item.subItems && item.subItems.some(sub => sub.id === currentView)) {
-            if (!openSubMenus.includes(item.id)) {
-                setOpenSubMenus(prev => [...prev, item.id]);
-            }
-        }
+    items.forEach(item => {
+      if (item.subItems?.some(sub => sub.id === currentView) && !openSubMenus.includes(item.id)) {
+        setOpenSubMenus(prev => [...prev, item.id]);
+      }
     });
-  }, [currentView, allowedModules]); // Add allowedModules dependency
+  }, [currentView, allowedModules]);
 
-  const toggleSubMenu = (id: string) => {
-      setOpenSubMenus(prev => 
-          prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-      );
-  };
+  const toggleSubMenu = (id: string) =>
+    setOpenSubMenus(prev => (prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]));
+
+
+  /** `isCollapsed` only ever applies to the desktop aside — the drawer is always full. */
+  const renderNav = (isCollapsed: boolean) => (
+    <>
+      {/* Collapsed, the toggle stacks under the logo but stays INSIDE this band,
+          above the divider — the shape the studio's other apps use. */}
+      <div className={cn('flex shrink-0 border-b border-sidebar-border', isCollapsed ? 'flex-col items-center gap-1 px-2 py-3' : 'h-16 items-center justify-between px-4')}>
+        {isCollapsed ? (
+          <>
+            <img src="/favicon.svg" alt="Lavadero Berazategui" className="h-8 w-8 object-contain" />
+            <button
+              type="button"
+              onClick={() => setCollapsed(false)}
+              title="Expandir menú"
+              aria-label="Expandir menú"
+              className="flex w-full justify-center rounded-md py-1.5 text-sidebar-muted transition-colors hover:bg-white/10 hover:text-sidebar-foreground"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </>
+        ) : (
+          <Logo variant="light" size="sm" />
+        )}
+
+        {/* Collapse toggle sits beside the logo — desktop only. */}
+        {!isCollapsed && (
+          <button
+            type="button"
+            onClick={() => setCollapsed(true)}
+            aria-label="Contraer menú"
+            className="hidden rounded-md p-1.5 text-sidebar-muted transition-colors hover:bg-white/10 hover:text-sidebar-foreground md:block"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        )}
+
+        {onClose && !isCollapsed && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar menú"
+            className="md:hidden flex h-11 w-11 items-center justify-center rounded-md text-sidebar-muted transition-colors hover:bg-white/10 hover:text-sidebar-foreground"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+        {!isCollapsed && (
+          <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-muted/70">
+            Menú principal
+          </p>
+        )}
+
+        {items.map(item => {
+          const hasSubItems = !!item.subItems;
+          const childActive = hasSubItems && item.subItems!.some(sub => sub.id === currentView);
+          const active = currentView === item.id || childActive;
+          const expanded = openSubMenus.includes(item.id);
+
+          return (
+            <div key={item.id}>
+              <button
+                type="button"
+                // Collapsed + submenu: open the rail first, then the submenu — a
+                // flyout would be a second popover system for one menu.
+                onClick={() => {
+                  if (!hasSubItems) return onNavigate(item.id);
+                  if (isCollapsed) setCollapsed(false);
+                  toggleSubMenu(item.id);
+                }}
+                aria-expanded={hasSubItems ? expanded : undefined}
+                title={isCollapsed ? item.label : undefined}
+                className={navItemClass(active && !hasSubItems, isCollapsed)}
+              >
+                {active && !hasSubItems && <ActiveBar />}
+                <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {!isCollapsed && (
+                  <>
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {hasSubItems && (
+                      <ChevronDown className={cn('h-4 w-4 shrink-0 transition-transform', expanded && 'rotate-180')} aria-hidden="true" />
+                    )}
+                  </>
+                )}
+              </button>
+
+              {hasSubItems && expanded && !isCollapsed && (
+                <div className="mt-1 space-y-1 pl-4">
+                  {item.subItems!.map(sub => (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => onNavigate(sub.id)}
+                      className={navItemClass(currentView === sub.id, false)}
+                    >
+                      {currentView === sub.id && <ActiveBar />}
+                      {sub.icon && <sub.icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+                      <span className="flex-1 text-left">{sub.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </nav>
+
+      <div className="shrink-0 border-t border-sidebar-border p-3">
+        <div className={cn('mb-2 flex items-center', isCollapsed ? 'justify-center' : 'gap-3 px-1')}>
+          <div
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-semibold text-sidebar-foreground"
+            title={isCollapsed ? `${capitalizeFirst(user.name)} · ${user.role}` : undefined}
+          >
+            {user.initials}
+          </div>
+          {!isCollapsed && (
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate text-sm font-semibold leading-tight text-sidebar-foreground">{capitalizeFirst(user.name)}</span>
+              <span className="truncate text-[11px] text-sidebar-muted">{user.role}</span>
+            </div>
+          )}
+        </div>
+
+        {/* red-300 rather than `destructive`: #ef4444 on the brand blue measures
+            2.60:1 — below the 4.5 AA floor — while red-300 reaches 5.15:1. */}
+        <button
+          type="button"
+          onClick={onLogout}
+          title={isCollapsed ? 'Cerrar sesión' : undefined}
+          className={cn(
+            'flex w-full items-center rounded-md text-sm font-medium text-red-300 transition-colors hover:bg-red-400/15 hover:text-red-200',
+            isCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5 md:py-2'
+          )}
+        >
+          <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
+          {!isCollapsed && 'Cerrar sesión'}
+        </button>
+
+        {!isCollapsed && <p className="mt-2 px-3 text-[10px] text-sidebar-muted/60">v20251223_1.0.10</p>}
+      </div>
+    </>
+  );
 
   return (
     <>
-      {/* Mobile Backdrop */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
-          onClick={onClose}
-        />
+      {/* Fixed mobile header (§5.10) */}
+      <header
+        className="fixed inset-x-0 top-0 flex h-[calc(4rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] items-center justify-between border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground md:hidden"
+        style={{ zIndex: Z.nav }}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={onOpen}
+            aria-label="Abrir menú"
+            className="-ml-2 flex h-11 w-11 items-center justify-center rounded-md transition-colors hover:bg-white/10"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+          <span className="truncate text-lg font-bold">{MODULE_LABELS[currentView] ?? 'Lavadero'}</span>
+        </div>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-card/15 text-xs font-semibold">
+          {user.initials}
+        </div>
+      </header>
+
+      {/* Desktop aside */}
+      <aside
+        className={cn(
+          'hidden h-screen shrink-0 flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-300 ease-in-out md:flex',
+          collapsed ? 'w-16' : 'w-64'
+        )}
+        style={{ zIndex: Z.nav }}
+      >
+        {renderNav(collapsed)}
+      </aside>
+
+      {/* Mobile drawer (§5.10) */}
+      {drawer.visible && (
+        <div className="fixed inset-0 md:hidden" style={{ zIndex: Z.drawer }}>
+          <div className={cn('absolute inset-0 bg-black/60 backdrop-blur-sm', drawer.overlayClass)} onClick={onClose} />
+          <div
+            className={cn(
+              'absolute left-0 top-0 flex h-full w-[280px] max-w-[85vw] flex-col bg-sidebar text-sidebar-foreground shadow-2xl',
+              isOpen ? 'drawer-enter-left' : 'drawer-exit-left'
+            )}
+          >
+            {renderNav(false)}
+          </div>
+        </div>
       )}
-
-      <div className={`flex flex-col w-[260px] md:w-[220px] h-screen fixed left-0 top-0 z-50 md:z-30 transition-all duration-300 ease-in-out transform ${
-        isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-      }`}>
-      
-      {/* Background & Ambient Lighting */}
-      <div className="absolute inset-0 bg-[#0B0F19] border-r border-slate-800/50 overflow-hidden">
-         {/* Top-Left Blue Glow */}
-         <div className="absolute top-[-10%] -left-1/2 w-[150%] h-[50%] bg-gradient-to-br from-blue-600/20 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none" />
-         {/* Bottom-Right Indigo Glow */}
-         <div className="absolute bottom-[-10%] -right-1/2 w-[150%] h-[50%] bg-gradient-to-tl from-indigo-600/20 to-transparent rounded-full blur-3xl opacity-60 pointer-events-none" />
-         {/* Noise Texture */}
-         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 brightness-100 contrast-150 pointer-events-none"></div>
-      </div>
-      
-      {/* Content */}
-      <div className="relative flex flex-col h-full z-10 py-6 px-4">
-        
-        {/* Logo */}
-        <div className="mb-10 px-2 pt-2 flex justify-between items-center">
-             <Logo size="lg" variant="light" showText={false} />
-             {onClose && (
-               <button 
-                 onClick={onClose}
-                 className="md:hidden p-2 text-slate-400 hover:text-white transition-colors"
-               >
-                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-               </button>
-             )}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex-1 space-y-1 overflow-y-auto custom-scrollbar">
-          <p className="px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Menu Principal</p>
-          {filteredMenuItems.map((item) => {
-            const hasSubItems = !!item.subItems;
-            // Parent is active if current view matches ID OR one of its children matches current view
-            const isParentActive = currentView === item.id || (hasSubItems && item.subItems?.some(sub => sub.id === currentView));
-            const isOpen = openSubMenus.includes(item.id);
-
-            return (
-              <div key={item.id}>
-                  <button
-                    onClick={() => {
-                        if (hasSubItems) {
-                            toggleSubMenu(item.id);
-                        } else {
-                            onNavigate(item.id);
-                        }
-                    }}
-                    className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 ease-out relative ${
-                      (isParentActive && !hasSubItems)
-                        ? 'bg-blue-600 shadow-lg shadow-blue-900/40 text-white' 
-                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
-                    } ${isOpen && hasSubItems ? 'text-slate-200 bg-white/5' : ''}`}
-                  >
-                     <div className="flex items-center gap-3">
-                        <item.icon 
-                            className={`w-4.5 h-4.5 transition-colors duration-200 ${
-                                (isParentActive && !hasSubItems) ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'
-                            }`} 
-                            strokeWidth={(isParentActive && !hasSubItems) ? 2.5 : 2}
-                        />
-                        <span className="text-sm font-medium tracking-wide">
-                            {item.label}
-                        </span>
-                     </div>
-                     {hasSubItems && (
-                         <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-                     )}
-                  </button>
-
-                  {/* Sub Menu */}
-                  {hasSubItems && isOpen && (
-                      <div className="mt-1 space-y-1 pl-4 relative">
-                          {item.subItems!.map((sub) => {
-                              const isSubActive = currentView === sub.id;
-                              return (
-                                  <button
-                                    key={sub.id}
-                                    onClick={() => onNavigate(sub.id)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-                                        isSubActive 
-                                            ? 'text-blue-400 font-semibold bg-blue-500/10' 
-                                            : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
-                                    }`}
-                                  >
-                                      {sub.icon && <sub.icon className={`w-3.5 h-3.5 ${isSubActive ? 'text-blue-400' : 'text-slate-600'}`} />}
-                                      <span>{sub.label}</span>
-                                  </button>
-                              )
-                          })}
-                      </div>
-                  )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* User Profile */}
-        <div className="mt-auto pt-4 border-t border-slate-800/50">
-            <div className="p-3 rounded-2xl bg-slate-900/40 border border-white/5 backdrop-blur-md shadow-sm">
-                <div className="flex items-center gap-3 mb-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold shadow-md shrink-0 border-2 border-[#0B0F19]">
-                        {userProfile?.name.substring(0, 2).toUpperCase() || 'US'}
-                    </div>
-                    <div className="flex flex-col min-w-0">
-                        <span className="text-sm font-bold text-white leading-none truncate">{userProfile?.name || 'User'}</span>
-                        <span className="text-[10px] text-slate-400 mt-1 truncate">{userProfile?.role || 'Usuario'}</span>
-                    </div>
-                </div>
-                <button 
-                    onClick={onLogout}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white/5 hover:bg-red-500/10 hover:border-red-500/20 border border-transparent rounded-lg transition-all duration-200 group"
-                >
-                    <span className="text-xs font-medium text-slate-400 group-hover:text-red-400 transition-colors">Cerrar Sesión</span>
-                </button>
-            </div>
-            <p className="text-center mt-4 text-[10px] text-slate-600 font-medium opacity-60">v20251223_1.0.10 &copy; {new Date().getFullYear()}</p>
-        </div>
-      </div>
-    </div>
-  </>
-);
+    </>
+  );
 };

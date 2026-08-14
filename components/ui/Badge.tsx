@@ -1,28 +1,46 @@
-
 import React from 'react';
+import { cn } from './UIComponents';
 
-interface BadgeProps {
-  children: React.ReactNode;
-  variant?: 'default' | 'outline' | 'secondary' | 'danger' | 'warning' | 'success' | 'purple' | 'orange' | 'indigo';
-  className?: string;
+/**
+ * Kit badge (DESIGN.md §3.4): pill shape, `px-2.5 py-0.5 text-xs font-semibold`.
+ *
+ * The semantic variants the app already uses are kept, remapped onto the kit's
+ * canonical palette (§1.4): emerald = positive, amber = warning, red = error,
+ * blue = info, indigo = in progress, violet = dispatched, slate = neutral.
+ * `orange` and `purple` are aliases — the kit deliberately has no orange, and
+ * violet is its "dispatched" hue.
+ */
+type BadgeVariant =
+  | 'default' | 'secondary' | 'destructive' | 'outline' | 'success'
+  | 'danger' | 'warning' | 'info' | 'indigo' | 'violet' | 'purple' | 'orange' | 'neutral';
+
+interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  variant?: BadgeVariant;
 }
 
-export const Badge: React.FC<BadgeProps> = ({ children, variant = 'default', className = '' }) => {
-  const variants = {
-    default: "bg-blue-50 text-blue-700 border border-blue-100",
-    secondary: "bg-slate-50 text-slate-700 border border-slate-100",
-    outline: "text-slate-700 border border-slate-200 bg-white",
-    danger: "bg-red-50 text-red-700 border border-red-100",
-    warning: "bg-amber-50 text-amber-700 border border-amber-100",
-    success: "bg-emerald-50 text-emerald-700 border border-emerald-100",
-    purple: "bg-purple-50 text-purple-700 border border-purple-100",
-    orange: "bg-orange-50 text-orange-700 border border-orange-100",
-    indigo: "bg-indigo-50 text-indigo-700 border border-indigo-100",
-  };
-
-  return (
-    <span className={`inline-flex items-center rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${variants[variant]} ${className}`}>
-      {children}
-    </span>
-  );
+const VARIANTS: Record<BadgeVariant, string> = {
+  default: 'border-transparent bg-primary text-primary-foreground',
+  secondary: 'border-transparent bg-secondary text-secondary-foreground',
+  destructive: 'border-transparent bg-destructive text-destructive-foreground',
+  outline: 'text-foreground border-border',
+  success: 'border-transparent bg-emerald-100 text-emerald-800',
+  danger: 'border-transparent bg-red-100 text-red-700',
+  warning: 'border-transparent bg-amber-100 text-amber-700',
+  info: 'border-transparent bg-brand/10 text-brand',
+  indigo: 'border-transparent bg-indigo-100 text-indigo-700',
+  violet: 'border-transparent bg-violet-100 text-violet-700',
+  purple: 'border-transparent bg-violet-100 text-violet-700',
+  orange: 'border-transparent bg-amber-100 text-amber-700',
+  neutral: 'border-transparent bg-muted text-muted-foreground',
 };
+
+export const Badge: React.FC<BadgeProps> = ({ className, variant = 'default', ...props }) => (
+  <span
+    className={cn(
+      'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors',
+      VARIANTS[variant],
+      className
+    )}
+    {...props}
+  />
+);

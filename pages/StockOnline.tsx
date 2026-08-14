@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Plus, Filter, RefreshCcw, ArrowRightLeft, Edit, Trash2, AlertTriangle, AlertCircle, X, Package, LayoutGrid, List } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -7,10 +7,14 @@ import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { Combobox } from '../components/ui/Combobox';
 import { Select } from '../components/ui/Select';
+import { MultiSelect } from '../components/ui/MultiSelect';
 import { StockItem, ModalType, StockPayload, ArticuloAPI } from '@/types';
 import { stockService } from '../services/stockService';
 import { configService } from '../services/configService';
 import { notify } from '../components/ui/Notice';
+import { Loader } from '../components/ui/Loader';
+import { PageHeader } from '../components/ui/PageHeader';
+import { capitalizeFirst } from '../utils/text';
 
 export const StockOnline: React.FC = () => {
   const [stock, setStock] = useState<StockItem[]>([]);
@@ -18,7 +22,28 @@ export const StockOnline: React.FC = () => {
   const [catalog, setCatalog] = useState<ArticuloAPI[]>([]);
   
   const [isLoading, setIsLoading] = useState(false);
-  
+
+  // The floating totals bar fades once the cursor gets near it, so it can never
+  // hide the row underneath. Measured here rather than with :hover because the
+  // bar is pointer-events-none — see the comment at its markup.
+  const totalsRef = useRef<HTMLDivElement>(null);
+  const [isCursorNearTotals, setIsCursorNearTotals] = useState(false);
+
+  useEffect(() => {
+    const MARGIN = 28; // px of slack around the bar
+    const onMove = (e: MouseEvent) => {
+      const r = totalsRef.current?.getBoundingClientRect();
+      // Same value in, React bails out of the re-render — safe on mousemove.
+      setIsCursorNearTotals(
+        !!r &&
+        e.clientX >= r.left - MARGIN && e.clientX <= r.right + MARGIN &&
+        e.clientY >= r.top - MARGIN && e.clientY <= r.bottom + MARGIN
+      );
+    };
+    window.addEventListener('mousemove', onMove, { passive: true });
+    return () => window.removeEventListener('mousemove', onMove);
+  }, []);
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -87,9 +112,9 @@ export const StockOnline: React.FC = () => {
   
   // Filter States
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
-    subdeposit: 'ALL',
-    sku: 'ALL'
+  const [filters, setFilters] = useState<{ subdeposit: string[]; sku: string[] }>({
+    subdeposit: [],
+    sku: [],
   });
   
   // UI States
@@ -534,8 +559,9 @@ export const StockOnline: React.FC = () => {
     const matchesSearch = sku.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           desc.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesSubdeposit = filters.subdeposit === 'ALL' || item.subdeposit === filters.subdeposit;
-    const matchesSku = filters.sku === 'ALL' || item.sku === filters.sku;
+    // An empty selection means "no filter", the same contract MultiSelect uses.
+    const matchesSubdeposit = filters.subdeposit.length === 0 || filters.subdeposit.includes(item.subdeposit);
+    const matchesSku = filters.sku.length === 0 || filters.sku.includes(item.sku);
 
     return matchesSearch && matchesSubdeposit && matchesSku;
   });
@@ -544,39 +570,39 @@ export const StockOnline: React.FC = () => {
   const logisticsQty = stock.filter(i => i.subdeposit === 'LOGISTICA').reduce((acc, item) => acc + item.quantity, 0);
   const plantQty = stock.filter(i => i.subdeposit === 'DEPOSITO').reduce((acc, item) => acc + item.quantity, 0);
   
-  const activeFiltersCount = (filters.subdeposit !== 'ALL' ? 1 : 0) + (filters.sku !== 'ALL' ? 1 : 0);
+  const activeFiltersCount = filters.subdeposit.length + filters.sku.length;
 
   return (
-    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 overflow-y-auto md:overflow-hidden bg-slate-50">
+    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 overflow-y-auto md:overflow-hidden bg-muted">
       
       {/* Header Area */}
-      <div className="px-4 sm:px-8 py-4 sm:py-6 sticky top-0 z-20 shrink-0 bg-slate-50/80 backdrop-blur-md border-b border-slate-200/60">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Stock Online</h2>
-             <div className="flex items-center gap-2 mt-1">
-                 <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                 <p className="text-slate-500 text-xs sm:text-sm font-medium">Actualizado en tiempo real</p>
-             </div>
-          </div>
-          
+      <div className="shrink-0 border-b border-border bg-muted px-4 py-4 sm:px-8">
+        <PageHeader
+          title="Stock Online"
+          subtitle={
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden="true" />
+              Actualizado en tiempo real
+            </span>
+          }
+          actions={
           <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3 w-full lg:w-auto items-center">
              <Button
                variant="outline"
                size="icon"
                onClick={fetchData}
                disabled={isLoading}
-               className="rounded-full bg-white text-slate-700 border-slate-200 shadow-sm hover:bg-slate-50 hover:text-blue-600 transition-colors shrink-0"
+               className="rounded-full bg-card text-foreground border-border shadow-sm hover:bg-accent hover:text-brand transition-colors shrink-0"
                title="Actualizar datos"
              >
-               <RefreshCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
+               <RefreshCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-brand' : ''}`} />
              </Button>
              
              <div className="relative flex-1 sm:w-80 group">
-               <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+               <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-brand transition-colors" />
                <input 
                  placeholder="Buscar..." 
-                 className="w-full pl-10 h-10 rounded-full bg-white shadow-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                 className="w-full pl-10 h-10 rounded-md bg-card shadow-sm border border-border focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all text-sm"
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
                />
@@ -585,7 +611,7 @@ export const StockOnline: React.FC = () => {
              <div className="relative">
                 <Button 
                     variant={activeFiltersCount > 0 ? "secondary" : "outline"} 
-                    className={`h-10 rounded-full px-4 ${activeFiltersCount > 0 ? "bg-blue-100 text-blue-700 border-blue-200" : "bg-white text-slate-700 border-slate-200 shadow-sm"}`}
+                    className={`h-10 rounded-md px-4 ${activeFiltersCount > 0 ? "bg-brand/10 text-brand border-brand/20" : "bg-card text-foreground border-border shadow-sm"}`}
                     onClick={() => setShowFilters(!showFilters)}
                 >
                     <Filter className="w-4 h-4 mr-2" />
@@ -596,42 +622,38 @@ export const StockOnline: React.FC = () => {
                 {showFilters && (
                     <>
                     <div className="fixed inset-0 z-30" onClick={() => setShowFilters(false)} />
-                    <div className="absolute right-0 mt-3 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl shadow-slate-300/50 ring-1 ring-slate-100 z-40 p-5 animate-in slide-in-from-top-2 duration-200">
+                    <div className="absolute right-0 mt-3 w-72 sm:w-80 bg-card rounded-lg shadow-sm ring-1 ring-border z-40 p-5 animate-in slide-in-from-top-2 duration-200">
                         <div className="flex items-center justify-between mb-5">
-                            <h3 className="font-bold text-slate-900">Configurar Filtros</h3>
-                            <button onClick={() => setShowFilters(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                            <h3 className="font-bold text-foreground">Configurar Filtros</h3>
+                            <button onClick={() => setShowFilters(false)} className="text-muted-foreground hover:text-foreground transition-colors">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
                         <div className="space-y-4">
-                            <Combobox
+                            <MultiSelect
                                 label="Subdepósito"
                                 placeholder="Todos"
                                 value={filters.subdeposit}
                                 onChange={(val) => setFilters(prev => ({...prev, subdeposit: val}))}
                                 options={[
-                                    { value: 'ALL', label: 'Todos los depósitos' },
                                     { value: 'DEPOSITO', label: 'Depósito Planta' },
                                     { value: 'LOGISTICA', label: 'Logística' }
                                 ]}
                             />
-                            <Combobox
+                            <MultiSelect
                                 label="Artículo"
                                 placeholder="Todos"
                                 value={filters.sku}
                                 onChange={(val) => setFilters(prev => ({...prev, sku: val}))}
-                                options={[
-                                    { value: 'ALL', label: 'Todos los productos' },
-                                    ...catalogOptions
-                                ]}
+                                options={catalogOptions.map(o => ({ value: o.value, label: o.label }))}
                             />
                         </div>
                         {(activeFiltersCount > 0) && (
-                            <div className="pt-4 border-t border-slate-100 mt-4 flex justify-end">
+                            <div className="pt-4 border-t border-border mt-4 flex justify-end">
                                 <button 
                                     className="text-sm font-medium text-red-600 hover:text-red-800 transition-colors flex items-center gap-1"
                                     onClick={() => {
-                                        setFilters({ subdeposit: 'ALL', sku: 'ALL' });
+                                        setFilters({ subdeposit: [], sku: [] });
                                     }}
                                 >
                                     <Trash2 className="w-3 h-3" /> Limpiar filtros
@@ -644,38 +666,37 @@ export const StockOnline: React.FC = () => {
              </div>
 
              <Button 
-                variant="primary" 
-                className="w-full sm:w-auto h-10 rounded-full px-5 shadow-lg shadow-blue-900/20 hover:shadow-blue-900/30 bg-blue-600 text-white" 
+                variant="default" 
+                className="w-full sm:w-auto h-10 rounded-md px-5 shadow-sm" 
                 onClick={() => handleOpenModal('ADD')}
              >
               <Plus className="w-4 h-4 mr-2" />
               Ingresar
             </Button>
           </div>
-        </div>
+          }
+        />
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-8 pb-24 pt-2 custom-scrollbar">
+      <div className="flex min-h-0 flex-1 flex-col px-4 sm:px-8 pb-4 pt-2 md:overflow-hidden overflow-y-auto">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center h-full min-h-[400px] animate-in fade-in zoom-in-95 duration-500">
-             <RefreshCcw className="w-12 h-12 mb-4 animate-spin text-blue-500" />
-             <h3 className="text-xl font-bold text-slate-900 tracking-tight">Cargando stock...</h3>
-             <p className="text-slate-500 mt-2 text-center max-w-xs">Por favor espere mientras actualizamos la información.</p>
+          <div className="flex h-full min-h-[400px] items-center justify-center">
+            <Loader text="Cargando stock…" />
           </div>
         ) : filteredStock.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full min-h-[400px] animate-in fade-in zoom-in-95 duration-500">
-             <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mb-6 shadow-sm ring-1 ring-slate-100">
-                 <Search className="w-10 h-10 text-slate-400" />
+             <div className="w-20 h-20 bg-muted rounded-md flex items-center justify-center mb-6 shadow-sm ring-1 ring-border">
+                 <Search className="w-10 h-10 text-muted-foreground" />
              </div>
-             <h3 className="text-xl font-bold text-slate-900 tracking-tight">Sin resultados</h3>
-             <p className="text-slate-500 mt-2 text-center max-w-xs">No encontramos productos que coincidan con tu búsqueda.</p>
+             <h3 className="text-xl font-bold text-foreground tracking-tight">Sin resultados</h3>
+             <p className="text-muted-foreground mt-2 text-center max-w-xs">No encontramos productos que coincidan con tu búsqueda.</p>
              {activeFiltersCount > 0 ? (
-                 <Button variant="ghost" className="mt-6 text-blue-600 hover:bg-blue-50" onClick={() => setFilters({subdeposit: 'ALL', sku: 'ALL'})}>
+                 <Button variant="ghost" className="mt-6 text-brand hover:bg-brand/10" onClick={() => setFilters({ subdeposit: [], sku: [] })}>
                      Limpiar filtros
                  </Button>
              ) : (
-                 <Button variant="primary" className="mt-6 rounded-xl shadow-lg shadow-blue-900/20" onClick={() => handleOpenModal('ADD')}>
+                 <Button variant="default" className="mt-6 rounded-md" onClick={() => handleOpenModal('ADD')}>
                    <Plus className="w-4 h-4 mr-2" />
                    Ingresar Producto
                  </Button>
@@ -684,73 +705,70 @@ export const StockOnline: React.FC = () => {
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden md:block glass-panel rounded-3xl overflow-hidden min-h-[500px] shadow-sm">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-50/50 border-b border-white/50 sticky top-0 z-10 backdrop-blur-md">
+            <div className="hidden md:flex min-h-0 flex-1 flex-col bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto">
+              <table className="w-full text-left border-collapse text-[13px]">
+                <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                   <tr>
-                    <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Producto</th>
-                    <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider">Ubicación</th>
-                    <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Cantidad</th>
-                    <th className="px-8 py-5 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Acciones</th>
+                    <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Producto</th>
+                    <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Ubicación</th>
+                    <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cantidad</th>
+                    <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100/50">
+                <tbody className="divide-y divide-border/50">
                   {filteredStock.map((item) => (
-                    <tr key={item.id} className="hover:bg-white/60 transition-colors group">
-                      <td className="px-8 py-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">
-                            <Package className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <span className="block font-bold text-slate-900 text-sm">{item.description}</span>
-                            <span className="block font-mono text-[10px] text-slate-400 mt-0.5 bg-slate-100 px-1.5 rounded w-fit">{item.sku}</span>
-                          </div>
+                    <tr key={item.id} className="hover:bg-card/60 transition-colors group">
+                      <td className="h-16 px-4 py-3">
+                        {/* No icon tile and no chip around the SKU: both inflated the
+                            row well past the reference grid's height. */}
+                        <div className="min-w-0">
+                          <span className="block truncate text-[13px] font-medium text-foreground">{capitalizeFirst(item.description)}</span>
+                          <span className="block truncate text-[11px] text-muted-foreground">SKU: {item.sku}</span>
                         </div>
                       </td>
-                      <td className="px-8 py-4">
+                      <td className="h-16 px-4 py-3">
                         <Badge 
-                            variant={item.subdeposit === 'DEPOSITO' ? 'default' : 'warning'}
-                            className="shadow-sm border-0 py-1 px-3 rounded-full font-medium"
+                            variant={item.subdeposit === 'DEPOSITO' ? 'info' : 'warning'}
+                            className="border-0 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
                         >
                           {item.subdeposit}
                         </Badge>
                       </td>
-                      <td className="px-8 py-4 text-right">
+                      <td className="h-16 px-4 py-3 text-right">
                          <div className="flex flex-col items-end">
-                            <span className={`text-base font-bold tabular-nums tracking-tight ${item.quantity < 50 ? 'text-amber-600' : 'text-slate-800'}`}>
+                            <span className={`text-base font-bold tabular-nums tracking-tight ${item.quantity < 50 ? 'text-amber-600' : 'text-foreground'}`}>
                                 {item.quantity} un.
                             </span>
                             {item.quantity < 50 && <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wide">Bajo Stock</span>}
                          </div>
                       </td>
-                      <td className="px-8 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                      <td className="h-16 px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
                           <button 
                             onClick={() => handleOpenModal('TRANSFORM', item)}
                             title="Transformar"
-                            className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                            className="p-2 text-muted-foreground hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                           >
                             <RefreshCcw className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => handleOpenModal('TRANSFER', item)}
                             title="Transferir"
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 text-muted-foreground hover:text-brand hover:bg-brand/10 rounded-lg transition-colors"
                           >
                             <ArrowRightLeft className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => handleOpenModal('EDIT', item)}
                             title="Editar"
-                            className="p-2 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+                            className="p-2 text-muted-foreground hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button 
                              onClick={() => handleOpenModal('DELETE', item)}
                              title="Eliminar"
-                             className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                             className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -761,32 +779,33 @@ export const StockOnline: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            </div>
 
             {/* Mobile Card View */}
             <div className="md:hidden space-y-3">
               {filteredStock.map((item) => (
-                <div key={item.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4">
+                <div key={item.id} className="bg-card rounded-lg border border-border shadow-sm p-4 space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 shrink-0">
+                    <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center text-muted-foreground shrink-0">
                       <Package className="w-5 h-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-slate-900 text-sm truncate">{item.description}</h4>
-                      <span className="inline-block font-mono text-[10px] text-slate-400 bg-slate-100 px-1.5 rounded mt-1">{item.sku}</span>
+                      <h4 className="font-semibold text-foreground text-[13px] truncate">{capitalizeFirst(item.description)}</h4>
+                      <span className="block truncate text-[11px] text-muted-foreground mt-0.5">SKU: {item.sku}</span>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className={`text-sm font-bold ${item.quantity < 50 ? 'text-amber-600' : 'text-slate-800'}`}>
+                      <div className={`text-sm font-bold ${item.quantity < 50 ? 'text-amber-600' : 'text-foreground'}`}>
                         {item.quantity} un.
                       </div>
                       {item.quantity < 50 && <span className="text-[9px] font-bold text-amber-500 uppercase">Bajo Stock</span>}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between py-2 border-y border-slate-50">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ubicación</span>
+                  <div className="flex items-center justify-between py-2 border-y border-border">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Ubicación</span>
                     <Badge 
-                        variant={item.subdeposit === 'DEPOSITO' ? 'default' : 'warning'}
-                        className="shadow-sm border-0 py-0.5 px-2.5 rounded-full text-[10px]"
+                        variant={item.subdeposit === 'DEPOSITO' ? 'info' : 'warning'}
+                        className="border-0 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
                     >
                       {item.subdeposit}
                     </Badge>
@@ -796,7 +815,7 @@ export const StockOnline: React.FC = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex-1 rounded-xl text-xs gap-2 min-w-[100px] border-purple-100 text-purple-600 bg-purple-50/50"
+                      className="flex-1 rounded-md text-xs gap-2 min-w-[100px] border-purple-100 text-purple-600 bg-purple-50/50"
                       onClick={() => handleOpenModal('TRANSFORM', item)}
                     >
                       <RefreshCcw className="w-3.5 h-3.5" />
@@ -805,7 +824,7 @@ export const StockOnline: React.FC = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="flex-1 rounded-xl text-xs gap-2 min-w-[100px] border-blue-100 text-blue-600 bg-blue-50/50"
+                      className="flex-1 rounded-md text-xs gap-2 min-w-[100px] border-brand/20 text-brand bg-brand/10/50"
                       onClick={() => handleOpenModal('TRANSFER', item)}
                     >
                       <ArrowRightLeft className="w-3.5 h-3.5" />
@@ -814,7 +833,7 @@ export const StockOnline: React.FC = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="rounded-xl text-xs px-3 border-orange-100 text-orange-600 bg-orange-50/50"
+                      className="rounded-md text-xs px-3 border-orange-100 text-orange-600 bg-orange-50/50"
                       onClick={() => handleOpenModal('EDIT', item)}
                     >
                       <Edit className="w-3.5 h-3.5" />
@@ -822,7 +841,7 @@ export const StockOnline: React.FC = () => {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="rounded-xl text-xs px-3 border-red-100 text-red-600 bg-red-50/50"
+                      className="rounded-md text-xs px-3 border-red-100 text-red-600 bg-red-50/50"
                       onClick={() => handleOpenModal('DELETE', item)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -835,22 +854,33 @@ export const StockOnline: React.FC = () => {
         )}
       </div>
 
-      {/* Floating Modern Footer Stats */}
-      <div className="fixed md:absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-xl border border-white/40 p-1.5 pr-4 rounded-full shadow-2xl shadow-slate-400/20 flex items-center gap-4 sm:gap-6 z-30 max-w-[90vw]">
-        <div className="bg-slate-900 text-white px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-md shrink-0">
-            Total: {totalQty}
-        </div>
-        <div className="flex gap-3 sm:gap-4 text-[10px] sm:text-xs font-medium text-slate-600 overflow-hidden">
-            <div className="flex items-center gap-1.5 shrink-0">
-               <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-               <span className="hidden xs:inline">Logística:</span> <b className="text-slate-900">{logisticsQty}</b>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-               <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-               <span className="hidden xs:inline">Planta:</span> <b className="text-slate-900">{plantQty}</b>
-            </div>
+      {/* Totals bar. Floating so it costs the grid no height, and `pointer-events-none`
+          so it is fully transparent to the mouse: wheel, clicks and text selection
+          all reach the grid underneath. That is also why proximity is measured in
+          JS — an element that receives no pointer events receives no :hover either,
+          and any CSS trick that restores hover would swallow the wheel again.
+          No backdrop-blur: a blur survives `opacity` and would keep smearing the
+          very row you are trying to read.
+          Hidden while loading: the counters would read a meaningless zero. */}
+      {!isLoading && (
+      <div ref={totalsRef} className="pointer-events-none fixed md:absolute bottom-[calc(1.25rem+env(safe-area-inset-bottom))] md:bottom-5 left-1/2 -translate-x-1/2 z-30 max-w-[90vw]">
+        <div className={`bg-card border border-border p-1.5 pr-4 rounded-full shadow-xl shadow-black/10 flex items-center gap-4 sm:gap-6 transition-opacity duration-200 ${isCursorNearTotals ? 'opacity-0' : 'opacity-100'}`}>
+          <div className="bg-primary text-primary-foreground px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-md shrink-0">
+              Total: {totalQty}
+          </div>
+          <div className="flex gap-3 sm:gap-4 text-[10px] sm:text-xs font-medium text-muted-foreground">
+              <div className="flex items-center gap-1.5 shrink-0">
+                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true"></span>
+                 Logística: <b className="text-foreground">{logisticsQty}</b>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true"></span>
+                 Planta: <b className="text-foreground">{plantQty}</b>
+              </div>
+          </div>
         </div>
       </div>
+      )}
 
       {/* Confirmation & Actions Modals (Logic remains identical, just ensuring imports work) */}
       <Modal
@@ -867,7 +897,7 @@ export const StockOnline: React.FC = () => {
         }
       >
         <div className="flex flex-col gap-3">
-            <div className="flex items-start gap-4 bg-amber-50 p-5 rounded-2xl border border-amber-100">
+            <div className="flex items-start gap-4 bg-amber-50 p-5 rounded-lg border border-amber-100">
                 <AlertCircle className="text-amber-600 w-6 h-6 shrink-0 mt-0.5" />
                 <div className="text-sm text-amber-900">
                     <p className="font-bold text-base mb-1">¿Está seguro?</p>
@@ -935,7 +965,7 @@ export const StockOnline: React.FC = () => {
                 </div>
             </div>
             {validationError && (
-                 <div className="text-red-600 text-sm bg-red-50 p-4 rounded-xl flex items-center gap-3 border border-red-100 animate-in fade-in slide-in-from-top-1">
+                 <div className="text-red-600 text-sm bg-red-50 p-4 rounded-md flex items-center gap-3 border border-red-100 animate-in fade-in slide-in-from-top-1">
                      <AlertCircle className="w-5 h-5"/> {validationError}
                  </div>
             )}
@@ -955,16 +985,16 @@ export const StockOnline: React.FC = () => {
         }
       >
         <div className="space-y-6">
-            <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-center gap-5">
-                <div className="w-12 h-12 bg-white rounded-xl border border-slate-200 flex items-center justify-center shrink-0 text-slate-400 shadow-sm">
+            <div className="bg-muted p-5 rounded-lg border border-border flex items-center gap-5">
+                <div className="w-12 h-12 bg-card rounded-md border border-border flex items-center justify-center shrink-0 text-muted-foreground shadow-sm">
                     <Package className="w-6 h-6" />
                 </div>
                 <div>
-                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Origen</label>
-                    <p className="text-base font-bold text-slate-900 leading-tight">{selectedItem?.description}</p>
-                    <p className="text-xs text-slate-400 font-mono mt-0.5">{selectedItem?.sku}</p>
-                    <div className="mt-1.5 text-xs font-medium text-slate-600 bg-white px-2 py-0.5 rounded-md border border-slate-100 inline-block">
-                        Stock: <span className="font-bold text-slate-900">{selectedItem?.quantity}</span>
+                    <label className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Origen</label>
+                    <p className="text-base font-bold text-foreground leading-tight">{selectedItem?.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{selectedItem?.sku}</p>
+                    <div className="mt-1.5 text-xs font-medium text-muted-foreground bg-card px-2 py-0.5 rounded-md border border-border inline-block">
+                        Stock: <span className="font-bold text-foreground">{selectedItem?.quantity}</span>
                     </div>
                 </div>
             </div>
@@ -987,7 +1017,7 @@ export const StockOnline: React.FC = () => {
             />
             
             {validationError && (
-                 <div className="text-red-600 text-sm bg-red-50 p-4 rounded-xl flex items-center gap-3 border border-red-100">
+                 <div className="text-red-600 text-sm bg-red-50 p-4 rounded-md flex items-center gap-3 border border-red-100">
                      <AlertCircle className="w-5 h-5"/> {validationError}
                  </div>
             )}
@@ -1007,16 +1037,16 @@ export const StockOnline: React.FC = () => {
         }
       >
         <div className="space-y-6">
-             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-2xl border border-blue-100 flex justify-between items-center relative overflow-hidden">
+             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-lg border border-brand/20 flex justify-between items-center relative overflow-hidden">
                  <div className="relative z-10">
-                    <span className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">Origen</span>
-                    <p className="text-lg font-bold text-blue-900">{selectedItem?.subdeposit}</p>
+                    <span className="text-[10px] text-brand font-bold uppercase tracking-wider">Origen</span>
+                    <p className="text-lg font-bold text-brand">{selectedItem?.subdeposit}</p>
                  </div>
-                 <div className="bg-white p-2.5 rounded-full shadow-md z-10 text-blue-600">
+                 <div className="bg-card p-2.5 rounded-full shadow-md z-10 text-brand">
                     <ArrowRightLeft className="w-5 h-5" />
                  </div>
                  <div className="text-right relative z-10">
-                    <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">Destino</span>
+                    <span className="text-[10px] text-brand font-bold uppercase tracking-wider">Destino</span>
                     <p className="text-lg font-bold text-indigo-900">{formData.targetDeposit}</p>
                  </div>
              </div>
@@ -1045,7 +1075,7 @@ export const StockOnline: React.FC = () => {
              </div>
 
              {validationError && (
-                 <div className="text-red-600 text-sm bg-red-50 p-4 rounded-xl flex items-center gap-3 border border-red-100">
+                 <div className="text-red-600 text-sm bg-red-50 p-4 rounded-md flex items-center gap-3 border border-red-100">
                      <AlertCircle className="w-5 h-5"/> {validationError}
                  </div>
             )}
@@ -1065,8 +1095,8 @@ export const StockOnline: React.FC = () => {
         }
       >
         <div className="space-y-5">
-            <p className="text-sm text-slate-500 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                Está editando el stock para <b className="text-slate-900">{selectedItem?.description}</b>. Esta acción quedará registrada.
+            <p className="text-sm text-muted-foreground bg-muted p-4 rounded-md border border-border">
+                Está editando el stock para <b className="text-foreground">{selectedItem?.description}</b>. Esta acción quedará registrada.
             </p>
             <Input 
                 label="Nueva Cantidad Total" 
@@ -1077,7 +1107,7 @@ export const StockOnline: React.FC = () => {
                 onChange={e => setFormData({...formData, quantity: Number(e.target.value)})}
             />
             {validationError && (
-                 <div className="text-red-600 text-sm bg-red-50 p-4 rounded-xl flex items-center gap-3 border border-red-100">
+                 <div className="text-red-600 text-sm bg-red-50 p-4 rounded-md flex items-center gap-3 border border-red-100">
                      <AlertCircle className="w-5 h-5"/> {validationError}
                  </div>
             )}
@@ -1092,11 +1122,11 @@ export const StockOnline: React.FC = () => {
         footer={
             <>
                 <Button variant="outline" onClick={closeModal}>Cancelar</Button>
-                <Button variant="danger" onClick={initiateAction}>Continuar</Button>
+                <Button variant="destructive" onClick={initiateAction}>Continuar</Button>
             </>
         }
       >
-        <div className="flex items-start gap-4 text-slate-600 bg-red-50 p-6 rounded-2xl border border-red-100">
+        <div className="flex items-start gap-4 text-muted-foreground bg-red-50 p-6 rounded-lg border border-red-100">
             <div className="bg-red-100 p-2.5 rounded-full shrink-0">
                 <AlertTriangle className="text-red-600 w-6 h-6" />
             </div>
