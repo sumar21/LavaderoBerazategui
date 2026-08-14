@@ -4,6 +4,7 @@ const router = express.Router();
 // Import Controllers and Middleware
 import * as authController from '../controllers/authController';
 import * as dataController from '../controllers/dataController';
+import * as mailController from '../controllers/mailController';
 import verifyToken from '../middleware/verifyToken';
 
 // ========================================================
@@ -18,10 +19,16 @@ router.post('/auth/recover', authController.recoverAccount);
 // 2. Login with Password (Step 2 of Login)
 router.post('/login', authController.login);
 
+// 3. Email the user their credentials (replaces the Power Automate flow)
+router.post('/auth/send-credentials', mailController.sendCredentials);
+
 
 // ========================================================
 // PROTECTED ROUTES (Token Required)
 // ========================================================
+
+// Notifications
+router.post('/notificaciones/orden-compra', verifyToken, mailController.notifyPurchaseOrder);
 
 // Ordenes de Compra Routes
 router.get('/ordenes-compra', verifyToken, dataController.getOrdenesCompra);
