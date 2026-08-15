@@ -287,7 +287,7 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                                          {hasImage && (
                                                              <button 
                                                                  onClick={() => removeImage('Item', item.sku)}
-                                                                 className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-sm hover:bg-red-600"
+                                                                 className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 shadow-sm hover:bg-red-600 dark:hover:text-red-950"
                                                              >
                                                                  <X className="w-2.5 h-2.5" />
                                                              </button>
@@ -391,7 +391,7 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                                          {hasImage && (
                                                              <button 
                                                                  onClick={() => removeImage('Item', item.sku)}
-                                                                 className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600"
+                                                                 className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 shadow-sm hover:bg-red-600 dark:hover:text-red-950"
                                                              >
                                                                  <X className="w-2 h-2" />
                                                              </button>
@@ -433,7 +433,7 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                  <img src={remitoImage} alt="Remito" className="w-full h-full object-contain rounded-lg" />
                                  <button 
                                      onClick={() => removeImage('Remito')}
-                                     className="absolute top-2 right-2 bg-red-500/80 text-white p-1.5 rounded-full hover:bg-red-600 backdrop-blur-sm"
+                                     className="absolute top-2 right-2 bg-red-500/80 text-white p-1.5 rounded-full hover:bg-red-600 dark:hover:text-red-950 backdrop-blur-sm"
                                  >
                                      <X className="w-4 h-4" />
                                  </button>

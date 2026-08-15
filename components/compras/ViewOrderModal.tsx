@@ -182,7 +182,7 @@ export const ViewOrderModal: React.FC<ViewOrderModalProps> = ({
                      </div>
                   ))}
                   {order.status !== 'Presupuesto' && (
-                     <div className="bg-emerald-600 rounded-md p-4 text-white shadow-md">
+                     <div className="bg-emerald-600 rounded-md p-4 text-white dark:text-emerald-950 shadow-md">
                         <div className="flex justify-between items-center">
                            <span className="text-xs uppercase font-bold opacity-80 tracking-wider">Total General</span>
                            <span className="text-xl font-bold">

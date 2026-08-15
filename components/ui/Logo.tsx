@@ -16,20 +16,16 @@ export const Logo: React.FC<LogoProps> = ({ className = "", showText = true, var
     lg: "h-20"
   };
 
-  // Logic for variant 'dark' (used on light backgrounds like Login):
-  // 1. invert(1): Turns White text to Black.
-  // 2. hue-rotate(180deg): Adjusts the inverted colors to look decent on white.
-  const imageStyle: React.CSSProperties = variant === 'dark' 
-    ? { filter: 'invert(1) hue-rotate(180deg)' } 
-    : {};
-
+  // variant 'dark' means "sits on a themed surface": the artwork is white, so it
+  // is inverted in light mode and left alone in dark mode. That has to be a
+  // class, not an inline style — an inline filter cannot react to the theme, and
+  // the inverted mark would disappear into a dark surface.
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <img 
-        src={Images.GAMMA_LOGO_WHITE} 
-        alt="Lavadero Berazategui" 
-        className={`object-contain ${sizeClasses[size]}`}
-        style={imageStyle}
+      <img
+        src={Images.GAMMA_LOGO_WHITE}
+        alt="Lavadero Berazategui"
+        className={`object-contain ${sizeClasses[size]} ${variant === 'dark' ? 'brand-art-on-surface' : ''}`}
       />
     </div>
   );

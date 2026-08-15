@@ -116,7 +116,9 @@ export const TooltipHost: React.FC = () => {
     <div
       ref={tipRef}
       role="tooltip"
-      className="kaut-tooltip pointer-events-none fixed max-w-xs rounded-md bg-neutral-900 px-2 py-1 text-xs font-medium leading-snug text-white shadow-lg"
+      /* Inverted against the page: a near-black pill is invisible on a dark
+         canvas, so it flips to a light pill with dark text. */
+      className="kaut-tooltip pointer-events-none fixed max-w-xs rounded-md bg-foreground px-2 py-1 text-xs font-medium leading-snug text-background shadow-lg"
       style={{
         left: tip.x,
         top: tip.y,

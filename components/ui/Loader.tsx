@@ -34,8 +34,7 @@ export const Loader: React.FC<LoaderProps> = ({ text, subtext, size = 'md', clas
             src="/favicon.svg"
             alt=""
             aria-hidden="true"
-            className={cn('object-contain animate-pulse', s.icon)}
-            style={{ filter: 'invert(1) hue-rotate(180deg)' }}
+            className={cn('object-contain animate-pulse brand-art-on-surface', s.icon)}
           />
         </div>
       </div>

@@ -431,7 +431,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                    <Button 
                      disabled={isProcessingAction}
                      onClick={() => editOrderDraft && handleAction('APPROVE', editOrderDraft.id, editOrderDraft)} 
-                     className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                     className="bg-emerald-600 hover:bg-emerald-700 text-white dark:text-emerald-950"
                     >
                      {isProcessingAction ? (
                          <>

@@ -16,6 +16,26 @@
   --input: 240 6% 90%;
   --ring: 240 5% 65%;
 
+  /* Surfaces, from the page canvas up. `muted` is the canvas and `card` sits on
+     top of it, so in dark mode `muted` has to stay DARKER than `card` or every
+     card sinks into the background. */
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --muted: 240 5% 96%;
+  --muted-foreground: 240 4% 46%;
+  --accent: 240 5% 96%;
+  --accent-foreground: 240 6% 10%;
+  --secondary: 240 5% 96%;
+  --secondary-foreground: 240 6% 10%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+
+  /* primary = near-black in light, near-white in dark. Buttons, focus, controls. */
+  --primary: 0 0% 10%;
+  --primary-foreground: 0 0% 98%;
+
   /* ── BRAND COLOR — Lavadero Berazategui = #173F8C ──
      Keep this in sync with BRAND in api/templates/emails.ts (kit rule 2). */
   --brand: 219 72% 32%;
@@ -38,6 +58,113 @@
   --radius: 0.5rem;
 }
 
+/* ── Dark theme (DESIGN.md §392 option "a": a real `.dark` block plus a toggle,
+   rather than leaving dead `dark:` classes around) ──────────────────────────
+   Only the channel values change; every utility in the app already reads them
+   through the tokens above, so no markup changes hands. */
+.dark {
+  --background: 240 10% 4%;
+  --foreground: 0 0% 96%;
+  --border: 240 5% 20%;
+  --input: 240 5% 22%;
+  --ring: 240 5% 45%;
+
+  /* muted (canvas) stays below card, mirroring the light-mode stacking. */
+  --muted: 240 8% 7%;
+  --muted-foreground: 240 5% 66%;
+  --card: 240 6% 11%;
+  --card-foreground: 0 0% 96%;
+  --popover: 240 6% 14%;
+  --popover-foreground: 0 0% 96%;
+  --accent: 240 5% 17%;
+  --accent-foreground: 0 0% 96%;
+  --secondary: 240 5% 17%;
+  --secondary-foreground: 0 0% 96%;
+  --destructive: 0 72% 55%;
+  --destructive-foreground: 0 0% 98%;
+
+  --primary: 0 0% 96%;
+  --primary-foreground: 240 10% 8%;
+
+  /* #173F8C is 32% lightness — as a text colour it disappears on a dark canvas.
+     The hue is kept, the lightness is raised until it reads, and the text that
+     sits ON brand flips to near-black to stay above AA. */
+  --brand: 219 78% 62%;
+  --brand-foreground: 219 90% 8%;
+
+  /* The shell stays brand-coloured but deepens, so it does not glow against the
+     canvas. Accent keeps clearing AA for white labels sitting on it. */
+  --sidebar: 219 55% 14%;
+  --sidebar-foreground: 0 0% 96%;
+  --sidebar-muted: 219 25% 70%;
+  --sidebar-border: 219 35% 24%;
+  --sidebar-accent: 219 50% 32%;
+}
+
+/* ── Semantic palette under dark ────────────────────────────────────────────
+   Tailwind 4 compiles `bg-red-50` to `background-color: var(--color-red-50)`,
+   so redefining the step here flips all 354 literal colour usages in the app
+   without touching a single className.
+
+   Only the two ends move: 50/100/200 are tint SURFACES and go dark, 600→900 are
+   FOREGROUND text on those tints and go light, keeping "higher step = more
+   emphasis". Steps 300/400/500 are deliberately untouched — they are dots,
+   icons and focus rings that read on either canvas, and some of them live on
+   the brand-coloured sidebar, which does not follow the theme. */
+.dark {
+  --color-red-50: oklch(25% 0.055 25);
+  --color-red-100: oklch(30% 0.07 25);
+  --color-red-200: oklch(37% 0.09 25);
+  --color-red-600: oklch(72% 0.16 25);
+  --color-red-700: oklch(78% 0.14 25);
+  --color-red-800: oklch(85% 0.10 25);
+  --color-red-900: oklch(91% 0.06 25);
+
+  --color-amber-50: oklch(25% 0.045 75);
+  --color-amber-100: oklch(30% 0.06 75);
+  --color-amber-200: oklch(37% 0.075 75);
+  --color-amber-600: oklch(78% 0.14 75);
+  --color-amber-700: oklch(84% 0.12 75);
+  --color-amber-800: oklch(89% 0.09 75);
+  --color-amber-900: oklch(93% 0.06 75);
+
+  --color-emerald-50: oklch(25% 0.045 160);
+  --color-emerald-100: oklch(30% 0.06 160);
+  --color-emerald-200: oklch(37% 0.075 160);
+  --color-emerald-600: oklch(75% 0.14 160);
+  --color-emerald-700: oklch(81% 0.12 160);
+  --color-emerald-800: oklch(87% 0.09 160);
+  --color-emerald-900: oklch(92% 0.06 160);
+
+  --color-indigo-50: oklch(25% 0.05 275);
+  --color-indigo-100: oklch(30% 0.065 275);
+  --color-indigo-200: oklch(37% 0.08 275);
+  --color-indigo-600: oklch(74% 0.14 275);
+  --color-indigo-700: oklch(80% 0.12 275);
+  --color-indigo-800: oklch(86% 0.09 275);
+  --color-indigo-900: oklch(91% 0.06 275);
+
+  --color-blue-50: oklch(25% 0.05 255);
+  --color-blue-200: oklch(37% 0.08 255);
+  --color-blue-800: oklch(86% 0.09 255);
+
+  --color-sky-100: oklch(30% 0.06 230);
+  --color-sky-700: oklch(80% 0.12 230);
+
+  --color-violet-100: oklch(30% 0.065 295);
+  --color-violet-700: oklch(80% 0.12 295);
+
+  --color-orange-50: oklch(25% 0.05 55);
+  --color-orange-100: oklch(30% 0.065 55);
+  --color-orange-600: oklch(77% 0.15 55);
+
+  --color-purple-50: oklch(25% 0.05 305);
+  --color-purple-100: oklch(30% 0.065 305);
+  --color-purple-600: oklch(75% 0.14 305);
+
+  --color-green-50: oklch(25% 0.045 145);
+}
+
 /* Tailwind 4 declares theme values in CSS instead of tailwind.config.js.
    Same token names and same utility classes as the kit — only the wiring differs. */
 @theme inline {
@@ -50,9 +177,10 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
-  /* primary = near-black. Buttons, active nav, focus, controls. Fixed. */
-  --color-primary: #1a1a1a;
-  --color-primary-foreground: #fafafa;
+  /* Every colour below reads a channel triplet from :root / .dark. They used to
+     be literal hex, which is why the theme could not reach them. */
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
 
   /* brand = the client's colour. The only token that changes per company. */
   --color-brand: hsl(var(--brand));
@@ -64,18 +192,18 @@
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-accent: hsl(var(--sidebar-accent));
 
-  --color-secondary: #f4f4f5;
-  --color-secondary-foreground: #18181b;
-  --color-destructive: #ef4444;
-  --color-destructive-foreground: #fafafa;
-  --color-muted: #f4f4f5;
-  --color-muted-foreground: #71717a;
-  --color-accent: #f4f4f5;
-  --color-accent-foreground: #18181b;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #09090b;
-  --color-card: #ffffff;
-  --color-card-foreground: #09090b;
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -91,7 +219,20 @@ html { overflow-x: hidden; }
    overlay and `scrollbar-gutter: stable` would leave a phantom strip that the
    backdrop cannot cover. */
 @media (min-width: 768px) { html { scrollbar-gutter: stable; } }
-body { margin: 0; padding: 0; overflow-x: hidden; max-width: 100vw; font-family: 'Inter', sans-serif; }
+/* `color-scheme` is what makes the browser's own chrome follow the theme:
+   native scrollbars, form controls and the flash between paints. Without it a
+   dark page still gets a white scrollbar track and a white overscroll area. */
+:root { color-scheme: light; }
+.dark { color-scheme: dark; }
+
+body {
+  margin: 0; padding: 0; overflow-x: hidden; max-width: 100vw;
+  font-family: 'Inter', sans-serif;
+  /* The shell paints its own surfaces, but the document behind it must match or
+     the edges flash white on overscroll and during route changes. */
+  background-color: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
 
 @layer base {
   /* Tailwind 3's preflight defaulted borders to gray-200; v4 dropped that and
@@ -101,17 +242,26 @@ body { margin: 0; padding: 0; overflow-x: hidden; max-width: 100vw; font-family:
     border-color: var(--color-border);
   }
 
-  /* Thin custom scrollbar (kit §0.3) */
+  /* Thin custom scrollbar (kit §0.3). Driven by tokens so it follows the theme —
+     a hardcoded #e4e4e7 thumb is a bright bar on a dark page. */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
 
   /* Number inputs: no spinners */
   input[type=number]::-webkit-outer-spin-button,
   input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   input[type=number] { -moz-appearance: textfield; }
 }
+
+/* ── Brand artwork on a themed surface ──────────────────────────────────────
+   The logo and the favicon isotype are drawn WHITE, for dark backgrounds. On a
+   light surface they have to be inverted to be seen; in dark mode the surface is
+   dark again, so the inversion has to lift or the mark vanishes into it.
+   Used by Logo.tsx (variant="dark") and Loader.tsx. */
+.brand-art-on-surface { filter: invert(1) hue-rotate(180deg); }
+.dark .brand-art-on-surface { filter: none; }
 
 /* ── Modal / overlay animations (used by useModalAnimation) ──
    The kit's modal keyframes slide along X, which reads as a side panel. A

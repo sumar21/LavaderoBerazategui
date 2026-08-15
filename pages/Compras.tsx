@@ -896,7 +896,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
              
              <Button 
                 onClick={() => setIsCreateModalOpen(true)}
-                className="w-full sm:w-auto bg-brand hover:bg-brand/90 text-white shadow-sm rounded-md px-6 py-2.5 flex items-center justify-center gap-2 transition-all active:scale-95"
+                className="w-full sm:w-auto bg-brand hover:bg-brand/90 text-brand-foreground shadow-sm rounded-md px-6 py-2.5 flex items-center justify-center gap-2 transition-all active:scale-95"
              >
                <Plus className="w-4 h-4" />
                <span className="hidden sm:inline">Nueva Orden</span>
@@ -920,7 +920,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
              </div>
              <h3 className="text-xl font-bold text-foreground tracking-tight">No hay órdenes</h3>
              <p className="text-muted-foreground mt-2 text-center max-w-xs">No se encontraron órdenes de compra con los filtros actuales.</p>
-             <Button onClick={() => setIsCreateModalOpen(true)} className="mt-6 rounded-md bg-brand text-white px-6 py-2.5 shadow-sm">
+             <Button onClick={() => setIsCreateModalOpen(true)} className="mt-6 rounded-md bg-brand text-brand-foreground px-6 py-2.5 shadow-sm">
                <Plus className="w-4 h-4 mr-2" />
                Generar Nueva OC
              </Button>

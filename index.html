@@ -4,9 +4,27 @@
     <meta charset="UTF-8" />
     <!-- viewport-fit=cover lets the safe-area insets resolve on notched iPhones (§5.13) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#173F8C" />
+    <meta name="theme-color" content="#173F8C" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0a0b" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Lavadero Berazategui</title>
+    <!--
+      Applies the theme BEFORE first paint. Doing this from React instead would
+      paint the light theme for a frame and then flip — the white flash every
+      dark-mode user notices. Blocking and inline on purpose: a deferred or
+      external script runs too late to help. Key must match THEME_KEY in
+      components/useTheme.ts.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var dark = stored ? stored === 'dark'
+                            : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.classList.toggle('dark', dark);
+        } catch (e) { /* private mode: fall back to the light default */ }
+      })();
+    </script>
   </head>
   <body class="bg-background text-foreground antialiased selection:bg-brand/20 selection:text-foreground">
     <div id="root"></div>

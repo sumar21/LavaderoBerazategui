@@ -42,3 +42,6 @@ preview-*.html
 # path and team email addresses, and this repository is public.
 EnviarUsuarioYContrase*/
 NotificarORdendeCOmpra_*/
+
+# Working documents (client feedback, notes) — not source
+*.docx.pdf

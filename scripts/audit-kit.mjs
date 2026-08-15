@@ -26,6 +26,21 @@ const flag = (rule, file, detail) => findings.push({ rule, file, detail });
 /** The arbitrary sizes the kit sanctions. Named steps up to 2xl are fine. */
 const SIZE_OK = new Set(['[13px]', '[11px]', '[10px]', '[9px]', '[8px]']);
 
+/* Dark mode works by redefining palette steps inside `.dark` in index.css, so a
+   step used in the app but missing there stays at its LIGHT value — a white
+   block on a dark page. Read the actual declarations instead of hardcoding a
+   list, so this can never drift from the stylesheet. */
+const CSS = readFileSync(`${R}/index.css`, 'utf8');
+const DARK_BLOCK = CSS.split('.dark').slice(1).join('.dark');
+const REMAPPED = new Set(
+  [...DARK_BLOCK.matchAll(/--color-([a-z]+)-(\d{2,3})\s*:/g)].map(m => `${m[1]}-${m[2]}`)
+);
+/* Steps that carry surfaces or foreground text and therefore must flip. 300/400/500
+   are mid tones (dots, icons, focus rings) that read on either canvas, and some
+   sit on the brand sidebar, which does not follow the theme. */
+const MUST_FLIP = new Set(['50', '100', '200', '600', '700', '800', '900']);
+const FAMILIES = /^(red|amber|emerald|indigo|blue|sky|violet|orange|purple|green|teal|cyan|rose|pink|lime|yellow|fuchsia)$/;
+
 for (const [file, s] of src) {
   const lines = s.split(/\r?\n/);
 
@@ -79,6 +94,15 @@ for (const [file, s] of src) {
     // `hidden xs:inline` hides the element at every width — silently.
     const bp = line.match(/(?<![\w-])(xs|2xs|3xl):/);
     if (bp) flag('tipo', at, `breakpoint inexistente en este proyecto: ${bp[1]}:`);
+
+    // Dark mode — every surface/text palette step must be redefined in `.dark`.
+    for (const m of line.matchAll(/(?<![\w-])(?:bg|text|border|divide|ring)-([a-z]+)-(\d{2,3})(?![\w-])/g)) {
+      const [, family, step] = m;
+      if (!FAMILIES.test(family) || !MUST_FLIP.has(step)) continue;
+      if (!REMAPPED.has(`${family}-${step}`)) {
+        flag('dark', at, `${family}-${step} no está redefinido en .dark (queda claro en modo oscuro)`);
+      }
+    }
   });
 
   // 5 — modals must portal

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   Home, Shirt, ShoppingCart, Check, Settings, ChevronDown, Package, Users,
-  LogOut, Menu, X, ChevronLeft, ChevronRight,
+  LogOut, Menu, X, ChevronLeft, ChevronRight, Sun, Moon,
 } from 'lucide-react';
 import { Logo } from './ui/Logo';
 import { cn, useModalAnimation } from './ui/UIComponents';
 import { Z } from './ui/zLayers';
 import { useUserProfile } from './useUserProfile';
+import { useTheme } from './useTheme';
 import { capitalizeFirst } from '../utils/text';
 
 interface SidebarProps {
@@ -83,6 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === '1');
   const drawer = useModalAnimation(isOpen);
   const user = useUserProfile();
+  const { isDark, toggle: toggleTheme } = useTheme();
 
   useEffect(() => { localStorage.setItem(COLLAPSE_KEY, collapsed ? '1' : '0'); }, [collapsed]);
 
@@ -215,6 +217,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       <div className="shrink-0 border-t border-sidebar-border p-3">
+        {/* Theme switch, above the user block. Icon and label report the theme you
+            are IN, not the one you would get — it sits directly on top of the
+            user's name and role, which are state labels, so anything else here
+            reads as state anyway. `role="switch"` is what carries the action:
+            the visible text is the accessible name, and aria-checked announces
+            the state, so nothing has to be duplicated into an aria-label. */}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isDark}
+          onClick={toggleTheme}
+          title={isCollapsed ? (isDark ? 'Modo oscuro' : 'Modo claro') : undefined}
+          className={cn(
+            'mb-2 flex w-full items-center rounded-md text-sm font-medium text-sidebar-muted transition-colors hover:bg-white/10 hover:text-sidebar-foreground',
+            isCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5 md:py-2'
+          )}
+        >
+          {isDark
+            ? <Moon className="h-4 w-4 shrink-0" aria-hidden="true" />
+            : <Sun className="h-4 w-4 shrink-0" aria-hidden="true" />}
+          {!isCollapsed && (isDark ? 'Modo oscuro' : 'Modo claro')}
+        </button>
+
         <div className={cn('mb-2 flex items-center', isCollapsed ? 'justify-center' : 'gap-3 px-1')}>
           <div
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-semibold text-sidebar-foreground"
