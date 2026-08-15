@@ -5,7 +5,7 @@
  * on this tenant) ignores flexbox, grid and most <style> blocks.
  */
 
-import { LOGO_CID } from './logo';
+import { LOGO_CID } from './logo.js';
 
 const BRAND = '#173F8C';
 /** Header cell dividers: visible against BRAND without fighting it. */

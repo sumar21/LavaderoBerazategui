@@ -2,10 +2,10 @@ import express from 'express';
 const router = express.Router();
 
 // Import Controllers and Middleware
-import * as authController from '../controllers/authController';
-import * as dataController from '../controllers/dataController';
-import * as mailController from '../controllers/mailController';
-import verifyToken from '../middleware/verifyToken';
+import * as authController from '../controllers/authController.js';
+import * as dataController from '../controllers/dataController.js';
+import * as mailController from '../controllers/mailController.js';
+import verifyToken from '../middleware/verifyToken.js';
 
 // ========================================================
 // PUBLIC ROUTES (No Token Required)

@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { getAppToken } from '../config/msal';
-import { LOGO_CID, LOGO_PNG_BASE64 } from '../templates/logo';
+import { getAppToken } from '../config/msal.js';
+import { LOGO_CID, LOGO_PNG_BASE64 } from '../templates/logo.js';
 
 const GRAPH = 'https://graph.microsoft.com/v1.0';
 

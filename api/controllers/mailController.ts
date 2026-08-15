@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
-import { getAppToken } from '../config/msal';
-import { SITE_ID, LISTS } from '../src/config/constants';
-import { sendMail, parseAddressList } from '../services/mail';
-import { purchaseOrderEmail, credentialsEmail, OrderItemRow } from '../templates/emails';
-import { findUserByEmail } from './authController';
+import { getAppToken } from '../config/msal.js';
+import { SITE_ID, LISTS } from '../src/config/constants.js';
+import { sendMail, parseAddressList } from '../services/mail.js';
+import { purchaseOrderEmail, credentialsEmail, OrderItemRow } from '../templates/emails.js';
+import { findUserByEmail } from './authController.js';
 
 const CC_ORDENES = parseAddressList(process.env.MAIL_CC_ORDENES);
 const BCC_ORDENES = parseAddressList(process.env.MAIL_BCC_ORDENES);

@@ -15,9 +15,9 @@
  */
 import assert from 'node:assert';
 import { writeFileSync } from 'node:fs';
-import { purchaseOrderEmail, credentialsEmail, escapeHtml } from './emails';
-import { buildMessage, parseAddressList } from '../services/mail';
-import { LOGO_CID, LOGO_PNG_BASE64 } from './logo';
+import { purchaseOrderEmail, credentialsEmail, escapeHtml } from './emails.js';
+import { buildMessage, parseAddressList } from '../services/mail.js';
+import { LOGO_CID, LOGO_PNG_BASE64 } from './logo.js';
 
 const order = purchaseOrderEmail({
   orderNumber: 131,

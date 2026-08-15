@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
-import { getAppToken } from '../config/msal';
-import { SITE_ID, LISTS } from '../src/config/constants';
-import { AuthRequest } from '../middleware/verifyToken';
-import { findUserByEmail } from './authController';
+import { getAppToken } from '../config/msal.js';
+import { SITE_ID, LISTS } from '../src/config/constants.js';
+import { AuthRequest } from '../middleware/verifyToken.js';
+import { findUserByEmail } from './authController.js';
 
 // Interface for Ordenes de Compra
 export interface OrdenCompra {

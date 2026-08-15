@@ -1,8 +1,13 @@
 {
+  // The root package.json sets "type": "module", so Vercel runs this API as
+  // native ESM on Node, where relative imports REQUIRE an explicit .js
+  // extension. "bundler" resolution hid that (tsx resolves like a bundler
+  // locally), and the function crashed on boot in production with
+  // ERR_MODULE_NOT_FOUND. NodeNext makes tsc fail here instead of in prod.
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "lib": ["ES2022"],
     "types": ["node"],
     "esModuleInterop": true,

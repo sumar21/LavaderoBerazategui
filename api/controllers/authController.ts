@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
-import { getAppToken } from '../config/msal';
-import { SITE_ID, LISTS } from '../src/config/constants';
+import { getAppToken } from '../config/msal.js';
+import { SITE_ID, LISTS } from '../src/config/constants.js';
 
 // --- SHARED TYPES ---
 export interface SharePointUser {
