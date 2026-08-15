@@ -90,9 +90,102 @@ dice el kit, qué hacemos nosotros, dónde vive el cambio y por qué.
 - **Kit**: la regla de oro 19 prohíbe los `z-[9999]`/`z-[999999]` del código legacy… pero sus
   propios snippets de `Toast` y `Tooltip` usan `z-[99999]` y `z-[100000]`
   (`docs/DESIGN.md:928`, `docs/DESIGN.md:1045`).
-- **Nosotros**: una escala tipada — nav 20 · drawer 50 · modal 60 · confirm 70 · toast 80 · tooltip 90.
+- **Nosotros**: una escala tipada — nav 20 · drawer 50 · modal 60 · confirm 70 · **popover 75** ·
+  toast 80 · tooltip 90 (`components/ui/zLayers.ts:16`).
 - **Dónde vive**: `components/ui/zLayers.ts`.
 - **Por qué**: se sigue la regla, no el ejemplo. Mismo orden relativo, valores sanos.
+  `popover` no está en el kit: los desplegables portaleados (`Select`, `Combobox`,
+  `MultiSelect`) se abren **desde adentro** de un diálogo, así que tienen que quedar por
+  encima de cualquier modal y por debajo del feedback transitorio.
+
+## 8. `font-mono` no se usa para identificadores
+
+- **Kit**: `font-mono` es para **montos en grillas y totales** (`docs/DESIGN.md:345`).
+- **Nosotros**: `font-mono` no se usa en ningún lado, y JetBrains Mono **no se descarga**.
+  La app es Inter y nada más (`index.css:4`, `index.css:44`).
+- **Dónde vive**: `index.css` (sin `@import` de la mono; `--font-mono` apunta a la del sistema
+  por si alguna vez hace falta).
+- **Por qué**: estaba aplicada en 29 lugares y los 29 eran identificadores —SKU, ID, teléfono,
+  código—, ninguno un monto. Era una segunda familia tipográfica bajándose en cada carga para
+  contradecir al kit. Si en el futuro aparece una grilla de dinero, `font-mono` vuelve a ser
+  la opción correcta **para esa columna**.
+
+## 9. Escala tipográfica verificada por script
+
+- **Kit**: define la escala en `docs/DESIGN.md:332-345`, sin herramienta que la haga cumplir.
+- **Nosotros**: `scripts/audit-kit.mjs` falla ante tamaños o pesos fuera de escala, ante
+  `font-mono`, y ante variantes de breakpoints inexistentes (`xs:`, `3xl:`)
+  (`scripts/audit-kit.mjs:27`, `scripts/audit-kit.mjs:73`).
+- **Dónde vive**: `scripts/audit-kit.mjs`. Se corre con `node scripts/audit-kit.mjs`.
+- **Por qué**: la app había derivado sola a 14 tamaños y 5 pesos. Los breakpoints inexistentes
+  son el caso más traicionero: **no emiten CSS**, así que `hidden xs:inline` oculta el elemento
+  en todos los anchos y falla en silencio. Este proyecto es Tailwind 4 sin archivo de config,
+  así que `xs` no existe. Única excepción registrada: el hero del login (`text-3xl lg:text-4xl`),
+  que el script exceptúa por archivo.
+
+## 10. Capitalización en presentación, nunca en el dato
+
+- **Kit**: no lo trata.
+- **Nosotros**: `capitalizeFirst()` en el punto de render (`utils/text.ts:14`), incluido dentro
+  de `Select`, `Combobox` y `MultiSelect` para que toda lista de opciones lo herede.
+- **Dónde vive**: `utils/text.ts` y los tres primitivos de desplegable.
+- **Por qué**: los registros llegan de SharePoint con la mayúscula que puso quien los cargó
+  ("sumar test"). **No se puede normalizar el dato**: `pages/Compras.tsx` matchea proveedores
+  con igualdad exacta (`p.name === targetData.providerId`), así que reescribirlos rompería la
+  búsqueda en silencio. Solo la primera letra: `text-transform: capitalize` capitaliza cada
+  palabra ("Zalea De Tela") y bajar el resto destruiría acrónimos ("TRADINGTEXT S.A").
+
+## 11. Un solo lugar resuelve el color de estado
+
+- **Kit**: regla de oro 7 — el color sale del estado canónico, no del texto traducido
+  (`docs/DESIGN.md:§3.11`).
+- **Nosotros**: `resolveStatus()` traduce el estado crudo de la API a clave canónica + etiqueta,
+  y vive **dentro** de `StatusBadge` (`components/ui/StatusBadge.tsx:75`).
+- **Dónde vive**: `components/ui/StatusBadge.tsx`. Ninguna página traduce estados por su cuenta.
+- **Por qué**: esa traducción vivía privada en `Compras.tsx` y `ViewOrderModal.tsx` tenía una
+  **tercera paleta propia**, así que la misma orden salía de un color en la grilla, de otro en
+  el modal de detalle y gris en Home. El orden de los alias importa: "Pendiente Ingreso"
+  contiene PENDIENTE pero no es una aprobación.
+
+## 12. Safe areas de iOS
+
+- **Kit**: menciona `pb-[env(safe-area-inset-bottom)]` en §5.13 sin exigir el meta tag.
+- **Nosotros**: `viewport-fit=cover` en `index.html:6`, y el header fijo de mobile crece con el
+  inset superior (`components/Sidebar.tsx:257`).
+- **Dónde vive**: `index.html`, `components/Sidebar.tsx`, `App.tsx` (el `mt-` de `<main>` acompaña).
+- **Por qué**: sin `viewport-fit=cover` los `env(safe-area-inset-*)` **valen cero** y todo el
+  esfuerzo es decorativo. Con él, la página se mete abajo del notch de verdad y el header hay
+  que compensarlo.
+
+## 13. Modo oscuro implementado de verdad
+
+- **Kit**: `darkMode: 'class'` en el config, pero **nunca se activa**: ni toggle ni bloque `.dark`,
+  y ~22 clases `dark:` sueltas que no hacen nada. El kit deja elegir: (a) implementarlo o
+  (b) borrar las clases muertas — "no lo dejes a medias" (`docs/DESIGN.md:394`).
+- **Nosotros**: opción (a). Bloque `.dark` en `index.css`, hook `useTheme`, y un switch en el
+  sidebar arriba del bloque de usuario.
+- **Dónde vive**: `index.css` (tokens + palette), `components/useTheme.ts`, `components/Sidebar.tsx`,
+  `index.html` (script inline anti-FOUC).
+- **Por qué / cómo**:
+  - **Tailwind 4 compila el palette a variables** (`.bg-red-50{background-color:var(--color-red-50)}`),
+    así que redefinir el paso dentro de `.dark` voltea los **354 colores literales de la app sin
+    tocar una sola `className`**. No hay 354 pares `dark:` que mantener.
+  - Solo voltean **50/100/200** (superficies) y **600→900** (texto sobre esas superficies).
+    **300/400/500 quedan fijos**: son puntitos, íconos y anillos de foco que se leen sobre
+    cualquier fondo, y algunos viven sobre el sidebar de marca, que no sigue al tema.
+  - `--brand` (#173F8C, 32% de luminosidad) **se aclara a 62% en oscuro**: como color de texto
+    desaparecía sobre el canvas. El texto que va ENCIMA del brand pasa a casi negro
+    (`--brand-foreground`), igual que hace shadcn con su `primary` oscuro.
+  - El arte de marca es **blanco** y se invierte por CSS para leerse sobre fondo claro. En
+    oscuro esa inversión **tiene que levantarse** o el logo se traga con el fondo: por eso es la
+    clase `.brand-art-on-surface` y no un `style` inline, que no puede reaccionar al tema.
+  - `color-scheme` en `:root`/`.dark` para que el cromo del navegador (scrollbars, controles
+    nativos, overscroll) acompañe.
+  - El script del `<head>` es **bloqueante e inline a propósito**: aplicado desde React, la
+    página pinta un frame en claro y recién ahí voltea — el flash blanco clásico.
+- **Verificación**: todos los pares de tokens en oscuro dan ≥4.4:1 y ninguno baja de 3:1;
+  `scripts/audit-kit.mjs` falla si se usa un paso de palette que no esté redefinido en `.dark`
+  (lee las declaraciones reales del CSS, así que no puede quedar desincronizado).
 
 ---
 
