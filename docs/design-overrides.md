@@ -183,6 +183,11 @@ dice el kit, qué hacemos nosotros, dónde vive el cambio y por qué.
     nativos, overscroll) acompañe.
   - El script del `<head>` es **bloqueante e inline a propósito**: aplicado desde React, la
     página pinta un frame en claro y recién ahí voltea — el flash blanco clásico.
+  - **El default es claro y el sistema operativo no se consulta.** El oscuro es opt-in: solo
+    lo enciende un `localStorage.theme === 'dark'` explícito. La app es de uso diurno en
+    mostrador y el claro es la identidad; heredar el `prefers-color-scheme` del equipo hacía
+    que la mitad de los usuarios viera un tema que nunca eligió. Por lo mismo el
+    `<meta name="theme-color">` es uno solo (`#173F8C`) en vez de un par por media query.
 - **Verificación**: todos los pares de tokens en oscuro dan ≥4.4:1 y ninguno baja de 3:1;
   `scripts/audit-kit.mjs` falla si se usa un paso de palette que no esté redefinido en `.dark`
   (lee las declaraciones reales del CSS, así que no puede quedar desincronizado).
