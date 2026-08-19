@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Plus, Filter, RefreshCcw, ArrowRightLeft, Edit, Trash2, AlertTriangle, AlertCircle, X, Package, LayoutGrid, List } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -22,27 +22,6 @@ export const StockOnline: React.FC = () => {
   const [catalog, setCatalog] = useState<ArticuloAPI[]>([]);
   
   const [isLoading, setIsLoading] = useState(false);
-
-  // The floating totals bar fades once the cursor gets near it, so it can never
-  // hide the row underneath. Measured here rather than with :hover because the
-  // bar is pointer-events-none — see the comment at its markup.
-  const totalsRef = useRef<HTMLDivElement>(null);
-  const [isCursorNearTotals, setIsCursorNearTotals] = useState(false);
-
-  useEffect(() => {
-    const MARGIN = 28; // px of slack around the bar
-    const onMove = (e: MouseEvent) => {
-      const r = totalsRef.current?.getBoundingClientRect();
-      // Same value in, React bails out of the re-render — safe on mousemove.
-      setIsCursorNearTotals(
-        !!r &&
-        e.clientX >= r.left - MARGIN && e.clientX <= r.right + MARGIN &&
-        e.clientY >= r.top - MARGIN && e.clientY <= r.bottom + MARGIN
-      );
-    };
-    window.addEventListener('mousemove', onMove, { passive: true });
-    return () => window.removeEventListener('mousemove', onMove);
-  }, []);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -566,10 +545,29 @@ export const StockOnline: React.FC = () => {
     return matchesSearch && matchesSubdeposit && matchesSku;
   });
 
-  const totalQty = stock.reduce((acc, item) => acc + item.quantity, 0);
-  const logisticsQty = stock.filter(i => i.subdeposit === 'LOGISTICA').reduce((acc, item) => acc + item.quantity, 0);
-  const plantQty = stock.filter(i => i.subdeposit === 'DEPOSITO').reduce((acc, item) => acc + item.quantity, 0);
-  
+  // Totals count the rows on screen, not the whole warehouse: the bar sits under
+  // the grid now, and a footer that disagrees with the rows above it reads as a
+  // bug the moment any filter is applied.
+  const totalQty = filteredStock.reduce((acc, item) => acc + item.quantity, 0);
+  const logisticsQty = filteredStock.filter(i => i.subdeposit === 'LOGISTICA').reduce((acc, item) => acc + item.quantity, 0);
+  const plantQty = filteredStock.filter(i => i.subdeposit === 'DEPOSITO').reduce((acc, item) => acc + item.quantity, 0);
+
+  const totalsBar = (
+    <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-1 px-4 py-2.5 text-xs">
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+        Logística: <b className="tabular-nums text-foreground">{logisticsQty}</b>
+      </div>
+      <div className="flex items-center gap-1.5 text-muted-foreground">
+        <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden="true" />
+        Planta: <b className="tabular-nums text-foreground">{plantQty}</b>
+      </div>
+      <div className="font-semibold text-foreground">
+        Total: <span className="tabular-nums">{totalQty}</span>
+      </div>
+    </div>
+  );
+
   const activeFiltersCount = filters.subdeposit.length + filters.sku.length;
 
   return (
@@ -679,7 +677,7 @@ export const StockOnline: React.FC = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex min-h-0 flex-1 flex-col px-4 sm:px-8 pb-4 pt-2 md:overflow-hidden overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col px-4 sm:px-8 pb-4 pt-5 md:overflow-hidden overflow-y-auto">
         {isLoading ? (
           <div className="flex h-full min-h-[400px] items-center justify-center">
             <Loader text="Cargando stock…" />
@@ -779,10 +777,20 @@ export const StockOnline: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            {/* Totals plinth: last child of the card and shrink-0, so it holds the
+                bottom edge while the table scrolls above it. It used to be a pill
+                floating over the middle of the grid, which meant it covered rows
+                and needed a mousemove listener to fade itself out of the way. */}
+            <div className="shrink-0 rounded-b-lg border-t border-border bg-muted/60">
+              {totalsBar}
+            </div>
             </div>
 
             {/* Mobile Card View */}
             <div className="md:hidden space-y-3">
+              <div className="sticky top-0 z-10 rounded-lg border border-border bg-card shadow-sm">
+                {totalsBar}
+              </div>
               {filteredStock.map((item) => (
                 <div key={item.id} className="bg-card rounded-lg border border-border shadow-sm p-4 space-y-4">
                   <div className="flex items-start gap-3">
@@ -854,34 +862,6 @@ export const StockOnline: React.FC = () => {
         )}
       </div>
 
-      {/* Totals bar. Floating so it costs the grid no height, and `pointer-events-none`
-          so it is fully transparent to the mouse: wheel, clicks and text selection
-          all reach the grid underneath. That is also why proximity is measured in
-          JS — an element that receives no pointer events receives no :hover either,
-          and any CSS trick that restores hover would swallow the wheel again.
-          No backdrop-blur: a blur survives `opacity` and would keep smearing the
-          very row you are trying to read.
-          Hidden while loading: the counters would read a meaningless zero. */}
-      {!isLoading && (
-      <div ref={totalsRef} className="pointer-events-none fixed md:absolute bottom-[calc(1.25rem+env(safe-area-inset-bottom))] md:bottom-5 left-1/2 -translate-x-1/2 z-30 max-w-[90vw]">
-        <div className={`bg-card border border-border p-1.5 pr-4 rounded-full shadow-xl shadow-black/10 flex items-center gap-4 sm:gap-6 transition-opacity duration-200 ${isCursorNearTotals ? 'opacity-0' : 'opacity-100'}`}>
-          <div className="bg-primary text-primary-foreground px-3 py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-md shrink-0">
-              Total: {totalQty}
-          </div>
-          <div className="flex gap-3 sm:gap-4 text-[10px] sm:text-xs font-medium text-muted-foreground">
-              <div className="flex items-center gap-1.5 shrink-0">
-                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true"></span>
-                 Logística: <b className="text-foreground">{logisticsQty}</b>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true"></span>
-                 Planta: <b className="text-foreground">{plantQty}</b>
-              </div>
-          </div>
-        </div>
-      </div>
-      )}
-
       {/* Confirmation & Actions Modals (Logic remains identical, just ensuring imports work) */}
       <Modal
         isOpen={showConfirmation}
@@ -949,7 +929,7 @@ export const StockOnline: React.FC = () => {
                     type="number" 
                     min="1"
                     placeholder="0" 
-                    value={formData.quantity}
+                    value={formData.quantity || ""}
                     onChange={e => setFormData({...formData, quantity: Number(e.target.value)})}
                 />
                 <div className="w-full">
@@ -1012,7 +992,7 @@ export const StockOnline: React.FC = () => {
                 placeholder="0" 
                 type="number" 
                 min="1"
-                value={formData.quantity}
+                value={formData.quantity || ""}
                 onChange={e => setFormData({...formData, quantity: Number(e.target.value)})}
             />
             
@@ -1069,7 +1049,7 @@ export const StockOnline: React.FC = () => {
                     placeholder="Ingrese cantidad" 
                     type="number"
                     min="1"
-                    value={formData.quantity}
+                    value={formData.quantity || ""}
                     onChange={e => setFormData({...formData, quantity: Number(e.target.value)})}
                  />
              </div>
@@ -1103,7 +1083,7 @@ export const StockOnline: React.FC = () => {
                 placeholder="Ingrese cantidad" 
                 type="number"
                 min="0"
-                value={formData.quantity}
+                value={formData.quantity || ""}
                 onChange={e => setFormData({...formData, quantity: Number(e.target.value)})}
             />
             {validationError && (
