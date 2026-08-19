@@ -35,8 +35,9 @@ dice el kit, qué hacemos nosotros, dónde vive el cambio y por qué.
 - **Kit**: el aside es `bg-card` (blanco) con el NavItem activo en `bg-primary` (negro), y la
   regla de oro 3 dice que `primary` no se toca entre clientes (`docs/DESIGN.md:1562`,
   `docs/DESIGN.md:1572`, `docs/DESIGN.md:2892`).
-- **Nosotros**: el sidebar usa el **color de marca como fondo** (`bg-sidebar` = `#173F8C`),
-  con texto blanco y el item activo un escalón más claro del mismo hue.
+- **Nosotros**: en claro el sidebar usa el **color de marca como fondo** (`bg-sidebar` =
+  `#173F8C`), con texto blanco y el item activo un escalón más claro del mismo hue. En oscuro
+  el shell es neutro y la marca queda solo en el item activo (ver más abajo).
 - **Dónde vive**: tokens `--sidebar*` en `index.css`; `components/Sidebar.tsx`.
 - **Por qué**: es el patrón de las otras apps del estudio con shell de marca (p. ej. RH360,
   que usa su verde de la misma forma). El resto de los usos de `primary` (botones, focus
@@ -176,7 +177,15 @@ dice el kit, qué hacemos nosotros, dónde vive el cambio y por qué.
     tocar una sola `className`**. No hay 354 pares `dark:` que mantener.
   - Solo voltean **50/100/200** (superficies) y **600→900** (texto sobre esas superficies).
     **300/400/500 quedan fijos**: son puntitos, íconos y anillos de foco que se leen sobre
-    cualquier fondo, y algunos viven sobre el sidebar de marca, que no sigue al tema.
+    cualquier fondo, sea el shell de marca del claro o el neutro del oscuro.
+  - **El sidebar sí cambia de identidad entre temas.** En claro es el azul de marca (§3); en
+    oscuro baja a la superficie más fría de la paleta (`--sidebar: 220 26% 5%`) y el azul
+    aparece únicamente en el item activo, ahora un bloque saturado (`221 83% 53%`, blanco
+    encima a 5.3:1) en vez de un escalón más claro de su propio fondo. Deepenar el mismo azul
+    para oscuro dejaba una placa marino brillando al lado de un canvas casi negro, y obligaba
+    al item activo a competir contra la superficie que lo sostiene. Los neutros del tema
+    oscuro se mueven además del hue 240 (violáceo) al **217**, un gris azulado frío, para que
+    todo el shell lea como un mismo negro y no como dos.
   - `--brand` (#173F8C, 32% de luminosidad) **se aclara a 62% en oscuro**: como color de texto
     desaparecía sobre el canvas. El texto que va ENCIMA del brand pasa a casi negro
     (`--brand-foreground`), igual que hace shadcn con su `primary` oscuro.

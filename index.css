@@ -63,28 +63,31 @@
    Only the channel values change; every utility in the app already reads them
    through the tokens above, so no markup changes hands. */
 .dark {
-  --background: 240 10% 4%;
-  --foreground: 0 0% 96%;
-  --border: 240 5% 20%;
-  --input: 240 5% 22%;
-  --ring: 240 5% 45%;
+  /* Neutrals sit on hue 217 — a cold blue-grey — rather than 240's violet cast.
+     Nothing here is a pure grey: every surface carries a little blue so the
+     shell reads as one cold near-black instead of a purple one. */
+  --background: 217 24% 6%;
+  --foreground: 220 12% 93%;
+  --border: 217 18% 18%;
+  --input: 217 18% 20%;
+  --ring: 217 15% 45%;
 
   /* muted (canvas) stays below card, mirroring the light-mode stacking. */
-  --muted: 240 8% 7%;
-  --muted-foreground: 240 5% 66%;
-  --card: 240 6% 11%;
-  --card-foreground: 0 0% 96%;
-  --popover: 240 6% 14%;
-  --popover-foreground: 0 0% 96%;
-  --accent: 240 5% 17%;
-  --accent-foreground: 0 0% 96%;
-  --secondary: 240 5% 17%;
-  --secondary-foreground: 0 0% 96%;
+  --muted: 216 22% 8%;
+  --muted-foreground: 217 12% 62%;
+  --card: 215 20% 12%;
+  --card-foreground: 220 12% 93%;
+  --popover: 215 20% 14%;
+  --popover-foreground: 220 12% 93%;
+  --accent: 216 18% 18%;
+  --accent-foreground: 220 12% 93%;
+  --secondary: 216 18% 18%;
+  --secondary-foreground: 220 12% 93%;
   --destructive: 0 72% 55%;
   --destructive-foreground: 0 0% 98%;
 
-  --primary: 0 0% 96%;
-  --primary-foreground: 240 10% 8%;
+  --primary: 220 12% 93%;
+  --primary-foreground: 217 24% 8%;
 
   /* #173F8C is 32% lightness — as a text colour it disappears on a dark canvas.
      The hue is kept, the lightness is raised until it reads, and the text that
@@ -92,13 +95,20 @@
   --brand: 219 78% 62%;
   --brand-foreground: 219 90% 8%;
 
-  /* The shell stays brand-coloured but deepens, so it does not glow against the
-     canvas. Accent keeps clearing AA for white labels sitting on it. */
-  --sidebar: 219 55% 14%;
-  --sidebar-foreground: 0 0% 96%;
-  --sidebar-muted: 219 25% 70%;
-  --sidebar-border: 219 35% 24%;
-  --sidebar-accent: 219 50% 32%;
+  /* ── Sidebar: neutral in dark, brand-coloured in light ──
+     The light shell IS the brand colour. Deepening that same blue for dark left
+     a navy slab glowing beside a near-black canvas, and the active item — being
+     the same hue again, only lighter — had to fight the surface it sat on.
+
+     Here the shell recedes to the coldest surface in the palette and the brand
+     appears only where it means something: the active item, now a saturated
+     block rather than a slightly-lighter shade of its own background. White on
+     it is 5.3:1, clear of AA. See docs/design-overrides.md. */
+  --sidebar: 220 26% 5%;
+  --sidebar-foreground: 220 12% 93%;
+  --sidebar-muted: 217 13% 60%;
+  --sidebar-border: 217 18% 16%;
+  --sidebar-accent: 221 83% 53%;
 }
 
 /* ── Semantic palette under dark ────────────────────────────────────────────
