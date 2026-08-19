@@ -148,17 +148,17 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                               </div>
                            </div>
                         </div>
-                        <div className="bg-emerald-50 p-2 rounded-lg border border-emerald-100 flex justify-between items-center">
-                           <span className="text-[10px] uppercase font-bold text-emerald-600">Subtotal</span>
-                           <span className="text-sm font-bold text-emerald-700">{formatCurrency(subtotal)}</span>
+                        <div className="bg-emerald-50 p-2 rounded-lg border border-emerald-100 flex justify-between items-center gap-2">
+                           <span className="shrink-0 text-[10px] uppercase font-bold text-emerald-600">Subtotal</span>
+                           <span className="min-w-0 truncate text-sm font-bold text-emerald-700" title={formatCurrency(subtotal)}>{formatCurrency(subtotal)}</span>
                         </div>
                      </div>
                   );
               })}
               <div className="bg-emerald-600 rounded-md p-4 text-white dark:text-emerald-950 shadow-md">
-                 <div className="flex justify-between items-center">
-                    <span className="text-xs uppercase font-bold opacity-80 tracking-wider">Total Estimado</span>
-                    <span className="text-xl font-bold">{formatCurrency(totalEstimated)}</span>
+                 <div className="flex justify-between items-center gap-2">
+                    <span className="shrink-0 text-xs uppercase font-bold opacity-80 tracking-wider">Total Estimado</span>
+                    <span className="min-w-0 truncate text-xl font-bold" title={formatCurrency(totalEstimated)}>{formatCurrency(totalEstimated)}</span>
                  </div>
               </div>
            </div>
@@ -213,8 +213,14 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                                     />
                                  </div>
                               </td>
+                              {/* The span is what clips. A fixed column width stops the
+                                  cell from growing but not the text inside it from
+                                  painting over the neighbouring one, which is how a
+                                  long subtotal ended up on top of the delete button. */}
                               <td className="h-16 px-4 py-3 text-right font-bold text-foreground tabular-nums">
-                                 {formatCurrency(subtotal)}
+                                 <span className="block truncate" title={formatCurrency(subtotal)}>
+                                    {formatCurrency(subtotal)}
+                                 </span>
                               </td>
                               <td className="px-2 py-3 text-center">
                                  <button 
@@ -233,8 +239,14 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                     <tr>
                        <td colSpan={3} className="px-4 py-4 text-right font-bold text-foreground uppercase text-xs tracking-wider">Total Estimado</td>
                        <td className="px-4 py-4 text-right font-bold text-emerald-700 text-base tabular-nums">
-                          {formatCurrency(totalEstimated)}
+                          <span className="block truncate" title={formatCurrency(totalEstimated)}>
+                             {formatCurrency(totalEstimated)}
+                          </span>
                        </td>
+                       {/* The header declares five columns and this row was drawing
+                           four, so the footer's background stopped short of the right
+                           edge and left a white notch under the delete column. */}
+                       <td className="px-2 py-4" />
                     </tr>
                  </tfoot>
               </table>
