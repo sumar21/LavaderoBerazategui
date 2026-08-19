@@ -9,6 +9,7 @@ import { OrderItem, Provider, Article } from '@/types';
 import { QuickAddArticleModal } from './QuickAddArticleModal';
 import { notify } from '../ui/Notice';
 import { capitalizeFirst } from '../../utils/text';
+import { toCount } from '../../utils/number';
 
 interface CreateOrderModalProps {
   isOpen: boolean;
@@ -191,7 +192,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                     min="1"
                     className="h-[42px]" 
                     value={tempQty || ''}
-                    onChange={(e) => setTempQty(Number(e.target.value))}
+                    onChange={(e) => setTempQty(toCount(e.target.value))}
                     disabled={!tempArticleId}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -243,7 +244,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                           aria-label={`Cantidad de ${item.description}`}
                           className="h-9 w-20 text-right"
                           value={item.quantity || ''}
-                          onChange={(e) => handleItemQtyChange(item.id, Number(e.target.value))}
+                          onChange={(e) => handleItemQtyChange(item.id, toCount(e.target.value))}
                         />
                         <span className="text-xs text-muted-foreground">un.</span>
                         <button onClick={() => handleRemoveItem(item.id)} className="text-muted-foreground hover:text-red-500 transition-colors p-1 hover:bg-red-50 rounded" title="Quitar">

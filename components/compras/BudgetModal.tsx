@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { PurchaseOrder } from '@/types';
 import { capitalizeFirst } from '../../utils/text';
+import { toAmount, toCount } from '../../utils/number';
 
 interface BudgetModalProps {
   isOpen: boolean;
@@ -129,7 +130,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-card text-foreground shadow-sm"
                                  value={qty || ''}
                                  placeholder="0"
-                                 onChange={(e) => handleQuantityChange(item.sku, parseInt(e.target.value) || 0)}
+                                 onChange={(e) => handleQuantityChange(item.sku, toCount(e.target.value))}
                               />
                            </div>
                            <div>
@@ -142,7 +143,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                                     className="w-full pl-6 pr-3 py-2 border border-border rounded-lg text-sm focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-card text-foreground shadow-sm"
                                     value={price || ''}
                                     placeholder="0.00"
-                                    onChange={(e) => handlePriceChange(item.sku, parseFloat(e.target.value) || 0)}
+                                    onChange={(e) => handlePriceChange(item.sku, toAmount(e.target.value))}
                                  />
                               </div>
                            </div>
@@ -196,7 +197,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                                     className="w-full px-3 py-1.5 border border-border rounded-lg text-right text-sm focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-card text-foreground shadow-sm appearance-none"
                                     value={qty || ''}
                                     placeholder="0"
-                                    onChange={(e) => handleQuantityChange(item.sku, parseInt(e.target.value) || 0)}
+                                    onChange={(e) => handleQuantityChange(item.sku, toCount(e.target.value))}
                                  />
                               </td>
                               <td className="h-16 px-4 py-3">
@@ -208,7 +209,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                                        className="w-full pl-6 pr-3 py-1.5 border border-border rounded-lg text-right text-sm focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-card text-foreground shadow-sm appearance-none"
                                        value={price || ''}
                                        placeholder="0.00"
-                                       onChange={(e) => handlePriceChange(item.sku, parseFloat(e.target.value) || 0)}
+                                       onChange={(e) => handlePriceChange(item.sku, toAmount(e.target.value))}
                                     />
                                  </div>
                               </td>

@@ -261,7 +261,7 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                                              if (val !== '') {
                                                                  const numVal = parseInt(val, 10);
                                                                  if (!isNaN(numVal)) {
-                                                                     val = Math.min(numVal, pending).toString();
+                                                                     val = Math.min(Math.max(0, numVal), pending).toString();
                                                                  }
                                                              }
                                                              handleInputChange(item.sku, val);
@@ -359,7 +359,7 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                                              if (val !== '') {
                                                                  const numVal = parseInt(val, 10);
                                                                  if (!isNaN(numVal)) {
-                                                                     val = Math.min(numVal, pending).toString();
+                                                                     val = Math.min(Math.max(0, numVal), pending).toString();
                                                                  }
                                                              }
                                                              handleInputChange(item.sku, val);

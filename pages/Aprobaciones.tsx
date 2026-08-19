@@ -11,6 +11,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { Select } from '../components/ui/Select';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { capitalizeFirst } from '../utils/text';
+import { toCount } from '../utils/number';
 
 interface AprobacionesProps {
   orders: PurchaseOrder[];
@@ -225,7 +226,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                <div className="relative min-w-0 flex-1 sm:w-72 sm:flex-none group">
                  <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-brand transition-colors" />
                  <input
-                   placeholder="Buscar por OC, proveedor o solicitante..."
+                   placeholder="Buscar OC o proveedor..."
                    aria-label="Buscar órdenes"
                    className="w-full pl-10 h-10 rounded-md bg-card shadow-sm border border-border focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all text-sm"
                    value={searchTerm}
@@ -579,7 +580,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                                         className="w-full text-center border border-border rounded-lg px-2 py-1 text-sm focus:border-primary focus:ring-1 focus:ring-ring outline-none bg-card text-foreground font-bold"
                                         value={item.quantity}
                                         disabled={!isDraftEditable}
-                                        onChange={(e) => handleQuantityChange(item.sku, parseInt(e.target.value) || 0)}
+                                        onChange={(e) => handleQuantityChange(item.sku, toCount(e.target.value))}
                                     />
                                 </div>
                             </div>
@@ -622,7 +623,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                                                 className="w-20 text-center border border-border rounded-lg px-2 py-1 text-sm focus:border-primary focus:ring-1 focus:ring-ring outline-none bg-card text-foreground font-bold appearance-none"
                                                 value={item.quantity}
                                                 disabled={!isDraftEditable}
-                                                onChange={(e) => handleQuantityChange(item.sku, parseInt(e.target.value) || 0)}
+                                                onChange={(e) => handleQuantityChange(item.sku, toCount(e.target.value))}
                                             />
                                         </div>
                                     </td>

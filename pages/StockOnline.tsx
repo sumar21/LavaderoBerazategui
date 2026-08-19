@@ -15,6 +15,7 @@ import { notify } from '../components/ui/Notice';
 import { Loader } from '../components/ui/Loader';
 import { PageHeader } from '../components/ui/PageHeader';
 import { capitalizeFirst } from '../utils/text';
+import { toCount } from '../utils/number';
 
 export const StockOnline: React.FC = () => {
   const [stock, setStock] = useState<StockItem[]>([]);
@@ -930,7 +931,7 @@ export const StockOnline: React.FC = () => {
                     min="1"
                     placeholder="0" 
                     value={formData.quantity || ""}
-                    onChange={e => setFormData({...formData, quantity: Number(e.target.value)})}
+                    onChange={e => setFormData({...formData, quantity: toCount(e.target.value)})}
                 />
                 <div className="w-full">
                     <Select 
@@ -993,7 +994,7 @@ export const StockOnline: React.FC = () => {
                 type="number" 
                 min="1"
                 value={formData.quantity || ""}
-                onChange={e => setFormData({...formData, quantity: Number(e.target.value)})}
+                onChange={e => setFormData({...formData, quantity: toCount(e.target.value)})}
             />
             
             {validationError && (
@@ -1050,7 +1051,7 @@ export const StockOnline: React.FC = () => {
                     type="number"
                     min="1"
                     value={formData.quantity || ""}
-                    onChange={e => setFormData({...formData, quantity: Number(e.target.value)})}
+                    onChange={e => setFormData({...formData, quantity: toCount(e.target.value)})}
                  />
              </div>
 
@@ -1084,7 +1085,7 @@ export const StockOnline: React.FC = () => {
                 type="number"
                 min="0"
                 value={formData.quantity || ""}
-                onChange={e => setFormData({...formData, quantity: Number(e.target.value)})}
+                onChange={e => setFormData({...formData, quantity: toCount(e.target.value)})}
             />
             {validationError && (
                  <div className="text-red-600 text-sm bg-red-50 p-4 rounded-md flex items-center gap-3 border border-red-100">

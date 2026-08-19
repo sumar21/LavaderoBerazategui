@@ -8,6 +8,7 @@ import { configService } from '../../services/configService';
 import { Loader2, Plus, Trash2, Package } from 'lucide-react';
 import { notify } from '../ui/Notice';
 import { capitalizeFirst } from '../../utils/text';
+import { keepNonNegative } from '../../utils/number';
 
 interface QuickAddArticleModalProps {
   isOpen: boolean;
@@ -219,7 +220,7 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
                      min="0"
                      step="0.01"
                      value={unitPriceStr} 
-                     onChange={e => setUnitPriceStr(e.target.value)}
+                     onChange={e => { const v = e.target.value; setUnitPriceStr(prev => keepNonNegative(v, prev)); }}
                      disabled={isSaving}
                      onKeyDown={(e) => {
                          if (e.key === 'Enter') handleStageArticle();

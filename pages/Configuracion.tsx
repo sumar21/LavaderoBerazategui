@@ -13,6 +13,7 @@ import { notify } from '../components/ui/Notice';
 import { Loader } from '../components/ui/Loader';
 import { PageHeader } from '../components/ui/PageHeader';
 import { capitalizeFirst } from '../utils/text';
+import { toAmount } from '../utils/number';
 
 type ConfigTab = 'PROVEEDORES' | 'ARTICULOS';
 
@@ -646,7 +647,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                             type="number"
                             placeholder="0.00"
                             value={articleForm.unitPrice || ''} 
-                            onChange={e => setArticleForm({...articleForm, unitPrice: parseFloat(e.target.value) || 0})}
+                            onChange={e => setArticleForm({...articleForm, unitPrice: toAmount(e.target.value)})}
                         />
                     </div>
                 </>
