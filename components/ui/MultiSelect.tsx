@@ -125,7 +125,10 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
 
   return (
     <div className={`w-full relative ${className}`} ref={containerRef}>
-      {label && <label className="block text-sm font-semibold text-foreground mb-1.5 ml-1">{label}</label>}
+      {/* The kit's field label, DESIGN.md:554 — same element the Input renders.
+          It used to be text-sm/semibold with mb-1.5, which sat 6px taller and
+          pushed this control below any Input beside it in a grid. */}
+      {label && <label className="mb-1 block text-xs font-medium text-muted-foreground">{label}</label>}
       
       <button
         type="button"
