@@ -105,6 +105,10 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     setItems(items.filter(i => String(i.id) !== String(id)));
   };
 
+  const handleItemQtyChange = (id: string | number, quantity: number) => {
+    setItems(items.map(i => (String(i.id) === String(id) ? { ...i, quantity } : i)));
+  };
+
   const handleSubmit = () => {
     onSave(providerId, items);
     // Reset internal state
@@ -123,7 +127,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       footer={
         <>
           <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancelar</Button>
-          <Button onClick={handleSubmit} disabled={!providerId || items.length === 0 || isLoading}>
+          <Button onClick={handleSubmit} disabled={!providerId || items.length === 0 || items.some(i => i.quantity < 1) || isLoading}>
             Guardar y Notificar
           </Button>
         </>
@@ -228,12 +232,20 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               ) : (
                 items.map((item, idx) => (
                   <div key={item.id + '-' + idx} className="flex justify-between items-center bg-card p-3 rounded-lg border border-border text-sm shadow-sm hover:border-brand/20 transition-colors">
-                     <div className="flex-1">
-                        <span className="font-medium text-foreground block">{capitalizeFirst(item.description)}</span>
-                        <span className="text-xs text-muted-foreground">{item.sku}</span>
+                     <div className="min-w-0 flex-1">
+                        <span className="block truncate font-medium text-foreground">{capitalizeFirst(item.description)}</span>
+                        <span className="block truncate text-xs text-muted-foreground">{item.sku}</span>
                      </div>
-                     <div className="flex items-center gap-4">
-                        <span className="font-bold text-foreground bg-muted px-2 py-1 rounded text-xs">{item.quantity} un.</span>
+                     <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min="1"
+                          aria-label={`Cantidad de ${item.description}`}
+                          className="h-9 w-20 text-right"
+                          value={item.quantity || ''}
+                          onChange={(e) => handleItemQtyChange(item.id, Number(e.target.value))}
+                        />
+                        <span className="text-xs text-muted-foreground">un.</span>
                         <button onClick={() => handleRemoveItem(item.id)} className="text-muted-foreground hover:text-red-500 transition-colors p-1 hover:bg-red-50 rounded" title="Quitar">
                           <Trash2 className="w-4 h-4" />
                         </button>

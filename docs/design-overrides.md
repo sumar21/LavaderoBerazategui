@@ -107,8 +107,12 @@ dice el kit, qué hacemos nosotros, dónde vive el cambio y por qué.
   por si alguna vez hace falta).
 - **Por qué**: estaba aplicada en 29 lugares y los 29 eran identificadores —SKU, ID, teléfono,
   código—, ninguno un monto. Era una segunda familia tipográfica bajándose en cada carga para
-  contradecir al kit. Si en el futuro aparece una grilla de dinero, `font-mono` vuelve a ser
-  la opción correcta **para esa columna**.
+  contradecir al kit.
+- **Actualización**: ya apareció la grilla de dinero (`BudgetModal`, totales de Stock) y no
+  usa `font-mono`: usa `tabular-nums`. Inter tiene cifras tabulares, así que se consigue la
+  misma alineación de columnas —que es lo único que el kit buscaba con la mono— sin bajar una
+  segunda familia. `font-mono` queda descartada también para montos; `tabular-nums` es la
+  respuesta para cualquier columna numérica nueva.
 
 ## 9. Escala tipográfica verificada por script
 

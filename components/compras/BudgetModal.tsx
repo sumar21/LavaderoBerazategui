@@ -164,13 +164,17 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
 
            {/* DESKTOP VIEW (Table) */}
            <div className="hidden md:block border rounded-md overflow-hidden border-border shadow-sm">
-              <table className="w-full text-[13px]">
+              {/* table-fixed: without it the w-* below are only hints, so a long
+                  subtotal widened its own column and shoved every other one left
+                  as you typed. Fixed layout makes the widths binding — the article
+                  column absorbs the remainder and nothing moves while editing. */}
+              <table className="w-full table-fixed text-[13px]">
                  <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                     <tr>
-                       <th className="px-5 py-3 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
-                       <th className="px-5 py-3 text-right w-28 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cant.</th>
-                       <th className="px-5 py-3 text-right w-36 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio Unit.</th>
-                       <th className="px-5 py-3 text-right w-36 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Subtotal</th>
+                       <th className="px-4 py-3 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
+                       <th className="px-4 py-3 text-right w-28 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cant.</th>
+                       <th className="px-4 py-3 text-right w-36 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio Unit.</th>
+                       <th className="px-4 py-3 text-right w-44 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Subtotal</th>
                        <th className="px-2 py-3 w-10 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap"></th>
                     </tr>
                  </thead>
@@ -182,8 +186,8 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                         return (
                            <tr key={idx} className="bg-card hover:bg-accent/50 transition-colors">
                               <td className="h-16 px-4 py-3">
-                                 <span className="block font-medium text-foreground">{capitalizeFirst(item.description)}</span>
-                                 <span className="text-xs text-muted-foreground">{item.sku}</span>
+                                 <span className="block truncate font-medium text-foreground">{capitalizeFirst(item.description)}</span>
+                                 <span className="block truncate text-xs text-muted-foreground">{item.sku}</span>
                               </td>
                               <td className="h-16 px-4 py-3">
                                  <input 
@@ -208,7 +212,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                                     />
                                  </div>
                               </td>
-                              <td className="h-16 px-4 py-3 text-right font-bold text-foreground">
+                              <td className="h-16 px-4 py-3 text-right font-bold text-foreground tabular-nums">
                                  {formatCurrency(subtotal)}
                               </td>
                               <td className="px-2 py-3 text-center">
@@ -226,8 +230,8 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                  </tbody>
                  <tfoot className="bg-muted/80 border-t border-border">
                     <tr>
-                       <td colSpan={3} className="px-5 py-4 text-right font-bold text-foreground uppercase text-xs tracking-wider">Total Estimado</td>
-                       <td className="px-5 py-4 text-right font-bold text-emerald-700 text-base">
+                       <td colSpan={3} className="px-4 py-4 text-right font-bold text-foreground uppercase text-xs tracking-wider">Total Estimado</td>
+                       <td className="px-4 py-4 text-right font-bold text-emerald-700 text-base tabular-nums">
                           {formatCurrency(totalEstimated)}
                        </td>
                     </tr>
