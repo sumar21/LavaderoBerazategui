@@ -908,7 +908,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
       </div>
 
       {/* Main Content Area */}
-      <div className="flex min-h-0 flex-1 flex-col px-4 sm:px-8 pb-4 pt-2 md:overflow-hidden overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col px-4 sm:px-8 pb-4 pt-5 md:overflow-hidden overflow-y-auto">
         {(isLoading || isRefreshing) ? (
           <div className="flex h-full min-h-[400px] items-center justify-center">
             <Loader text="Cargando órdenes…" />

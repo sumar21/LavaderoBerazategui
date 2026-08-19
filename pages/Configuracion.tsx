@@ -346,7 +346,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
       </div>
 
       {/* CONTENT AREA */}
-      <div className="flex min-h-0 flex-1 flex-col px-4 md:px-8 pb-4 pt-2 md:overflow-hidden overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col px-4 md:px-8 pb-4 pt-5 md:overflow-hidden overflow-y-auto">
          {isLoading ? (
             <div className="flex h-full min-h-[400px] items-center justify-center">
             <Loader text="Cargando configuración…" />
@@ -646,7 +646,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                             type="number"
                             placeholder="0.00"
                             value={articleForm.unitPrice || ''} 
-                            onChange={e => setArticleForm({...articleForm, unitPrice: parseFloat(e.target.value)})}
+                            onChange={e => setArticleForm({...articleForm, unitPrice: parseFloat(e.target.value) || 0})}
                         />
                     </div>
                 </>

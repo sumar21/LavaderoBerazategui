@@ -202,7 +202,7 @@ export const Inyecciones: React.FC = () => {
       </div>
 
       {/* Content Area */}
-      <div className="flex min-h-0 flex-1 flex-col px-4 sm:px-8 py-4 md:overflow-hidden overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col px-4 sm:px-8 pb-4 pt-5 md:overflow-hidden overflow-y-auto">
         {isLoading ? (
             <div className="flex h-full min-h-[400px] items-center justify-center">
             <Loader text="Cargando inyecciones…" />
