@@ -249,6 +249,16 @@ body {
   ::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
 
+  /* The standard properties, not only the -webkit- pseudo-elements above.
+     Firefox never had those, and Chrome 121+ prefers this path when it is
+     present — both otherwise draw their own ~15px bar with an OPAQUE track.
+     That opaque track is why a sticky table header looked like it stopped
+     short of its card: the scroll box's own background cannot show through
+     it, so the gutter read as a notch beside the header. `transparent` as the
+     track colour hands that strip back to the element behind it, and the
+     header, the rows and the footer all run into it. */
+  * { scrollbar-width: thin; scrollbar-color: hsl(var(--border)) transparent; }
+
   /* Number inputs: no spinners */
   input[type=number]::-webkit-outer-spin-button,
   input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
