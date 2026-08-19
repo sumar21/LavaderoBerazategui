@@ -8,7 +8,7 @@ import { configService } from '../../services/configService';
 import { Loader2, Plus, Trash2, Package } from 'lucide-react';
 import { notify } from '../ui/Notice';
 import { capitalizeFirst } from '../../utils/text';
-import { keepNonNegative } from '../../utils/number';
+import { MAX_UNIT_PRICE, keepPriceText } from '../../utils/number';
 
 interface QuickAddArticleModalProps {
   isOpen: boolean;
@@ -218,9 +218,10 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
                      label="Precio Unitario" 
                      placeholder="0.00"
                      min="0"
+                     max={MAX_UNIT_PRICE}
                      step="0.01"
                      value={unitPriceStr} 
-                     onChange={e => { const v = e.target.value; setUnitPriceStr(prev => keepNonNegative(v, prev)); }}
+                     onChange={e => { const v = e.target.value; setUnitPriceStr(prev => keepPriceText(v, prev)); }}
                      disabled={isSaving}
                      onKeyDown={(e) => {
                          if (e.key === 'Enter') handleStageArticle();
@@ -273,13 +274,13 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
            </ul>
 
            <div className="hidden md:block border border-border rounded-lg overflow-hidden max-h-[40vh] overflow-y-auto">
-               <table className="w-full text-left text-[13px]">
+               <table className="w-full table-fixed min-w-[640px] text-left text-[13px]">
                   <thead className="sticky top-0 z-20 bg-muted border-b border-border font-semibold">
                      <tr>
-                         <th className="px-4 py-2 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Categoría</th>
-                         <th className="px-4 py-2 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">SKU</th>
+                         <th className="w-32 px-4 py-2 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Categoría</th>
+                         <th className="w-40 px-4 py-2 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">SKU</th>
                          <th className="px-4 py-2 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
-                         <th className="px-4 py-2 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio Unit.</th>
+                         <th className="w-36 px-4 py-2 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio Unit.</th>
                          <th className="px-3 py-2 w-10 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap"></th>
                      </tr>
                   </thead>
@@ -287,9 +288,9 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
                      {stagedArticles.map((a, idx) => (
                          <tr key={a.tempId} className="hover:bg-accent transition-colors">
                              <td className="px-4 py-2"><span className="text-[10px] bg-muted px-2 py-0.5 rounded uppercase font-bold tracking-wider text-muted-foreground">{a.category || '-'}</span></td>
-                             <td className="px-4 py-2 text-[11px] text-muted-foreground font-semibold">{a.code}</td>
-                             <td className="px-4 py-2 font-medium text-foreground">{capitalizeFirst(a.name)}</td>
-                             <td className="px-4 py-2 text-right text-foreground font-bold">${a.unitPrice.toFixed(2)}</td>
+                             <td className="px-4 py-2 truncate text-[11px] text-muted-foreground font-semibold">{a.code}</td>
+                             <td className="px-4 py-2 truncate font-medium text-foreground" title={capitalizeFirst(a.name)}>{capitalizeFirst(a.name)}</td>
+                             <td className="px-4 py-2 truncate text-right text-foreground font-bold tabular-nums">${a.unitPrice.toFixed(2)}</td>
                              <td className="px-3 py-2 text-center">
                                  <button onClick={() => handleRemoveStaged(a.tempId)} className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded transition-colors shadow-sm bg-card border border-border">
                                      <Trash2 className="w-3.5 h-3.5" />

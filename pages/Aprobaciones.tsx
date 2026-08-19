@@ -266,14 +266,17 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
           <div className="space-y-4">
             {/* Desktop Table View */}
             <div className="hidden md:flex min-h-0 flex-1 flex-col bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto">
-              <table className="w-full text-left text-[13px]">
+              {/* table-fixed so a long amount or provider name cannot widen its own
+                  column and shove the rest sideways. min-w keeps the columns readable:
+                  below it the wrapper scrolls instead of squashing them. */}
+              <table className="w-full table-fixed min-w-[900px] text-left text-[13px]">
                 <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Orden</th>
+                    <th className="h-12 w-40 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Orden</th>
                     <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Detalles</th>
-                    <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Solicitante</th>
-                    <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Monto Total</th>
-                    <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Decisión</th>
+                    <th className="h-12 w-56 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Solicitante</th>
+                    <th className="h-12 w-44 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Monto Total</th>
+                    <th className="h-12 w-40 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Decisión</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
@@ -289,8 +292,8 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                         </div>
                       </td>
                       <td className="h-16 px-4 py-3">
-                        <span className="font-semibold text-foreground block">{capitalizeFirst(order.providerName)}</span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="block truncate font-semibold text-foreground" title={capitalizeFirst(order.providerName)}>{capitalizeFirst(order.providerName)}</span>
+                        <span className="block truncate text-xs text-muted-foreground">
                           {order.items.length} ítems{isPending(order) ? ' esperando revisión' : ''}
                         </span>
                       </td>
@@ -299,14 +302,14 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                             <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
                                 {order.requester ? order.requester.substring(0, 2).toUpperCase() : 'US'}
                             </div>
-                            <div className="flex flex-col">
-                                <span className="text-sm font-medium text-foreground">{order.requester || 'Usuario'}</span>
-                                <span className="text-[10px] text-muted-foreground uppercase">{order.requesterProfile || 'COMPRAS'}</span>
+                            <div className="flex min-w-0 flex-col">
+                                <span className="truncate text-sm font-medium text-foreground">{order.requester || 'Usuario'}</span>
+                                <span className="truncate text-[10px] text-muted-foreground uppercase">{order.requesterProfile || 'COMPRAS'}</span>
                             </div>
                         </div>
                       </td>
                       <td className="h-16 px-4 py-3 text-right">
-                        <span className="text-lg font-bold text-foreground">
+                        <span className="block truncate text-lg font-bold text-foreground tabular-nums" title={formatCurrency(calculateTotal(order.items))}>
                             {formatCurrency(calculateTotal(order.items))}
                         </span>
                       </td>
@@ -596,11 +599,11 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                 {/* This one scrolls itself, so it IS the sticky context. `overflow-hidden`
                     alongside `overflow-y-auto` was contradictory — the Y axis wins anyway. */}
                 <div className="hidden md:block rounded-md border border-border max-h-[350px] overflow-y-auto shadow-sm">
-                    <table className="w-full text-[13px]">
+                    <table className="w-full table-fixed min-w-[560px] text-[13px]">
                         <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                             <tr>
-                                <th className="px-5 py-3 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Descripción</th>
-                                <th className="px-5 py-3 text-right w-32 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio</th>
+                                <th className="px-4 py-3 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Descripción</th>
+                                <th className="px-4 py-3 text-right w-40 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio</th>
                                 <th className="px-5 py-3 text-center w-32 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cant.</th>
                                 <th className="px-5 py-3 text-right w-16 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap"></th>
                             </tr>
@@ -609,11 +612,13 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                             {editOrderDraft.items.map((item, idx) => (
                                 <tr key={item.sku} className="bg-card hover:bg-accent">
                                     <td className="h-16 px-4 py-3">
-                                        <span className="block font-medium text-foreground">{capitalizeFirst(item.description)}</span>
-                                        <span className="text-xs text-muted-foreground">{item.sku}</span>
+                                        <span className="block truncate font-medium text-foreground" title={capitalizeFirst(item.description)}>{capitalizeFirst(item.description)}</span>
+                                        <span className="block truncate text-xs text-muted-foreground">{item.sku}</span>
                                     </td>
-                                    <td className="h-16 px-4 py-3 text-right text-muted-foreground">
-                                        {item.price ? formatCurrency(item.price) : '-'}
+                                    <td className="h-16 px-4 py-3 text-right text-muted-foreground tabular-nums">
+                                        <span className="block truncate" title={item.price ? formatCurrency(item.price) : undefined}>
+                                            {item.price ? formatCurrency(item.price) : '-'}
+                                        </span>
                                     </td>
                                     <td className="h-16 px-4 py-3">
                                         <div className="flex justify-center">

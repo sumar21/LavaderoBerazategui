@@ -5,7 +5,7 @@ import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { PurchaseOrder } from '@/types';
 import { capitalizeFirst } from '../../utils/text';
-import { toAmount, toCount } from '../../utils/number';
+import { MAX_UNIT_PRICE, toCount, toPrice } from '../../utils/number';
 
 interface BudgetModalProps {
   isOpen: boolean;
@@ -140,10 +140,11 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                                  <input 
                                     type="number"
                                     min="0"
+                                    max={MAX_UNIT_PRICE}
                                     className="w-full pl-6 pr-3 py-2 border border-border rounded-lg text-sm focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-card text-foreground shadow-sm"
                                     value={price || ''}
                                     placeholder="0.00"
-                                    onChange={(e) => handlePriceChange(item.sku, toAmount(e.target.value))}
+                                    onChange={(e) => handlePriceChange(item.sku, toPrice(e.target.value))}
                                  />
                               </div>
                            </div>
@@ -169,7 +170,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                   subtotal widened its own column and shoved every other one left
                   as you typed. Fixed layout makes the widths binding — the article
                   column absorbs the remainder and nothing moves while editing. */}
-              <table className="w-full table-fixed text-[13px]">
+              <table className="w-full table-fixed min-w-[720px] text-[13px]">
                  <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                     <tr>
                        <th className="px-4 py-3 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
@@ -206,10 +207,11 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                                     <input 
                                        type="number"
                                        min="0"
+                                       max={MAX_UNIT_PRICE}
                                        className="w-full pl-6 pr-3 py-1.5 border border-border rounded-lg text-right text-sm focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-card text-foreground shadow-sm appearance-none"
                                        value={price || ''}
                                        placeholder="0.00"
-                                       onChange={(e) => handlePriceChange(item.sku, toAmount(e.target.value))}
+                                       onChange={(e) => handlePriceChange(item.sku, toPrice(e.target.value))}
                                     />
                                  </div>
                               </td>

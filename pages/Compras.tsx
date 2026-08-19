@@ -929,15 +929,18 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
           <>
             {/* Desktop Table View */}
             <div className="hidden md:flex min-h-0 flex-1 flex-col bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto">
-              <table className="w-full text-left text-[13px]">
+              {/* table-fixed: a long provider name used to widen its column and drag
+                  every other one out of place. min-w keeps them readable — below it
+                  the wrapper scrolls instead of squashing. */}
+              <table className="w-full table-fixed min-w-[920px] text-left text-[13px]">
                 <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Orden</th>
+                    <th className="h-12 w-32 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Orden</th>
                     <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Fecha & Proveedor</th>
-                    <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Items</th>
-                    <th className="h-12 px-4 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Estado</th>
-                    <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Avance</th>
-                    <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
+                    <th className="h-12 w-28 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Items</th>
+                    <th className="h-12 w-48 px-4 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Estado</th>
+                    <th className="h-12 w-32 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Avance</th>
+                    <th className="h-12 w-44 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
@@ -957,8 +960,8 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                           </span>
                         </td>
                         <td className="h-16 px-4 py-3">
-                           <div className="flex flex-col">
-                              <span className="font-semibold text-foreground text-sm">{capitalizeFirst(order.providerName)}</span>
+                           <div className="flex min-w-0 flex-col">
+                              <span className="truncate font-semibold text-foreground text-sm" title={capitalizeFirst(order.providerName)}>{capitalizeFirst(order.providerName)}</span>
                               <div className="flex items-center gap-1.5 mt-1">
                                   <Calendar className="w-3 h-3 text-muted-foreground" />
                                   <span className="text-xs text-muted-foreground">{order.date}</span>

@@ -194,17 +194,21 @@ export const ViewOrderModal: React.FC<ViewOrderModalProps> = ({
                </div>
 
                {/* DESKTOP VIEW (Table) */}
-               <div className="hidden md:block border border-border rounded-md overflow-hidden shadow-sm">
-                  <table className="w-full text-[13px]">
+               {/* overflow-auto, not hidden: the table now carries a minimum width, and
+                   clipping it would simply hide the last columns instead of letting the
+                   user reach them. The minimum differs because the last two columns only
+                   exist once the order has prices. */}
+               <div className="hidden md:block border border-border rounded-md overflow-auto shadow-sm">
+                  <table className={`w-full table-fixed text-[13px] ${order.status !== 'Presupuesto' ? 'min-w-[800px]' : 'min-w-[480px]'}`}>
                      <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                         <tr>
-                           <th className="px-5 py-3 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Descripción</th>
-                           <th className="px-5 py-3 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cant.</th>
-                           <th className="px-5 py-3 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Recibido</th>
+                           <th className="px-4 py-3 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Descripción</th>
+                           <th className="w-24 px-4 py-3 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cant.</th>
+                           <th className="w-28 px-4 py-3 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Recibido</th>
                            {order.status !== 'Presupuesto' && (
                                <>
-                                <th className="px-5 py-3 text-right whitespace-nowrap text-sm align-middle font-medium text-muted-foreground">Precio Unit.</th>
-                                <th className="px-5 py-3 text-right whitespace-nowrap text-sm align-middle font-medium text-muted-foreground">Subtotal</th>
+                                <th className="w-40 px-4 py-3 text-right whitespace-nowrap text-sm align-middle font-medium text-muted-foreground">Precio Unit.</th>
+                                <th className="w-44 px-4 py-3 text-right whitespace-nowrap text-sm align-middle font-medium text-muted-foreground">Subtotal</th>
                                </>
                            )}
                         </tr>
@@ -213,8 +217,8 @@ export const ViewOrderModal: React.FC<ViewOrderModalProps> = ({
                         {order.items.map((item, idx) => (
                            <tr key={idx} className="bg-card hover:bg-accent/50 transition-colors">
                               <td className="h-16 px-4 py-3">
-                                 <span className="block font-medium text-foreground">{capitalizeFirst(item.description)}</span>
-                                 <span className="block text-xs text-muted-foreground mt-0.5">{item.sku}</span>
+                                 <span className="block truncate font-medium text-foreground" title={capitalizeFirst(item.description)}>{capitalizeFirst(item.description)}</span>
+                                 <span className="block truncate text-xs text-muted-foreground mt-0.5">{item.sku}</span>
                               </td>
                               <td className="h-16 px-4 py-3 text-right font-bold text-foreground">
                                  {item.quantity}
@@ -224,11 +228,15 @@ export const ViewOrderModal: React.FC<ViewOrderModalProps> = ({
                               </td>
                               {order.status !== 'Presupuesto' && (
                                 <>
-                                    <td className="h-16 px-4 py-3 text-right text-muted-foreground whitespace-nowrap">
-                                        {item.price ? formatCurrency(item.price) : '-'}
+                                    <td className="h-16 px-4 py-3 text-right text-muted-foreground tabular-nums">
+                                        <span className="block truncate" title={item.price ? formatCurrency(item.price) : undefined}>
+                                            {item.price ? formatCurrency(item.price) : '-'}
+                                        </span>
                                     </td>
-                                    <td className="h-16 px-4 py-3 text-right font-medium text-foreground whitespace-nowrap">
-                                        {item.price ? formatCurrency(item.price * item.quantity) : '-'}
+                                    <td className="h-16 px-4 py-3 text-right font-medium text-foreground tabular-nums">
+                                        <span className="block truncate" title={item.price ? formatCurrency(item.price * item.quantity) : undefined}>
+                                            {item.price ? formatCurrency(item.price * item.quantity) : '-'}
+                                        </span>
                                     </td>
                                 </>
                               )}
@@ -245,8 +253,10 @@ export const ViewOrderModal: React.FC<ViewOrderModalProps> = ({
                               {order.items.reduce((acc, i) => acc + (i.receivedQuantity || 0), 0)}
                            </td>
                            {order.status !== 'Presupuesto' && (
-                               <td colSpan={2} className="px-5 py-3 text-right font-bold text-emerald-700 whitespace-nowrap text-lg">
-                                  {formatCurrency(order.items.reduce((acc, i) => acc + ((i.price || 0) * i.quantity), 0))}
+                               <td colSpan={2} className="px-4 py-3 text-right font-bold text-emerald-700 text-lg tabular-nums">
+                                  <span className="block truncate" title={formatCurrency(order.items.reduce((acc, i) => acc + ((i.price || 0) * i.quantity), 0))}>
+                                     {formatCurrency(order.items.reduce((acc, i) => acc + ((i.price || 0) * i.quantity), 0))}
+                                  </span>
                                </td>
                            )}
                         </tr>

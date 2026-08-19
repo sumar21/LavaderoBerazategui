@@ -705,13 +705,16 @@ export const StockOnline: React.FC = () => {
           <>
             {/* Desktop Table View */}
             <div className="hidden md:flex min-h-0 flex-1 flex-col bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto">
-              <table className="w-full text-left border-collapse text-[13px]">
+              {/* table-fixed so a long product name cannot widen its own column and
+                  drag the rest sideways. min-w keeps them readable - below it the
+                  wrapper scrolls instead of squashing them. */}
+              <table className="w-full table-fixed min-w-[720px] text-left border-collapse text-[13px]">
                 <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                   <tr>
                     <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Producto</th>
-                    <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Ubicación</th>
-                    <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cantidad</th>
-                    <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
+                    <th className="h-12 w-40 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Ubicación</th>
+                    <th className="h-12 w-40 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cantidad</th>
+                    <th className="h-12 w-44 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">

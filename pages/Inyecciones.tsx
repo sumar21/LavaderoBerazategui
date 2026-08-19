@@ -211,17 +211,17 @@ export const Inyecciones: React.FC = () => {
             <div className="space-y-4">
                 {/* Desktop Table View */}
                 <div className="hidden lg:block bg-card rounded-lg shadow-sm ring-1 ring-ring/5 overflow-hidden">
-                    <table className="w-full text-left text-[13px]">
+                    <table className="w-full table-fixed min-w-[1120px] text-left text-[13px]">
                         <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                             <tr className="border-b border-border bg-muted/50">
-                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Status</th>
-                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">N°</th>
-                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cliente</th>
+                                <th className="h-12 w-36 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Status</th>
+                                <th className="h-12 w-24 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">N°</th>
+                                <th className="h-12 w-48 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cliente</th>
                                 <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
-                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Subdepósito</th>
-                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Origen</th>
-                                <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cantidad</th>
-                                <th className="h-12 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
+                                <th className="h-12 w-40 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Subdepósito</th>
+                                <th className="h-12 w-40 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Origen</th>
+                                <th className="h-12 w-32 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cantidad</th>
+                                <th className="h-12 w-32 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
@@ -232,12 +232,12 @@ export const Inyecciones: React.FC = () => {
                                             {inj.status}
                                         </Badge>
                                     </td>
-                                    <td className="h-16 px-4 py-3 text-muted-foreground">{inj.id}</td>
-                                    <td className="h-16 px-4 py-3 font-semibold text-foreground">{inj.client}</td>
+                                    <td className="h-16 px-4 py-3 truncate text-muted-foreground">{inj.id}</td>
+                                    <td className="h-16 px-4 py-3 truncate font-semibold text-foreground" title={inj.client}>{inj.client}</td>
                                     <td className="h-16 px-4 py-3">
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-medium text-foreground">{capitalizeFirst(inj.description)}</span>
-                                            <span className="text-xs text-muted-foreground">{inj.sku}</span>
+                                        <div className="flex min-w-0 flex-col">
+                                            <span className="truncate text-sm font-medium text-foreground" title={capitalizeFirst(inj.description)}>{capitalizeFirst(inj.description)}</span>
+                                            <span className="truncate text-xs text-muted-foreground">{inj.sku}</span>
                                         </div>
                                     </td>
                                     <td className="h-16 px-4 py-3">
@@ -245,8 +245,8 @@ export const Inyecciones: React.FC = () => {
                                             {inj.subdeposit}
                                         </Badge>
                                     </td>
-                                    <td className="h-16 px-4 py-3 text-muted-foreground">{inj.origin}</td>
-                                    <td className="h-16 px-4 py-3 text-right font-bold text-foreground">{inj.quantity}</td>
+                                    <td className="h-16 px-4 py-3 truncate text-muted-foreground">{inj.origin}</td>
+                                    <td className="h-16 px-4 py-3 text-right font-bold text-foreground tabular-nums">{inj.quantity}</td>
                                     <td className="h-16 px-4 py-3 text-right">
                                         <button 
                                             onClick={() => handleRemoveItem(inj.id)}
