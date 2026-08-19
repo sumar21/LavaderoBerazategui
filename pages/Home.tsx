@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Shirt, TrendingUp, AlertTriangle, Clock, ArrowRight, ShoppingCart,
-  AlertCircle, Check, PackageSearch, Inbox,
+  Shirt, AlertTriangle, Clock, ShoppingCart,
+  AlertCircle, PackageSearch, Inbox,
 } from 'lucide-react';
 import { Card, CardContent, cn } from '../components/ui/UIComponents';
 import { KpiCard, type Tone as KpiTone } from '../components/ui/KpiCard';
@@ -23,14 +23,10 @@ interface HomeProps {
   orders: PurchaseOrder[];
 }
 
-const QUICK_ACTIONS = [
-  { id: 'stock', label: 'Cargar stock', hint: 'Nuevo ingreso', icon: TrendingUp },
-  { id: 'compras', label: 'Nueva compra', hint: 'Crear orden', icon: ShoppingCart },
-  { id: 'aprobaciones', label: 'Aprobaciones', hint: 'Revisar pendientes', icon: Check },
-];
-
 const LOW_STOCK_THRESHOLD = 50;
-const LIST_SIZE = 5;
+/* The two working lists are the whole point of this screen, so they get as many
+   rows as the fold allows. It was 5 while a row of nav shortcuts sat underneath. */
+const LIST_SIZE = 9;
 
 /** SharePoint hands back either casing depending on the list. */
 const qtyOf = (item: any) => {
@@ -220,32 +216,6 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
           </section>
         </div>
 
-        <section className="stagger-in" style={{ '--stagger-index': 5 } as React.CSSProperties}>
-          <SectionHeading>Accesos rápidos</SectionHeading>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {QUICK_ACTIONS.map(action => (
-              <button
-                key={action.id}
-                type="button"
-                onClick={() => onViewChange?.(action.id)}
-                className="group rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                <Card className="border-border transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-lg hover:shadow-brand/10 active:scale-[0.99]">
-                  <CardContent className="flex items-center gap-3 p-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand transition-colors group-hover:bg-brand group-hover:text-brand-foreground">
-                      <action.icon className="h-4 w-4" aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold">{action.label}</p>
-                      <p className="truncate text-[11px] text-muted-foreground">{action.hint}</p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-                  </CardContent>
-                </Card>
-              </button>
-            ))}
-          </div>
-        </section>
       </div>
     </div>
   );
