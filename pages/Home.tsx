@@ -24,8 +24,9 @@ interface HomeProps {
 }
 
 const LOW_STOCK_THRESHOLD = 50;
-/* The two working lists are the whole point of this screen, so they get as many
-   rows as the fold allows. It was 5 while a row of nav shortcuts sat underneath. */
+/* How many rows each list holds — a data cap, not a layout one. The cards get
+   their height from the viewport, so a longer list scrolls instead of pushing
+   the page down. Anything past this is behind "Ver todas". */
 const LIST_SIZE = 9;
 
 /** SharePoint hands back either casing depending on the list. */
@@ -35,7 +36,7 @@ const qtyOf = (item: any) => {
 };
 
 const SectionHeading: React.FC<{ children: React.ReactNode; action?: React.ReactNode }> = ({ children, action }) => (
-  <div className="mb-3 flex items-center justify-between gap-3">
+  <div className="mb-2 flex shrink-0 items-center justify-between gap-3">
     <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
       <span className="h-3.5 w-1 rounded-full bg-brand" aria-hidden="true" />
       {children}
@@ -122,13 +123,17 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
   ];
 
   return (
-    <div className="h-full overflow-y-auto p-3 md:p-6">
-      <div className="mx-auto max-w-[1400px] space-y-5">
+    /* From lg up the panel is exactly one screen tall: header and KPIs keep their
+       size, the two lists split what is left and scroll inside their own card.
+       Sizing by row count instead meant picking a number that fit one laptop and
+       overflowed the next. Below lg the lists stack, so the page scrolls. */
+    <div className="h-full overflow-y-auto p-3 md:p-6 lg:overflow-hidden">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-4 lg:h-full">
 
-        <PageHeader title="Panel de control" subtitle="Resumen de stock, compras y aprobaciones." />
+        <PageHeader className="shrink-0" title="Panel de control" subtitle="Resumen de stock, compras y aprobaciones." />
 
         {/* KPI row (§5.3), entering one after the other */}
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid shrink-0 grid-cols-2 gap-3 lg:grid-cols-4">
           {KPIS.map((kpi, i) => (
             <div key={kpi.label} className="stagger-in" style={{ '--stagger-index': i } as React.CSSProperties}>
               <KpiCard
@@ -144,8 +149,8 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
         </div>
 
         {/* Two working lists — the panel's actual value, not just counters */}
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 stagger-in" style={{ '--stagger-index': 4 } as React.CSSProperties}>
-          <section>
+        <div className="grid grid-cols-1 gap-4 stagger-in lg:min-h-0 lg:flex-1 lg:grid-cols-2" style={{ '--stagger-index': 4 } as React.CSSProperties}>
+          <section className="flex min-h-0 flex-col">
             <SectionHeading
               action={
                 stats.low.length > LIST_SIZE ? (
@@ -157,8 +162,8 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
             >
               Stock crítico
             </SectionHeading>
-            <Card>
-              <CardContent className="p-0">
+            <Card className="flex min-h-0 flex-col overflow-hidden lg:flex-1">
+              <CardContent className="min-h-0 flex-1 overflow-y-auto p-0">
                 {stats.low.length === 0 ? (
                   <EmptyRow icon={PackageSearch}>Ningún artículo por debajo de {LOW_STOCK_THRESHOLD} unidades.</EmptyRow>
                 ) : (
@@ -166,7 +171,7 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
                     {stats.low.slice(0, LIST_SIZE).map(item => {
                       const qty = qtyOf(item);
                       return (
-                        <li key={item.id} className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/60">
+                        <li key={item.id} className="flex items-center gap-3 px-4 py-2 transition-colors hover:bg-accent/60">
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-sm font-medium">{capitalizeFirst(item.concat || item.articulo || item.sku)}</p>
                             <p className="truncate text-[11px] text-muted-foreground">{item.subdeposito || item.sku}</p>
@@ -183,7 +188,7 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
             </Card>
           </section>
 
-          <section>
+          <section className="flex min-h-0 flex-col">
             <SectionHeading
               action={
                 <button type="button" onClick={() => onViewChange?.('compras')} className="text-xs font-medium text-brand hover:underline">
@@ -193,14 +198,14 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
             >
               Últimas órdenes
             </SectionHeading>
-            <Card>
-              <CardContent className="p-0">
+            <Card className="flex min-h-0 flex-col overflow-hidden lg:flex-1">
+              <CardContent className="min-h-0 flex-1 overflow-y-auto p-0">
                 {stats.recent.length === 0 ? (
                   <EmptyRow icon={Inbox}>Todavía no hay órdenes de compra.</EmptyRow>
                 ) : (
                   <ul className="divide-y divide-border">
                     {stats.recent.map(order => (
-                      <li key={order.id} className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/60">
+                      <li key={order.id} className="flex items-center gap-3 px-4 py-2 transition-colors hover:bg-accent/60">
                         <span className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">#{order.sharepointId}</span>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[13px] font-medium">{capitalizeFirst(order.providerName) || 'Sin proveedor'}</p>
