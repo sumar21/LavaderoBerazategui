@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, Edit, AlertCircle, Users, Package, ChevronDown, RefreshCw } from 'lucide-react';
+import { Search, Plus, Trash2, Edit, AlertCircle, Users, Package, RefreshCw } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Combobox } from '../components/ui/Combobox';
-import { MultiSelect } from '../components/ui/MultiSelect';
+import { Select } from '../components/ui/Select';
 import { QuickAddArticleModal } from '../components/compras/QuickAddArticleModal';
 import { Provider, Article } from '@/types';
 import { configService } from '../services/configService';
@@ -94,6 +94,8 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
   // --- FORM DATA ---
   const [providerForm, setProviderForm] = useState<Partial<Provider>>({});
   const [articleForm, setArticleForm] = useState<Partial<Article>>({});
+  /** Provider staged in the picker of the article modal, before Agregar. */
+  const [providerToAdd, setProviderToAdd] = useState('');
 
   // --- HANDLERS ---
 
@@ -107,6 +109,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
 
   const handleOpenModal = (item?: any) => {
     setEditingItem(item || null);
+    setProviderToAdd('');
     if (activeTab === 'PROVEEDORES') {
         setProviderForm(item || { name: '', segment: '', phone: '', email: '', paymentCondition: 'ARS', currency: 'ARS' });
     } else {
@@ -297,6 +300,20 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
    * Resolved provider names for an article. Each name is capitalised on its
    * own — capitalising the joined string would only reach the first provider.
    */
+  // Providers attached to the article being edited, plus the one staged in the
+  // picker. Kept out of articleForm: it is a control's value, not part of the record.
+  const articleProviderIds = articleForm.providerIds ?? [];
+
+  const handleAddArticleProvider = () => {
+    if (!providerToAdd || articleProviderIds.includes(providerToAdd)) return;
+    setArticleForm({ ...articleForm, providerIds: [...articleProviderIds, providerToAdd] });
+    setProviderToAdd('');
+  };
+
+  const handleRemoveArticleProvider = (id: string) => {
+    setArticleForm({ ...articleForm, providerIds: articleProviderIds.filter(p => p !== id) });
+  };
+
   const providerNames = (ids?: string[]): string =>
       (ids ?? []).map(id => capitalizeFirst(providers.find(p => p.id === id)?.name)).filter(Boolean).join(', ');
 
@@ -559,7 +576,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingItem ? (activeTab === 'PROVEEDORES' ? 'Editar Proveedor' : 'Editar Artículo') : (activeTab === 'PROVEEDORES' ? 'Nuevo Proveedor' : 'Nuevo Artículo')}
-        maxWidth="lg"
+        maxWidth={activeTab === 'ARTICULOS' ? '2xl' : 'lg'}
         footer={
             <>
                 <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
@@ -591,22 +608,18 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                             value={providerForm.phone || ''} 
                             onChange={e => setProviderForm({...providerForm, phone: e.target.value})}
                         />
-                        <div>
-                             <label className="block text-sm font-semibold text-foreground mb-1.5 ml-1">Moneda</label>
-                             <div className="relative">
-                                 <select 
-                                    className="flex h-10 w-full appearance-none rounded-lg border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-ring shadow-sm transition-all duration-200 hover:border-ring cursor-pointer"
-                                    value={providerForm.currency}
-                                    onChange={e => setProviderForm({...providerForm, currency: e.target.value as any})}
-                                 >
-                                    <option value="ARS">ARS - Peso Argentino</option>
-                                    <option value="USD">USD - Dólar Estadounidense</option>
-                                 </select>
-                                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground">
-                                    <ChevronDown className="h-4 w-4" />
-                                 </div>
-                             </div>
-                        </div>
+                        {/* The app's Select, not a hand-rolled native one. The bespoke
+                            copy carried its own taller label, which pushed this field
+                            below the Teléfono input beside it. */}
+                        <Select
+                            label="Moneda"
+                            value={providerForm.currency || 'ARS'}
+                            onChange={val => setProviderForm({...providerForm, currency: val as any})}
+                            options={[
+                                { value: 'ARS', label: 'ARS - Peso Argentino' },
+                                { value: 'USD', label: 'USD - Dólar Estadounidense' },
+                            ]}
+                        />
                     </div>
                     <Input 
                         label="Mail" 
@@ -617,13 +630,67 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                 </>
             ) : (
                 <>
-                    <MultiSelect 
-                        label="Proveedores"
-                        placeholder="Seleccionar proveedores..."
-                        options={providers.map(p => ({ label: p.name, value: p.id }))}
-                        value={articleForm.providerIds || []}
-                        onChange={vals => setArticleForm({...articleForm, providerIds: vals})}
-                    />
+                    {/* Detalle de proveedores. A MultiSelect hid the association behind
+                        a closed dropdown: to answer "who supplies this?" you had to open
+                        it and read the ticks. An article routinely has several, so the
+                        list is the primary view and the picker is just how you add to it. */}
+                    <section className="rounded-md border border-border bg-muted/40 p-3">
+                        <div className="mb-2 flex items-baseline justify-between gap-2">
+                            <h4 className="text-sm font-semibold text-foreground">Detalle de proveedores</h4>
+                            <span className="shrink-0 text-xs text-muted-foreground">
+                                {articleProviderIds.length === 0
+                                    ? 'Ninguno asociado'
+                                    : `${articleProviderIds.length} asociado${articleProviderIds.length > 1 ? 's' : ''}`}
+                            </span>
+                        </div>
+
+                        <div className="flex items-end gap-2">
+                            <div className="min-w-0 flex-1">
+                                <Combobox
+                                    options={providers
+                                        .filter(p => !articleProviderIds.includes(p.id))
+                                        .map(p => ({ label: p.name, value: p.id }))}
+                                    value={providerToAdd}
+                                    onChange={setProviderToAdd}
+                                    placeholder="Buscar proveedor..."
+                                />
+                            </div>
+                            <Button
+                                variant="secondary"
+                                className="h-10 shrink-0"
+                                onClick={handleAddArticleProvider}
+                                disabled={!providerToAdd}
+                            >
+                                <Plus className="mr-1.5 h-4 w-4" />
+                                Agregar
+                            </Button>
+                        </div>
+
+                        {articleProviderIds.length === 0 ? (
+                            <p className="mt-3 rounded-md border border-dashed border-border px-3 py-4 text-center text-xs italic text-muted-foreground">
+                                Este artículo todavía no tiene proveedores asociados.
+                            </p>
+                        ) : (
+                            <ul className="mt-3 divide-y divide-border overflow-hidden rounded-md border border-border bg-card">
+                                {articleProviderIds.map(id => (
+                                    <li key={id} className="flex items-center gap-3 px-3 py-2">
+                                        <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+                                            {capitalizeFirst(providers.find(p => p.id === id)?.name) || `Proveedor ${id}`}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveArticleProvider(id)}
+                                            title="Quitar proveedor"
+                                            aria-label="Quitar proveedor"
+                                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600"
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </section>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                          <Input 
                             label="Artículo" 

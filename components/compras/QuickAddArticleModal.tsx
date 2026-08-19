@@ -281,20 +281,29 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
                          <th className="w-40 px-4 py-2 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">SKU</th>
                          <th className="px-4 py-2 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
                          <th className="w-36 px-4 py-2 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio Unit.</th>
-                         <th className="px-3 py-2 w-10 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap"></th>
+                         {/* w-10 minus px-3 left the button a 16px box to sit in, so it ended up
+                             jammed against the table edge. w-16/px-2 gives it room to centre. */}
+                         <th className="w-16 px-2 py-2 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap"></th>
                      </tr>
                   </thead>
                   <tbody className="divide-y divide-border bg-card">
                      {stagedArticles.map((a, idx) => (
                          <tr key={a.tempId} className="hover:bg-accent transition-colors">
-                             <td className="px-4 py-2"><span className="text-[10px] bg-muted px-2 py-0.5 rounded uppercase font-bold tracking-wider text-muted-foreground">{a.category || '-'}</span></td>
-                             <td className="px-4 py-2 truncate text-[11px] text-muted-foreground font-semibold">{a.code}</td>
-                             <td className="px-4 py-2 truncate font-medium text-foreground" title={capitalizeFirst(a.name)}>{capitalizeFirst(a.name)}</td>
-                             <td className="px-4 py-2 truncate text-right text-foreground font-bold tabular-nums">${a.unitPrice.toFixed(2)}</td>
-                             <td className="px-3 py-2 text-center">
-                                 <button onClick={() => handleRemoveStaged(a.tempId)} className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded transition-colors shadow-sm bg-card border border-border">
-                                     <Trash2 className="w-3.5 h-3.5" />
-                                 </button>
+                             <td className="px-4 py-2.5"><span className="text-[10px] bg-muted px-2 py-0.5 rounded uppercase font-bold tracking-wider text-muted-foreground">{a.category || '-'}</span></td>
+                             <td className="px-4 py-2.5 truncate text-[11px] text-muted-foreground font-semibold">{a.code}</td>
+                             <td className="px-4 py-2.5 truncate font-medium text-foreground" title={capitalizeFirst(a.name)}>{capitalizeFirst(a.name)}</td>
+                             <td className="px-4 py-2.5 truncate text-right text-foreground font-bold tabular-nums">${a.unitPrice.toFixed(2)}</td>
+                             <td className="w-16 px-2 py-2">
+                                 <div className="flex justify-center">
+                                   <button
+                                     onClick={() => handleRemoveStaged(a.tempId)}
+                                     title="Quitar del listado"
+                                     aria-label={`Quitar ${a.name}`}
+                                     className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground shadow-sm transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                                   >
+                                     <Trash2 className="h-3.5 w-3.5" />
+                                   </button>
+                                 </div>
                              </td>
                          </tr>
                      ))}
