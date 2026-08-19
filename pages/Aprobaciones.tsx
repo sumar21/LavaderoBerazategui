@@ -11,7 +11,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { Select } from '../components/ui/Select';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { capitalizeFirst } from '../utils/text';
-import { toCount } from '../utils/number';
+import { MAX_QUANTITY, toCount } from '../utils/number';
 
 interface AprobacionesProps {
   orders: PurchaseOrder[];
@@ -580,6 +580,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                                     <input 
                                         type="number" 
                                         min="1"
+                                        max={MAX_QUANTITY}
                                         className="w-full text-center border border-border rounded-lg px-2 py-1 text-sm focus:border-primary focus:ring-1 focus:ring-ring outline-none bg-card text-foreground font-bold"
                                         value={item.quantity}
                                         disabled={!isDraftEditable}
@@ -625,6 +626,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                                             <input 
                                                 type="number" 
                                                 min="1"
+                                                max={MAX_QUANTITY}
                                                 className="w-20 text-center border border-border rounded-lg px-2 py-1 text-sm focus:border-primary focus:ring-1 focus:ring-ring outline-none bg-card text-foreground font-bold appearance-none"
                                                 value={item.quantity}
                                                 disabled={!isDraftEditable}

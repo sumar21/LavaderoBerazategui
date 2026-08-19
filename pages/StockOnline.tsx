@@ -15,7 +15,7 @@ import { notify } from '../components/ui/Notice';
 import { Loader } from '../components/ui/Loader';
 import { PageHeader } from '../components/ui/PageHeader';
 import { capitalizeFirst } from '../utils/text';
-import { toCount } from '../utils/number';
+import { MAX_QUANTITY, toCount } from '../utils/number';
 
 export const StockOnline: React.FC = () => {
   const [stock, setStock] = useState<StockItem[]>([]);
@@ -932,6 +932,7 @@ export const StockOnline: React.FC = () => {
                     label="Cantidad" 
                     type="number" 
                     min="1"
+                    max={MAX_QUANTITY}
                     placeholder="0" 
                     value={formData.quantity || ""}
                     onChange={e => setFormData({...formData, quantity: toCount(e.target.value)})}
@@ -996,6 +997,7 @@ export const StockOnline: React.FC = () => {
                 placeholder="0" 
                 type="number" 
                 min="1"
+                max={MAX_QUANTITY}
                 value={formData.quantity || ""}
                 onChange={e => setFormData({...formData, quantity: toCount(e.target.value)})}
             />
@@ -1053,6 +1055,7 @@ export const StockOnline: React.FC = () => {
                     placeholder="Ingrese cantidad" 
                     type="number"
                     min="1"
+                    max={MAX_QUANTITY}
                     value={formData.quantity || ""}
                     onChange={e => setFormData({...formData, quantity: toCount(e.target.value)})}
                  />
@@ -1087,6 +1090,7 @@ export const StockOnline: React.FC = () => {
                 placeholder="Ingrese cantidad" 
                 type="number"
                 min="0"
+                max={MAX_QUANTITY}
                 value={formData.quantity || ""}
                 onChange={e => setFormData({...formData, quantity: toCount(e.target.value)})}
             />

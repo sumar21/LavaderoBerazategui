@@ -19,11 +19,18 @@
  */
 export const MAX_UNIT_PRICE = 999_999_999;
 
+/**
+ * Ceiling for any quantity. Set with the business alongside MAX_UNIT_PRICE:
+ * together they bound every total the app can compute.
+ */
+export const MAX_QUANTITY = 9_999_999;
+
 /** Non-negative amount from an input's raw value. Empty or unparseable → 0. */
 const toAmount = (raw: string): number => Math.max(0, Number(raw) || 0);
 
-/** Non-negative whole count. Things you can hold are never fractional. */
-export const toCount = (raw: string): number => Math.floor(toAmount(raw));
+/** Non-negative whole count, capped. Things you can hold are never fractional. */
+export const toCount = (raw: string): number =>
+  Math.min(MAX_QUANTITY, Math.floor(toAmount(raw)));
 
 /** A unit price: non-negative and capped at MAX_UNIT_PRICE. */
 export const toPrice = (raw: string): number => Math.min(MAX_UNIT_PRICE, toAmount(raw));

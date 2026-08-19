@@ -5,7 +5,7 @@ import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { PurchaseOrder } from '@/types';
 import { capitalizeFirst } from '../../utils/text';
-import { MAX_UNIT_PRICE, toCount, toPrice } from '../../utils/number';
+import { MAX_QUANTITY, MAX_UNIT_PRICE, toCount, toPrice } from '../../utils/number';
 
 interface BudgetModalProps {
   isOpen: boolean;
@@ -127,6 +127,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                               <input 
                                  type="number"
                                  min="0"
+                                 max={MAX_QUANTITY}
                                  className="w-full px-3 py-2 border border-border rounded-lg text-sm focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-card text-foreground shadow-sm"
                                  value={qty || ''}
                                  placeholder="0"
@@ -195,6 +196,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                                  <input 
                                     type="number"
                                     min="0"
+                                    max={MAX_QUANTITY}
                                     className="w-full px-3 py-1.5 border border-border rounded-lg text-right text-sm focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 outline-none bg-card text-foreground shadow-sm appearance-none"
                                     value={qty || ''}
                                     placeholder="0"

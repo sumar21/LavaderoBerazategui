@@ -9,7 +9,7 @@ import { OrderItem, Provider, Article } from '@/types';
 import { QuickAddArticleModal } from './QuickAddArticleModal';
 import { notify } from '../ui/Notice';
 import { capitalizeFirst } from '../../utils/text';
-import { toCount } from '../../utils/number';
+import { MAX_QUANTITY, toCount } from '../../utils/number';
 
 interface CreateOrderModalProps {
   isOpen: boolean;
@@ -190,6 +190,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                     type="number" 
                     placeholder="Cant." 
                     min="1"
+                    max={MAX_QUANTITY}
                     className="h-[42px]" 
                     value={tempQty || ''}
                     onChange={(e) => setTempQty(toCount(e.target.value))}
@@ -241,6 +242,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                         <Input
                           type="number"
                           min="1"
+                          max={MAX_QUANTITY}
                           aria-label={`Cantidad de ${item.description}`}
                           className="h-9 w-20 text-right"
                           value={item.quantity || ''}
