@@ -102,9 +102,32 @@ export const ViewOrderModal: React.FC<ViewOrderModalProps> = ({
         onClose={onClose}
         title={`Detalle de Orden #${order.sharepointId || order.id}`}
         description="Información completa de la solicitud de compra."
-        maxWidth="3xl"
+        maxWidth="5xl"
         footer={
-           <Button onClick={onClose} variant="outline">Cerrar</Button>
+           <>
+             <Button onClick={onClose} variant="outline">Cerrar</Button>
+             {/* These two used to sit at the bottom of the scrolling body, where
+                 they were only reachable after scrolling past every item. The
+                 footer is where a dialog's actions belong. */}
+             {order.status === 'Presupuesto' && (
+               <>
+                 <Button
+                   variant="secondary"
+                   onClick={() => { onClose(); onBudgetClick(order); }}
+                 >
+                   <DollarSign className="w-3.5 h-3.5 mr-2" />
+                   Cargar Presupuesto
+                 </Button>
+                 <Button
+                   variant="outline"
+                   onClick={() => { onClose(); onResendClick(order); }}
+                 >
+                   <Send className="w-3.5 h-3.5 mr-2" />
+                   Reenviar solicitud
+                 </Button>
+               </>
+             )}
+           </>
         }
       >
          <div className="space-y-6">
@@ -351,33 +374,6 @@ export const ViewOrderModal: React.FC<ViewOrderModalProps> = ({
               </div>
             )}
 
-            {/* Actions inside detail view if needed */}
-            {order.status === 'Presupuesto' && (
-                <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                     <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        onClick={() => {
-                            onClose();
-                            onBudgetClick(order);
-                        }}
-                    >
-                        <DollarSign className="w-3.5 h-3.5 mr-2" />
-                        Cargar Presupuesto
-                    </Button>
-                    <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => {
-                            onClose();
-                            onResendClick(order);
-                        }}
-                    >
-                        <Send className="w-3.5 h-3.5 mr-2" />
-                        Reenviar solicitud
-                    </Button>
-                </div>
-            )}
          </div>
       </Modal>
 

@@ -553,7 +553,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                 </div>
 
                 {/* MOBILE VIEW (Cards) */}
-                <div className="md:hidden space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                <div className="md:hidden space-y-3 max-h-[55vh] overflow-y-auto pr-1">
                     {editOrderDraft.items.map((item, idx) => (
                         <div key={item.sku} className="bg-card border border-border rounded-md p-4 shadow-sm">
                             <div className="flex justify-between items-start mb-3">
@@ -599,7 +599,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                 {/* DESKTOP VIEW (Table) */}
                 {/* This one scrolls itself, so it IS the sticky context. `overflow-hidden`
                     alongside `overflow-y-auto` was contradictory — the Y axis wins anyway. */}
-                <div className="hidden md:block rounded-md border border-border bg-muted max-h-[350px] overflow-y-auto shadow-sm">
+                <div className="hidden md:block rounded-md border border-border bg-muted max-h-[55vh] overflow-auto shadow-sm">
                     <table className="w-full table-fixed min-w-[560px] text-[13px]">
                         <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                             <tr>
