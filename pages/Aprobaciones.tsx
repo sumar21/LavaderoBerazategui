@@ -265,7 +265,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
         ) : (
           <div className="space-y-4">
             {/* Desktop Table View */}
-            <div className="hidden md:flex min-h-0 flex-1 flex-col bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto">
+            <div className="hidden md:flex min-h-0 flex-1 flex-col overflow-hidden bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto bg-muted">
               {/* table-fixed so a long amount or provider name cannot widen its own
                   column and shove the rest sideways. min-w keeps the columns readable:
                   below it the wrapper scrolls instead of squashing them. */}
@@ -279,7 +279,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                     <th className="h-12 w-40 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Decisión</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
+                <tbody className="divide-y divide-border bg-card [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                   {visibleOrders.map((order) => (
                     <tr key={order.id} className="hover:bg-brand/10/30 transition-all duration-200 group">
                       <td className="h-16 px-4 py-3">
@@ -599,7 +599,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                 {/* DESKTOP VIEW (Table) */}
                 {/* This one scrolls itself, so it IS the sticky context. `overflow-hidden`
                     alongside `overflow-y-auto` was contradictory — the Y axis wins anyway. */}
-                <div className="hidden md:block rounded-md border border-border max-h-[350px] overflow-y-auto shadow-sm">
+                <div className="hidden md:block rounded-md border border-border bg-muted max-h-[350px] overflow-y-auto shadow-sm">
                     <table className="w-full table-fixed min-w-[560px] text-[13px]">
                         <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                             <tr>
@@ -609,7 +609,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                                 <th className="px-5 py-3 text-right w-16 text-sm align-middle font-medium text-muted-foreground whitespace-nowrap"></th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
+                        <tbody className="divide-y divide-border bg-card [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                             {editOrderDraft.items.map((item, idx) => (
                                 <tr key={item.sku} className="bg-card hover:bg-accent">
                                     <td className="h-16 px-4 py-3">

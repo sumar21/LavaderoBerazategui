@@ -928,7 +928,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden md:flex min-h-0 flex-1 flex-col bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto">
+            <div className="hidden md:flex min-h-0 flex-1 flex-col overflow-hidden bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto bg-muted">
               {/* table-fixed: a long provider name used to widen its column and drag
                   every other one out of place. min-w keeps them readable — below it
                   the wrapper scrolls instead of squashing. */}
@@ -943,7 +943,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                     <th className="h-12 w-44 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
+                <tbody className="divide-y divide-border bg-card [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                   {filteredOrders.map((order) => {
                     const totalItems = order.items.reduce((acc, i) => acc + i.quantity, 0);
                     const totalReceived = order.items.reduce((acc, i) => acc + (i.receivedQuantity || 0), 0);

@@ -273,7 +273,7 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
               ))}
            </ul>
 
-           <div className="hidden md:block border border-border rounded-lg overflow-hidden max-h-[40vh] overflow-y-auto">
+           <div className="hidden md:block border border-border rounded-lg bg-muted max-h-[40vh] overflow-auto">
                <table className="w-full table-fixed min-w-[640px] text-left text-[13px]">
                   <thead className="sticky top-0 z-20 bg-muted border-b border-border font-semibold">
                      <tr>

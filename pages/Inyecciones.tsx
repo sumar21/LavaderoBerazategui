@@ -210,7 +210,7 @@ export const Inyecciones: React.FC = () => {
         ) : filteredInjections.length > 0 ? (
             <div className="space-y-4">
                 {/* Desktop Table View */}
-                <div className="hidden lg:block bg-card rounded-lg shadow-sm ring-1 ring-ring/5 overflow-hidden">
+                <div className="hidden lg:block bg-muted rounded-lg shadow-sm ring-1 ring-ring/5 overflow-auto">
                     <table className="w-full table-fixed min-w-[1120px] text-left text-[13px]">
                         <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                             <tr className="border-b border-border bg-muted/50">
@@ -224,7 +224,7 @@ export const Inyecciones: React.FC = () => {
                                 <th className="h-12 w-32 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
+                        <tbody className="divide-y divide-border bg-card [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                             {filteredInjections.map((inj) => (
                                 <tr key={inj.id} className="hover:bg-brand/10/30 transition-colors group">
                                     <td className="h-16 px-4 py-3">

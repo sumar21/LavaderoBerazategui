@@ -418,7 +418,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                     </div>
 
                     {/* PROVEEDORES TABLE (Desktop) */}
-                    <div className="hidden min-h-0 flex-1 overflow-auto md:block">
+                    <div className="hidden min-h-0 flex-1 overflow-auto bg-muted md:block">
                     {/* table-fixed: a long mail address used to widen its own column and
                         drag every other one sideways. min-w keeps them readable - below it
                         the wrapper scrolls instead of squashing them. */}
@@ -433,7 +433,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                                 <th className="h-12 w-28 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
+                        <tbody className="divide-y divide-border bg-card [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                             {filteredProviders.map((prov) => (
                                 <tr key={prov.id} className="hover:bg-brand/10/30 transition-all duration-200 group">
                                     <td className="h-16 px-4 py-3 truncate font-semibold text-foreground" title={capitalizeFirst(prov.name)}>{capitalizeFirst(prov.name)}</td>
@@ -503,7 +503,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                     </div>
 
                     {/* ARTICULOS TABLE (Desktop) */}
-                    <div className="hidden min-h-0 flex-1 overflow-auto md:block">
+                    <div className="hidden min-h-0 flex-1 overflow-auto bg-muted md:block">
                     <table className="w-full table-fixed min-w-[1080px] text-left hidden md:table text-[13px]">
                         <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                             <tr className="border-b border-border bg-muted/50">
@@ -516,7 +516,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                                 <th className="h-12 w-28 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
+                        <tbody className="divide-y divide-border bg-card [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                             {filteredArticles.map((art) => (
                                 <tr key={art.id} className="hover:bg-brand/10/30 transition-all duration-200 group">
                                     <td className="h-16 px-4 py-3 text-muted-foreground text-[11px]">{art.id}</td>

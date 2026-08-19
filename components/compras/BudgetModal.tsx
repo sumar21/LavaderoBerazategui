@@ -166,7 +166,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
            </div>
 
            {/* DESKTOP VIEW (Table) */}
-           <div className="hidden md:block border rounded-md overflow-hidden border-border shadow-sm">
+           <div className="hidden md:block border rounded-md overflow-auto bg-muted border-border shadow-sm">
               {/* table-fixed: without it the w-* below are only hints, so a long
                   subtotal widened its own column and shoved every other one left
                   as you typed. Fixed layout makes the widths binding — the article

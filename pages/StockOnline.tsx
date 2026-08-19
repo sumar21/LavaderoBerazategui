@@ -704,7 +704,7 @@ export const StockOnline: React.FC = () => {
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden md:flex min-h-0 flex-1 flex-col bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto">
+            <div className="hidden md:flex min-h-0 flex-1 flex-col overflow-hidden bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto bg-muted">
               {/* table-fixed so a long product name cannot widen its own column and
                   drag the rest sideways. min-w keeps them readable - below it the
                   wrapper scrolls instead of squashing them. */}
@@ -717,7 +717,7 @@ export const StockOnline: React.FC = () => {
                     <th className="h-12 w-44 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/50">
+                <tbody className="divide-y divide-border/50 bg-card">
                   {filteredStock.map((item) => (
                     <tr key={item.id} className="hover:bg-card/60 transition-colors group">
                       <td className="h-16 px-4 py-3">
@@ -779,14 +779,16 @@ export const StockOnline: React.FC = () => {
                     </tr>
                   ))}
                 </tbody>
+                {/* A real tfoot, stuck to the bottom of the same scroll box the
+                    header is stuck to the top of. As a sibling div outside the box
+                    it spanned the full card while the header stopped at the
+                    scrollbar, and the mismatch read as a broken header. */}
+                <tfoot className="sticky bottom-0 z-20 border-t border-border bg-muted">
+                  <tr>
+                    <td colSpan={4} className="p-0">{totalsBar}</td>
+                  </tr>
+                </tfoot>
               </table>
-            </div>
-            {/* Totals plinth: last child of the card and shrink-0, so it holds the
-                bottom edge while the table scrolls above it. It used to be a pill
-                floating over the middle of the grid, which meant it covered rows
-                and needed a mousemove listener to fade itself out of the way. */}
-            <div className="shrink-0 rounded-b-lg border-t border-border bg-muted/60">
-              {totalsBar}
             </div>
             </div>
 

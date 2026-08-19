@@ -198,7 +198,7 @@ export const ViewOrderModal: React.FC<ViewOrderModalProps> = ({
                    clipping it would simply hide the last columns instead of letting the
                    user reach them. The minimum differs because the last two columns only
                    exist once the order has prices. */}
-               <div className="hidden md:block border border-border rounded-md overflow-auto shadow-sm">
+               <div className="hidden md:block border border-border rounded-md overflow-auto bg-muted shadow-sm">
                   <table className={`w-full table-fixed text-[13px] ${order.status !== 'Presupuesto' ? 'min-w-[800px]' : 'min-w-[480px]'}`}>
                      <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                         <tr>
