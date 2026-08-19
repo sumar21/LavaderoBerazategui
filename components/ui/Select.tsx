@@ -119,8 +119,8 @@ export const Select: React.FC<SelectProps> = ({
                 zIndex: Z.popover,
                 top: position.top, 
                 left: position.left, 
-                minWidth: position.width,
-                maxWidth: '90vw',
+                // width, not minWidth — see the same note in Combobox.tsx.
+                width: position.width,
                 maxHeight: '300px'
             }}
         >

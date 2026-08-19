@@ -145,8 +145,10 @@ export const Combobox: React.FC<ComboboxProps> = ({
                 zIndex: Z.popover,
                 top: position.top, 
                 left: position.left, 
-                minWidth: position.width,
-                maxWidth: '90vw',
+                // width, not minWidth: the panel matches the trigger exactly. With
+                // minWidth a single long option stretched it past the field it
+                // belongs to. Every option already truncates, so nothing is lost.
+                width: position.width,
                 maxHeight: '300px'
             }}
         >
