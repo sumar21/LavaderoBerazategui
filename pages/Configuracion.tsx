@@ -312,7 +312,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
     const Icon = !active ? ChevronsUpDown : providerSort!.dir === 1 ? ChevronUp : ChevronDown;
     return (
       <th
-        className={`h-14 px-4 align-middle text-sm font-medium text-muted-foreground whitespace-nowrap ${className}`}
+        className={`h-12 px-4 align-middle text-sm font-medium text-muted-foreground whitespace-nowrap ${className}`}
         aria-sort={active ? (providerSort!.dir === 1 ? 'ascending' : 'descending') : 'none'}
       >
         <button type="button" onClick={() => toggleProviderSort(sortKey)} className={`inline-flex items-center gap-1.5 rounded-md transition-colors hover:text-foreground ${active ? 'text-foreground' : ''}`}>
@@ -475,7 +475,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                     {/* table-fixed: a long mail address used to widen its own column and
                         drag every other one sideways. min-w keeps them readable - below it
                         the wrapper scrolls instead of squashing them. */}
-                    <table className="w-full table-fixed min-w-[980px] text-left hidden md:table text-sm">
+                    <table className="w-full table-fixed min-w-[980px] text-left hidden md:table text-[13px]">
                         <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                             <tr className="border-b border-border">
                                 {sortHeader('Proveedor', 'name', 'pl-6')}
@@ -483,22 +483,22 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                                 {sortHeader('Teléfono', 'phone', 'w-44')}
                                 {sortHeader('Mail', 'email', 'w-80')}
                                 {sortHeader('Condición', 'paymentCondition', 'w-36 text-center')}
-                                <th className="h-14 w-32 px-6 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
+                                <th className="h-12 w-32 px-6 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border bg-card [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                             {filteredProviders.map((prov) => (
                                 <tr key={prov.id} className="transition-all duration-200 group">
-                                    <td className="h-[4.25rem] px-6 py-3 truncate text-[15px] font-bold text-foreground" title={capitalizeFirst(prov.name)}>{capitalizeFirst(prov.name)}</td>
-                                    <td className="h-[4.25rem] px-4 py-3 truncate text-muted-foreground" title={prov.segment}>{prov.segment || '-'}</td>
-                                    <td className="h-[4.25rem] px-4 py-3 truncate tabular-nums text-muted-foreground">{prov.phone || '-'}</td>
-                                    <td className="h-[4.25rem] px-4 py-3 truncate text-muted-foreground" title={prov.email}>{prov.email || '-'}</td>
-                                    <td className="h-[4.25rem] px-4 py-3 text-center">
+                                    <td className="h-16 px-6 py-3 truncate font-bold text-foreground" title={capitalizeFirst(prov.name)}>{capitalizeFirst(prov.name)}</td>
+                                    <td className="h-16 px-4 py-3 truncate text-muted-foreground" title={prov.segment}>{prov.segment || '-'}</td>
+                                    <td className="h-16 px-4 py-3 truncate tabular-nums text-muted-foreground">{prov.phone || '-'}</td>
+                                    <td className="h-16 px-4 py-3 truncate text-muted-foreground" title={prov.email}>{prov.email || '-'}</td>
+                                    <td className="h-16 px-4 py-3 text-center">
                                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-muted text-foreground">
                                             {prov.paymentCondition}
                                         </span>
                                     </td>
-                                    <td className="h-[4.25rem] px-6 py-3">
+                                    <td className="h-16 px-6 py-3">
                                         <div className="flex items-center justify-center gap-3">
                                             <button onClick={() => handleOpenModal(prov)} title="Editar" aria-label={`Editar ${prov.name}`} className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-brand/10 hover:text-brand">
                                                 <Edit className="w-5 h-5" />
@@ -513,7 +513,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                         </tbody>
                         <tfoot className="sticky bottom-0 z-20 border-t border-border bg-card">
                             <tr>
-                                <td colSpan={6} className="px-6 py-3 text-sm text-muted-foreground">
+                                <td colSpan={6} className="px-6 py-2.5 text-xs text-muted-foreground">
                                     Mostrando {filteredProviders.length} de {providers.length} proveedores
                                 </td>
                             </tr>
@@ -564,36 +564,36 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
 
                     {/* ARTICULOS TABLE (Desktop) */}
                     <div className="hidden min-h-0 flex-1 overflow-auto bg-muted md:block">
-                    <table className="w-full table-fixed min-w-[1080px] text-left hidden md:table text-sm">
+                    <table className="w-full table-fixed min-w-[1080px] text-left hidden md:table text-[13px]">
                         {/* Column rules in the header only: they separate the labels
                             without turning the body into a spreadsheet. */}
                         <thead className="sticky top-0 z-20 bg-muted border-b border-border [&_th:not(:last-child)]:border-r [&_th]:border-border">
                             <tr className="border-b border-border">
-                                <th className="h-14 w-28 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Nro. Art</th>
-                                <th className="h-14 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
-                                <th className="h-14 w-52 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Proveedores</th>
-                                <th className="h-14 w-36 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Categoría</th>
-                                <th className="h-14 w-56 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Código</th>
-                                <th className="h-14 w-44 px-5 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio Unitario</th>
-                                <th className="h-14 w-36 px-5 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
+                                <th className="h-12 w-28 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Nro. Art</th>
+                                <th className="h-12 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
+                                <th className="h-12 w-52 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Proveedores</th>
+                                <th className="h-12 w-36 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Categoría</th>
+                                <th className="h-12 w-56 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Código</th>
+                                <th className="h-12 w-44 px-5 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio Unitario</th>
+                                <th className="h-12 w-36 px-5 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border bg-card [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                             {filteredArticles.map((art) => (
                                 <tr key={art.id} className="transition-all duration-200 group">
-                                    <td className="h-[4.5rem] px-5 py-3 tabular-nums text-muted-foreground">{art.id}</td>
-                                    <td className="h-[4.5rem] px-5 py-3 truncate text-[15px] font-bold text-foreground" title={capitalizeFirst(art.name)}>{capitalizeFirst(art.name)}</td>
+                                    <td className="h-16 px-5 py-3 tabular-nums text-muted-foreground">{art.id}</td>
+                                    <td className="h-16 px-5 py-3 truncate font-bold text-foreground" title={capitalizeFirst(art.name)}>{capitalizeFirst(art.name)}</td>
                                     {/* The tooltip is what the truncation hides, so it must be the
                                         resolved names — it used to print the raw provider IDs. */}
-                                    <td className="h-[4.5rem] px-5 py-3 truncate text-muted-foreground" title={providerNames(art.providerIds) || undefined}>
+                                    <td className="h-16 px-5 py-3 truncate text-muted-foreground" title={providerNames(art.providerIds) || undefined}>
                                         {getProviderNames(art.providerIds)}
                                     </td>
-                                    <td className="h-[4.5rem] px-5 py-3">
-                                        <span className="inline-block max-w-full truncate rounded-md bg-muted px-3 py-1 text-sm font-medium uppercase text-muted-foreground">{art.category}</span>
+                                    <td className="h-16 px-5 py-3">
+                                        <span className="inline-block max-w-full truncate rounded-md bg-muted px-2 py-1 text-xs font-medium uppercase text-muted-foreground">{art.category}</span>
                                     </td>
-                                    <td className="h-[4.5rem] px-5 py-3 truncate text-muted-foreground" title={art.code}>{art.code}</td>
-                                    <td className="h-[4.5rem] px-5 py-3 truncate text-right text-[15px] font-bold text-foreground tabular-nums" title={formatCurrency(art.unitPrice)}>{formatCurrency(art.unitPrice)}</td>
-                                    <td className="h-[4.5rem] px-5 py-3">
+                                    <td className="h-16 px-5 py-3 truncate text-muted-foreground" title={art.code}>{art.code}</td>
+                                    <td className="h-16 px-5 py-3 truncate text-right font-bold text-foreground tabular-nums" title={formatCurrency(art.unitPrice)}>{formatCurrency(art.unitPrice)}</td>
+                                    <td className="h-16 px-5 py-3">
                                         <div className="flex items-center justify-center gap-3">
                                             <button onClick={() => handleOpenModal(art)} title="Editar" aria-label={`Editar ${art.name}`} className={rowAction()}>
                                                 <Edit className="w-4 h-4" />
@@ -608,7 +608,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                         </tbody>
                         <tfoot className="sticky bottom-0 z-20 border-t border-border bg-card">
                             <tr>
-                                <td colSpan={7} className="px-5 py-3 text-sm text-muted-foreground">
+                                <td colSpan={7} className="px-5 py-2.5 text-xs text-muted-foreground">
                                     Mostrando {filteredArticles.length} de {articles.length} artículos
                                 </td>
                             </tr>

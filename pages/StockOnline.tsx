@@ -554,16 +554,16 @@ export const StockOnline: React.FC = () => {
   const plantQty = filteredStock.filter(i => i.subdeposit === 'DEPOSITO').reduce((acc, item) => acc + item.quantity, 0);
 
   const totalsBar = (
-    <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-1 px-4 py-3 text-sm">
+    <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-1 px-4 py-2.5 text-xs">
       <span className="mr-auto text-muted-foreground">
         Mostrando {filteredStock.length} {filteredStock.length === 1 ? 'producto' : 'productos'}
       </span>
       <div className="flex items-center gap-2 text-muted-foreground">
-        <span className="h-2.5 w-2.5 rounded-full bg-orange-500" aria-hidden="true" />
+        <span className="h-2 w-2 rounded-full bg-orange-500" aria-hidden="true" />
         Logística: <b className="tabular-nums text-foreground">{logisticsQty}</b>
       </div>
       <div className="flex items-center gap-2 text-muted-foreground">
-        <span className="h-2.5 w-2.5 rounded-full bg-blue-500" aria-hidden="true" />
+        <span className="h-2 w-2 rounded-full bg-blue-500" aria-hidden="true" />
         Planta: <b className="tabular-nums text-foreground">{plantQty}</b>
       </div>
       <div className="border-l border-border pl-6 font-semibold text-foreground">
@@ -714,38 +714,38 @@ export const StockOnline: React.FC = () => {
               <table className="w-full table-fixed min-w-[760px] text-left border-collapse text-[13px]">
                 <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                   <tr>
-                    <th className="h-14 px-6 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Producto</th>
-                    <th className="h-14 w-44 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Ubicación</th>
-                    <th className="h-14 w-40 px-4 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cantidad</th>
-                    <th className="h-14 w-60 px-6 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
+                    <th className="h-12 px-6 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Producto</th>
+                    <th className="h-12 w-44 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Ubicación</th>
+                    <th className="h-12 w-40 px-4 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cantidad</th>
+                    <th className="h-12 w-60 px-6 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-card">
                   {filteredStock.map((item) => (
                     <tr key={item.id} className="hover:bg-muted/40 transition-colors group">
-                      <td className="h-[4.5rem] px-6 py-3">
+                      <td className="h-16 px-6 py-3">
                         <div className="min-w-0">
-                          <span className="block truncate text-[15px] font-bold text-foreground">{capitalizeFirst(item.description)}</span>
-                          <span className="mt-0.5 block truncate text-[13px] text-muted-foreground">SKU: {item.sku}</span>
+                          <span className="block truncate text-[13px] font-bold text-foreground">{capitalizeFirst(item.description)}</span>
+                          <span className="block truncate text-[11px] text-muted-foreground">SKU: {item.sku}</span>
                         </div>
                       </td>
-                      <td className="h-[4.5rem] px-4 py-3">
+                      <td className="h-16 px-4 py-3">
                         <Badge
                             variant={item.subdeposit === 'DEPOSITO' ? 'info' : 'warning'}
-                            className="border-0 px-3 py-1 text-[11px] font-bold uppercase tracking-wide"
+                            className="border-0 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"
                         >
                           {item.subdeposit}
                         </Badge>
                       </td>
-                      <td className="h-[4.5rem] px-4 py-3 text-center">
+                      <td className="h-16 px-4 py-3 text-center">
                          <div className="flex flex-col items-center gap-0.5">
-                            <span className={`text-lg font-bold tabular-nums tracking-tight ${item.quantity < 50 ? 'text-orange-600' : 'text-foreground'}`}>
+                            <span className={`text-base font-bold tabular-nums tracking-tight ${item.quantity < 50 ? 'text-orange-600' : 'text-foreground'}`}>
                                 {item.quantity} un.
                             </span>
                             {item.quantity < 50 && <span className="rounded-md bg-orange-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-600">Bajo Stock</span>}
                          </div>
                       </td>
-                      <td className="h-[4.5rem] px-6 py-3">
+                      <td className="h-16 px-6 py-3">
                         <div className="flex items-center justify-end gap-3">
                           <button onClick={() => handleOpenModal('TRANSFORM', item)} title="Transformar" className={rowAction()}>
                             <RefreshCcw className="w-4 h-4" />

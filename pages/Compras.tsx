@@ -939,12 +939,12 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
               <table className="w-full table-fixed min-w-[960px] text-left text-[13px]">
                 <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                   <tr className="border-b border-border">
-                    <th className="h-14 w-32 px-6 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Orden</th>
-                    <th className="h-14 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Fecha & Proveedor</th>
-                    <th className="h-14 w-28 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Items</th>
-                    <th className="h-14 w-56 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Estado</th>
-                    <th className="h-14 w-40 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Avance</th>
-                    <th className="h-14 w-52 px-6 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
+                    <th className="h-12 w-32 px-6 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Orden</th>
+                    <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Fecha & Proveedor</th>
+                    <th className="h-12 w-28 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Items</th>
+                    <th className="h-12 w-56 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Estado</th>
+                    <th className="h-12 w-40 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Avance</th>
+                    <th className="h-12 w-52 px-6 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-card [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
@@ -958,28 +958,28 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                     
                     return (
                       <tr key={order.id} className="transition-all duration-200 group">
-                        <td className="h-[4.25rem] px-6 py-3">
-                          <span className="inline-block rounded-md bg-brand/10 px-3 py-1.5 text-sm font-bold tabular-nums text-brand">
+                        <td className="h-16 px-6 py-3">
+                          <span className="inline-block rounded-md bg-brand/10 px-2 py-1 text-xs font-bold tabular-nums text-brand">
                               #{order.sharepointId || order.id}
                           </span>
                         </td>
-                        <td className="h-[4.25rem] px-4 py-3">
+                        <td className="h-16 px-4 py-3">
                            <div className="flex min-w-0 flex-col">
-                              <span className="truncate font-semibold text-foreground text-[15px]" title={capitalizeFirst(order.providerName)}>{capitalizeFirst(order.providerName)}</span>
+                              <span className="truncate font-semibold text-foreground text-sm" title={capitalizeFirst(order.providerName)}>{capitalizeFirst(order.providerName)}</span>
                               <div className="flex items-center gap-1.5 mt-1">
-                                  <Calendar className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                                  <span className="text-sm tabular-nums text-muted-foreground">{order.date}</span>
+                                  <Calendar className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+                                  <span className="text-xs tabular-nums text-muted-foreground">{order.date}</span>
                               </div>
                            </div>
                         </td>
 
-                        <td className="h-[4.25rem] px-4 py-3">
-                          <span className="text-[15px] font-bold tabular-nums text-foreground">{totalItems}</span> <span className="text-muted-foreground text-sm">un.</span>
+                        <td className="h-16 px-4 py-3">
+                          <span className="font-bold tabular-nums text-foreground">{totalItems}</span> <span className="text-muted-foreground text-xs">un.</span>
                         </td>
-                        <td className="h-[4.25rem] px-4 py-3">
+                        <td className="h-16 px-4 py-3">
                           {getStatusBadge(order.status)}
                         </td>
-                        <td className="h-[4.25rem] px-4 py-3">
+                        <td className="h-16 px-4 py-3">
                            {order.status.toUpperCase() === 'COMPLETADA' || order.status.toUpperCase() === 'APROBADA' || order.status.toUpperCase() === 'EN RECEPCION' || order.status.toUpperCase() === 'PENDIENTE INGRESO' ? (
                                <div className="flex items-center gap-3">
                                    <div className="w-20 bg-muted rounded-full h-2 overflow-hidden">
@@ -991,10 +991,10 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                                    <span className="text-xs font-semibold tabular-nums text-muted-foreground">{progress}%</span>
                                </div>
                            ) : (
-                               <span className="pl-8 text-muted-foreground text-sm">-</span>
+                               <span className="pl-8 text-muted-foreground text-xs">-</span>
                            )}
                         </td>
-                        <td className="h-[4.25rem] px-6 py-3">
+                        <td className="h-16 px-6 py-3">
                           <div className="flex items-center justify-end gap-2">
                               {order.status === 'Presupuesto' && (
                                   <>
@@ -1052,7 +1052,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                 </tbody>
                 <tfoot className="sticky bottom-0 z-20 border-t border-border bg-card">
                   <tr>
-                    <td colSpan={6} className="px-6 py-3 text-sm text-muted-foreground">
+                    <td colSpan={6} className="px-6 py-2.5 text-xs text-muted-foreground">
                       Mostrando {filteredOrders.length} de {orders.length} órdenes
                     </td>
                   </tr>
