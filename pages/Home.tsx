@@ -59,30 +59,31 @@ const ListCard: React.FC<{
   children: React.ReactNode;
 }> = ({ icon: Icon, tone, title, subtitle, action, children }) => (
   <Card className="relative flex min-h-0 flex-col overflow-hidden lg:flex-1">
-    {tone === 'danger' && <span className="absolute left-0 top-0 h-[4.5rem] w-1 bg-red-500" aria-hidden="true" />}
-    <div className="flex shrink-0 items-center gap-3 px-4 pb-3 pt-4">
-      <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1', TONE_TILE[tone])}>
-        <Icon className="h-5 w-5" aria-hidden="true" />
+    {tone === 'danger' && <span className="absolute left-0 top-0 h-14 w-1 bg-red-500" aria-hidden="true" />}
+    {/* Compact on purpose: the header's height comes straight out of the rows. */}
+    <div className="flex shrink-0 items-center gap-2.5 px-4 py-2.5">
+      <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1', TONE_TILE[tone])}>
+        <Icon className="h-4 w-4" aria-hidden="true" />
       </div>
       <div className="min-w-0 flex-1">
-        <h2 className="truncate text-lg font-bold leading-tight">{title}</h2>
-        <p className="truncate text-xs text-muted-foreground sm:text-sm">{subtitle}</p>
+        <h2 className="truncate text-sm font-bold leading-tight">{title}</h2>
+        <p className="truncate text-[11px] text-muted-foreground">{subtitle}</p>
       </div>
       {action}
     </div>
-    <CardContent className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">{children}</CardContent>
+    <CardContent className="min-h-0 flex-1 overflow-y-auto px-3 pb-2">{children}</CardContent>
   </Card>
 );
 
 const SeeAll: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
-  <button type="button" onClick={onClick} className="flex shrink-0 items-center gap-1 text-sm font-medium text-brand hover:underline">
+  <button type="button" onClick={onClick} className="flex shrink-0 items-center gap-1 text-xs font-medium text-brand hover:underline">
     {children}
-    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
   </button>
 );
 
 /** Header cells of both lists: a muted band with rounded ends, stuck to the top while the rows scroll. */
-const TH = 'sticky top-0 z-10 h-10 bg-muted px-3 text-left text-sm font-medium text-muted-foreground first:rounded-l-lg last:rounded-r-lg';
+const TH = 'sticky top-0 z-10 h-8 bg-muted px-3 text-left text-xs font-medium text-muted-foreground first:rounded-l-lg last:rounded-r-lg';
 
 const EmptyRow: React.FC<{ icon: React.ElementType; children: React.ReactNode }> = ({ icon: Icon, children }) => (
   <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
@@ -168,16 +169,16 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
        Sizing by row count instead meant picking a number that fit one laptop and
        overflowed the next. Below lg the lists stack, so the page scrolls. */
     <div className="h-full overflow-y-auto p-4 md:px-8 md:py-6 lg:overflow-hidden">
-      <div className="mx-auto flex max-w-[1600px] flex-col gap-4 lg:h-full lg:gap-5">
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-4 lg:h-full">
 
         <PageHeader
           className="shrink-0"
           title="Panel de control"
           subtitle="Resumen de stock, compras y aprobaciones."
           actions={
-            <div className="hidden items-center gap-3 rounded-xl border border-border bg-card py-2.5 pl-3 pr-5 shadow-sm sm:flex">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
-                <Calendar className="h-5 w-5" aria-hidden="true" />
+            <div className="hidden items-center gap-3 rounded-xl border border-border bg-card py-2 pl-2.5 pr-4 shadow-sm sm:flex">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+                <Calendar className="h-4 w-4" aria-hidden="true" />
               </div>
               <div className="leading-tight">
                 <p className="text-sm font-semibold">{longDate(new Date())}</p>
@@ -215,7 +216,7 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
             {stats.low.length === 0 ? (
               <EmptyRow icon={PackageSearch}>Ningún artículo por debajo de {LOW_STOCK_THRESHOLD} unidades.</EmptyRow>
             ) : (
-              <table className="w-full table-fixed text-sm">
+              <table className="w-full table-fixed text-[13px]">
                 <thead>
                   <tr>
                     <th className={TH}>Artículo</th>
@@ -229,7 +230,7 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
                       <tr key={item.id} className="transition-colors hover:bg-accent/60">
                         <td className="px-3 py-1.5">
                           <p className="truncate font-medium">{capitalizeFirst(item.concat || item.articulo || item.sku)}</p>
-                          <p className="truncate text-xs text-muted-foreground">{capitalizeFirst(item.subdeposito) || item.sku}</p>
+                          <p className="truncate text-[11px] text-muted-foreground">{capitalizeFirst(item.subdeposito) || item.sku}</p>
                         </td>
                         <td className="px-3 py-1.5 text-center">
                           <span className={cn('inline-flex min-w-11 justify-center rounded-md px-2 py-0.5 font-semibold tabular-nums', qty === 0 ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600')}>
@@ -254,7 +255,7 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
             {stats.recent.length === 0 ? (
               <EmptyRow icon={Inbox}>Todavía no hay órdenes de compra.</EmptyRow>
             ) : (
-              <table className="w-full table-fixed text-sm">
+              <table className="w-full table-fixed text-[13px]">
                 <thead>
                   <tr>
                     <th className={cn(TH, 'w-16')}>#</th>
@@ -266,15 +267,15 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
                 <tbody className="divide-y divide-border">
                   {stats.recent.map(order => (
                     <tr key={order.id} className="transition-colors hover:bg-accent/60">
-                      <td className="px-2 py-2">
+                      <td className="px-2 py-1.5">
                         <span className="inline-block rounded-md bg-muted px-2 py-1 text-xs font-semibold tabular-nums text-muted-foreground">#{order.sharepointId}</span>
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-3 py-1.5">
                         <p className="truncate" title={capitalizeFirst(order.providerName)}>{capitalizeFirst(order.providerName) || 'Sin proveedor'}</p>
                         <p className="truncate text-xs text-muted-foreground sm:hidden">{order.date}</p>
                       </td>
-                      <td className="hidden px-3 py-2 tabular-nums text-muted-foreground sm:table-cell">{order.date}</td>
-                      <td className="px-3 py-2">
+                      <td className="hidden px-3 py-1.5 tabular-nums text-muted-foreground sm:table-cell">{order.date}</td>
+                      <td className="px-3 py-1.5">
                         {order.status && <StatusBadge status={order.status} />}
                       </td>
                     </tr>

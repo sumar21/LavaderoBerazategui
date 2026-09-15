@@ -213,9 +213,14 @@ dice el kit, qué hacemos nosotros, dónde vive el cambio y por qué.
   - **Neutros claros en hue 214** (gris azulado que tira a la marca) y tinta navy
     (`--foreground: 222 47% 11%`). El oscuro no cambia.
   - **`--radius: 0.75rem`**: cards, diálogos y controles más redondeados.
-  - **Escala ampliada**: `text-3xl` para títulos de página (desde `md`), `text-4xl` para el valor
-    de los KPI y `text-[15px]` para el texto principal de las grillas y el nav. `audit-kit.mjs`
-    los admite explícitamente; cualquier otro tamaño sigue fallando.
+  - **Escala ampliada, sólo fuera de las grillas**: `text-3xl` para títulos de página (desde `md`)
+    y `text-[15px]` para el nav del sidebar. `audit-kit.mjs` admite esos dos; cualquier otro
+    tamaño sigue fallando.
+  - **La densidad de las grillas y del panel de Home no se toca.** La primera versión del
+    rediseño subió las filas a 68–72px, los encabezados a 56px, el texto de celda a 15px y los KPI
+    a `text-4xl`, y entraban menos registros en pantalla; el cliente lo rechazó. Filas `h-16`,
+    encabezados `h-12`, celdas en `text-[13px]`, KPI en `text-2xl`: el rediseño cambia colores,
+    badges y acciones, no cuántas filas se ven.
   - **Labels de campo en `text-sm` foreground**, definidos una sola vez en `FIELD_LABEL`
     (`components/ui/Input.tsx`) y compartidos por Input, Select, Combobox y MultiSelect, igual que
     el slot de ícono (`FIELD_ICON`). Un label distinto en cualquiera de los cuatro los desalinea en grilla.

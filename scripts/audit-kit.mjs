@@ -24,9 +24,10 @@ const findings = [];
 const flag = (rule, file, detail) => findings.push({ rule, file, detail });
 
 /** The arbitrary sizes the kit sanctions. Named steps up to 2xl are fine.
-    [15px] (table primary text, nav), 3xl (page titles) and 4xl (KPI values) are
-    this app's own — see docs/design-overrides.md §14. */
-const SIZE_OK = new Set(['[15px]', '[13px]', '[11px]', '[10px]', '[9px]', '[8px]', '3xl', '4xl']);
+    [15px] (sidebar nav) and 3xl (page titles) are this app's own — see
+    docs/design-overrides.md §14. Grids and the Home panel stay on the kit scale:
+    density there is a requirement, not a style choice. */
+const SIZE_OK = new Set(['[15px]', '[13px]', '[11px]', '[10px]', '[9px]', '[8px]', '3xl']);
 
 /* Dark mode works by redefining palette steps inside `.dark` in index.css, so a
    step used in the app but missing there stays at its LIGHT value — a white

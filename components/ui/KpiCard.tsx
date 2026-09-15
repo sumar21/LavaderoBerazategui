@@ -50,26 +50,27 @@ export const KpiCard: React.FC<KpiCardProps> = ({
       {/* Watermark: decorative only, never announced and never clickable. */}
       <Icon
         className={cn(
-          'pointer-events-none absolute -right-2 top-1/2 h-20 w-20 -translate-y-1/2 opacity-[0.08] transition-all duration-300 group-hover/kpi:-rotate-6 group-hover/kpi:scale-110 group-hover/kpi:opacity-[0.14] md:h-24 md:w-24',
+          'pointer-events-none absolute -right-2 top-1/2 h-20 w-20 -translate-y-1/2 opacity-[0.08] transition-all duration-300 group-hover/kpi:-rotate-6 group-hover/kpi:scale-110 group-hover/kpi:opacity-[0.14]',
           t.mark
         )}
         strokeWidth={1.75}
         aria-hidden="true"
       />
-      <CardContent className="relative p-4 md:p-5">
-        <div className="flex items-center gap-3">
-          <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 group-hover/kpi:scale-110 md:h-12 md:w-12', t.tile)}>
-            <Icon className="h-5 w-5 md:h-6 md:w-6" aria-hidden="true" />
+      {/* Compact on purpose: every pixel here is a row the lists below lose. */}
+      <CardContent className="relative p-4">
+        <div className="flex items-center gap-2.5">
+          <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover/kpi:scale-110', t.tile)}>
+            <Icon className="h-4 w-4" aria-hidden="true" />
           </div>
-          <p className="truncate text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
         </div>
-        <div className="mt-3 flex items-baseline gap-2">
-          <span className={cn('text-2xl font-bold tabular-nums tracking-tight md:text-4xl', t.value)}>{value}</span>
+        <div className="mt-2 flex items-baseline gap-2">
+          <span className={cn('text-2xl font-bold tabular-nums tracking-tight', t.value)}>{value}</span>
           {badge && (
             <span className="shrink-0 rounded-md bg-brand px-1.5 py-0.5 text-xs font-bold text-brand-foreground">{badge}</span>
           )}
         </div>
-        {sub && <p className="mt-1 truncate text-xs text-muted-foreground md:text-sm">{sub}</p>}
+        {sub && <p className="truncate text-xs text-muted-foreground">{sub}</p>}
       </CardContent>
     </Card>
   );
