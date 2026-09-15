@@ -1,7 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, Edit, AlertCircle, Users, Package, RefreshCw } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import {
+  Search, Plus, Trash2, Edit, AlertCircle, Users, Package, RefreshCw, ChevronsUpDown, ChevronUp, ChevronDown,
+  User, Building2, Tag, Phone, Mail, Coins, FileText, DollarSign,
+} from 'lucide-react';
+import { Button, rowAction } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Combobox } from '../components/ui/Combobox';
@@ -16,6 +19,7 @@ import { capitalizeFirst } from '../utils/text';
 import { MAX_UNIT_PRICE, toPrice } from '../utils/number';
 
 type ConfigTab = 'PROVEEDORES' | 'ARTICULOS';
+type ProviderSortKey = 'name' | 'segment' | 'phone' | 'email' | 'paymentCondition';
 
 interface ConfiguracionProps {
     initialTab?: ConfigTab;
@@ -279,13 +283,45 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
     }
   };
 
+  // --- SORTING (providers grid) ---
+  const [providerSort, setProviderSort] = useState<{ key: ProviderSortKey; dir: 1 | -1 } | null>(null);
+  const toggleProviderSort = (key: ProviderSortKey) =>
+    setProviderSort(prev => (prev?.key === key ? { key, dir: prev.dir === 1 ? -1 : 1 } : { key, dir: 1 }));
+
   // --- FILTERING ---
   const filteredProviders = providers.filter(p => {
     const name = p.name || '';
     const segment = p.segment || '';
-    return name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    return name.toLowerCase().includes(searchTerm.toLowerCase()) ||
            segment.toLowerCase().includes(searchTerm.toLowerCase());
   });
+  if (providerSort) {
+    // Blank values always sink to the bottom, whichever way the column is sorted.
+    filteredProviders.sort((a, b) => {
+      const x = String(a[providerSort.key] ?? '').trim();
+      const y = String(b[providerSort.key] ?? '').trim();
+      if (!x || !y) return x ? -1 : y ? 1 : 0;
+      return x.localeCompare(y, 'es', { sensitivity: 'base', numeric: true }) * providerSort.dir;
+    });
+  }
+
+  // A plain render function, not a component: declared inside the render, a
+  // component would be a new type every time and remount, dropping focus.
+  const sortHeader = (label: string, sortKey: ProviderSortKey, className = '') => {
+    const active = providerSort?.key === sortKey;
+    const Icon = !active ? ChevronsUpDown : providerSort!.dir === 1 ? ChevronUp : ChevronDown;
+    return (
+      <th
+        className={`h-14 px-4 align-middle text-sm font-medium text-muted-foreground whitespace-nowrap ${className}`}
+        aria-sort={active ? (providerSort!.dir === 1 ? 'ascending' : 'descending') : 'none'}
+      >
+        <button type="button" onClick={() => toggleProviderSort(sortKey)} className={`inline-flex items-center gap-1.5 rounded-md transition-colors hover:text-foreground ${active ? 'text-foreground' : ''}`}>
+          {label}
+          <Icon className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </th>
+    );
+  };
 
   const filteredArticles = articles.filter(a => {
     const name = a.name || '';
@@ -324,20 +360,20 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
   };
 
   return (
-    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 bg-muted/50 overflow-hidden">
-      
+    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 overflow-hidden">
+
       {/* HEADER & SWITCH */}
-      <div className="shrink-0 border-b border-border bg-muted px-4 py-4 md:px-8">
+      <div className="shrink-0 px-4 pt-5 md:px-8 md:pt-6">
         <PageHeader
           title={activeTab === 'PROVEEDORES' ? 'Administración Proveedores' : 'Configuración Artículos'}
           subtitle="Gestión de datos maestros del sistema"
           actions={
             <>
-              <div className="relative min-w-[7rem] flex-1 sm:w-64 sm:flex-none">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+              <div className="relative min-w-[7rem] flex-1 sm:w-72 sm:flex-none">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                 <Input
                   placeholder="Buscar..."
-                  className="h-10 bg-card pl-9"
+                  className="h-11 md:h-11 rounded-lg bg-card pl-11"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -348,14 +384,14 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                 size="icon"
                 onClick={fetchData}
                 disabled={isLoading}
-                className="h-10 w-10 shrink-0 bg-card"
+                className="h-11 w-11 md:h-11 md:w-11 shrink-0 rounded-lg bg-card shadow-sm"
                 title="Actualizar datos"
               >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} />
               </Button>
 
-              <Button className="h-10 shrink-0" onClick={handleOpenNewItemModal}>
-                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+              <Button className="h-11 md:h-11 shrink-0 rounded-lg px-6 text-base font-semibold" onClick={handleOpenNewItemModal}>
+                <Plus className="mr-2 h-5 w-5" aria-hidden="true" />
                 <span className="whitespace-nowrap">{activeTab === 'PROVEEDORES' ? 'Nuevo Proveedor' : 'Nuevo Artículo'}</span>
               </Button>
             </>
@@ -394,7 +430,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                 </Button>
             </div>
          ) : (
-             <div className="flex min-h-0 flex-1 flex-col bg-card md:rounded-lg border border-border shadow-sm md:overflow-hidden">
+             <div className="flex min-h-0 flex-1 flex-col bg-card md:rounded-xl border border-border shadow-sm md:overflow-hidden">
                 {activeTab === 'PROVEEDORES' ? (
                     <>
                     {/* MOBILE CARDS VIEW */}
@@ -439,42 +475,49 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                     {/* table-fixed: a long mail address used to widen its own column and
                         drag every other one sideways. min-w keeps them readable - below it
                         the wrapper scrolls instead of squashing them. */}
-                    <table className="w-full table-fixed min-w-[980px] text-left hidden md:table text-[13px]">
+                    <table className="w-full table-fixed min-w-[980px] text-left hidden md:table text-sm">
                         <thead className="sticky top-0 z-20 bg-muted border-b border-border">
-                            <tr className="border-b border-border bg-muted/50">
-                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Proveedor</th>
-                                <th className="h-12 w-36 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Segmento</th>
-                                <th className="h-12 w-40 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Teléfono</th>
-                                <th className="h-12 w-64 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Mail</th>
-                                <th className="h-12 w-36 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Condición</th>
-                                <th className="h-12 w-28 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
+                            <tr className="border-b border-border">
+                                {sortHeader('Proveedor', 'name', 'pl-6')}
+                                {sortHeader('Segmento', 'segment', 'w-44')}
+                                {sortHeader('Teléfono', 'phone', 'w-44')}
+                                {sortHeader('Mail', 'email', 'w-80')}
+                                {sortHeader('Condición', 'paymentCondition', 'w-36 text-center')}
+                                <th className="h-14 w-32 px-6 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border bg-card [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                             {filteredProviders.map((prov) => (
-                                <tr key={prov.id} className="hover:bg-brand/10/30 transition-all duration-200 group">
-                                    <td className="h-16 px-4 py-3 truncate font-semibold text-foreground" title={capitalizeFirst(prov.name)}>{capitalizeFirst(prov.name)}</td>
-                                    <td className="h-16 px-4 py-3 truncate text-muted-foreground">{prov.segment}</td>
-                                    <td className="h-16 px-4 py-3 truncate text-muted-foreground">{prov.phone}</td>
-                                    <td className="h-16 px-4 py-3 truncate text-muted-foreground" title={prov.email}>{prov.email}</td>
-                                    <td className="h-16 px-4 py-3 text-right">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted text-foreground">
+                                <tr key={prov.id} className="transition-all duration-200 group">
+                                    <td className="h-[4.25rem] px-6 py-3 truncate text-[15px] font-bold text-foreground" title={capitalizeFirst(prov.name)}>{capitalizeFirst(prov.name)}</td>
+                                    <td className="h-[4.25rem] px-4 py-3 truncate text-muted-foreground" title={prov.segment}>{prov.segment || '-'}</td>
+                                    <td className="h-[4.25rem] px-4 py-3 truncate tabular-nums text-muted-foreground">{prov.phone || '-'}</td>
+                                    <td className="h-[4.25rem] px-4 py-3 truncate text-muted-foreground" title={prov.email}>{prov.email || '-'}</td>
+                                    <td className="h-[4.25rem] px-4 py-3 text-center">
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-muted text-foreground">
                                             {prov.paymentCondition}
                                         </span>
                                     </td>
-                                    <td className="h-16 px-4 py-3 text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <button onClick={() => handleOpenModal(prov)} className="p-2 text-muted-foreground hover:text-brand hover:bg-brand/10 rounded-lg transition-colors">
-                                                <Edit className="w-4 h-4" />
+                                    <td className="h-[4.25rem] px-6 py-3">
+                                        <div className="flex items-center justify-center gap-3">
+                                            <button onClick={() => handleOpenModal(prov)} title="Editar" aria-label={`Editar ${prov.name}`} className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-brand/10 hover:text-brand">
+                                                <Edit className="w-5 h-5" />
                                             </button>
-                                            <button onClick={() => handleDeleteClick(prov)} className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                                <Trash2 className="w-4 h-4" />
+                                            <button onClick={() => handleDeleteClick(prov)} title="Eliminar" aria-label={`Eliminar ${prov.name}`} className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600">
+                                                <Trash2 className="w-5 h-5" />
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
+                        <tfoot className="sticky bottom-0 z-20 border-t border-border bg-card">
+                            <tr>
+                                <td colSpan={6} className="px-6 py-3 text-sm text-muted-foreground">
+                                    Mostrando {filteredProviders.length} de {providers.length} proveedores
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                     </div>
                     </>
@@ -521,39 +564,41 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
 
                     {/* ARTICULOS TABLE (Desktop) */}
                     <div className="hidden min-h-0 flex-1 overflow-auto bg-muted md:block">
-                    <table className="w-full table-fixed min-w-[1080px] text-left hidden md:table text-[13px]">
-                        <thead className="sticky top-0 z-20 bg-muted border-b border-border">
-                            <tr className="border-b border-border bg-muted/50">
-                                <th className="h-12 w-24 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Nro. Art</th>
-                                <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
-                                <th className="h-12 w-48 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Proveedores</th>
-                                <th className="h-12 w-36 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Categoría</th>
-                                <th className="h-12 w-36 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Código</th>
-                                <th className="h-12 w-44 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio Unitario</th>
-                                <th className="h-12 w-28 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
+                    <table className="w-full table-fixed min-w-[1080px] text-left hidden md:table text-sm">
+                        {/* Column rules in the header only: they separate the labels
+                            without turning the body into a spreadsheet. */}
+                        <thead className="sticky top-0 z-20 bg-muted border-b border-border [&_th:not(:last-child)]:border-r [&_th]:border-border">
+                            <tr className="border-b border-border">
+                                <th className="h-14 w-28 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Nro. Art</th>
+                                <th className="h-14 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Artículo</th>
+                                <th className="h-14 w-52 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Proveedores</th>
+                                <th className="h-14 w-36 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Categoría</th>
+                                <th className="h-14 w-56 px-5 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Código</th>
+                                <th className="h-14 w-44 px-5 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Precio Unitario</th>
+                                <th className="h-14 w-36 px-5 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border bg-card [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
                             {filteredArticles.map((art) => (
-                                <tr key={art.id} className="hover:bg-brand/10/30 transition-all duration-200 group">
-                                    <td className="h-16 px-4 py-3 text-muted-foreground text-[11px]">{art.id}</td>
-                                    <td className="h-16 px-4 py-3 truncate font-semibold text-foreground" title={capitalizeFirst(art.name)}>{capitalizeFirst(art.name)}</td>
+                                <tr key={art.id} className="transition-all duration-200 group">
+                                    <td className="h-[4.5rem] px-5 py-3 tabular-nums text-muted-foreground">{art.id}</td>
+                                    <td className="h-[4.5rem] px-5 py-3 truncate text-[15px] font-bold text-foreground" title={capitalizeFirst(art.name)}>{capitalizeFirst(art.name)}</td>
                                     {/* The tooltip is what the truncation hides, so it must be the
                                         resolved names — it used to print the raw provider IDs. */}
-                                    <td className="h-16 px-4 py-3 truncate text-muted-foreground" title={providerNames(art.providerIds) || undefined}>
+                                    <td className="h-[4.5rem] px-5 py-3 truncate text-muted-foreground" title={providerNames(art.providerIds) || undefined}>
                                         {getProviderNames(art.providerIds)}
                                     </td>
-                                    <td className="h-16 px-4 py-3">
-                                        <span className="bg-muted text-muted-foreground px-2 py-1 rounded text-xs border border-border uppercase">{art.category}</span>
+                                    <td className="h-[4.5rem] px-5 py-3">
+                                        <span className="inline-block max-w-full truncate rounded-md bg-muted px-3 py-1 text-sm font-medium uppercase text-muted-foreground">{art.category}</span>
                                     </td>
-                                    <td className="h-16 px-4 py-3 truncate text-muted-foreground">{art.code}</td>
-                                    <td className="h-16 px-4 py-3 truncate text-right font-bold text-foreground tabular-nums" title={formatCurrency(art.unitPrice)}>{formatCurrency(art.unitPrice)}</td>
-                                    <td className="h-16 px-4 py-3 text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <button onClick={() => handleOpenModal(art)} className="p-2 text-muted-foreground hover:text-brand hover:bg-brand/10 rounded-lg transition-colors">
+                                    <td className="h-[4.5rem] px-5 py-3 truncate text-muted-foreground" title={art.code}>{art.code}</td>
+                                    <td className="h-[4.5rem] px-5 py-3 truncate text-right text-[15px] font-bold text-foreground tabular-nums" title={formatCurrency(art.unitPrice)}>{formatCurrency(art.unitPrice)}</td>
+                                    <td className="h-[4.5rem] px-5 py-3">
+                                        <div className="flex items-center justify-center gap-3">
+                                            <button onClick={() => handleOpenModal(art)} title="Editar" aria-label={`Editar ${art.name}`} className={rowAction()}>
                                                 <Edit className="w-4 h-4" />
                                             </button>
-                                            <button onClick={() => handleDeleteClick(art)} className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                            <button onClick={() => handleDeleteClick(art)} title="Eliminar" aria-label={`Eliminar ${art.name}`} className={rowAction(true)}>
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -561,6 +606,13 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                                 </tr>
                             ))}
                         </tbody>
+                        <tfoot className="sticky bottom-0 z-20 border-t border-border bg-card">
+                            <tr>
+                                <td colSpan={7} className="px-5 py-3 text-sm text-muted-foreground">
+                                    Mostrando {filteredArticles.length} de {articles.length} artículos
+                                </td>
+                            </tr>
+                        </tfoot>
                     </table>
                     </div>
                     </>
@@ -576,6 +628,10 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingItem ? (activeTab === 'PROVEEDORES' ? 'Editar Proveedor' : 'Editar Artículo') : (activeTab === 'PROVEEDORES' ? 'Nuevo Proveedor' : 'Nuevo Artículo')}
+        icon={activeTab === 'PROVEEDORES' ? User : Package}
+        description={activeTab === 'PROVEEDORES'
+            ? (editingItem ? 'Modificá la información del proveedor.' : 'Completá la información del proveedor para agregarlo al sistema.')
+            : (editingItem ? 'Modificá la información del artículo.' : 'Completá la información del artículo para agregarlo al sistema.')}
         maxWidth={activeTab === 'ARTICULOS' ? '2xl' : 'lg'}
         footer={
             <>
@@ -590,12 +646,14 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input 
                             label="Proveedor" 
+                            icon={Building2}
                             placeholder="Nombre del proveedor"
                             value={providerForm.name || ''} 
                             onChange={e => setProviderForm({...providerForm, name: e.target.value})}
                         />
                         <Input 
                             label="Segmento" 
+                            icon={Tag}
                             placeholder="Ej: T. Producto terminado"
                             value={providerForm.segment || ''} 
                             onChange={e => setProviderForm({...providerForm, segment: e.target.value})}
@@ -604,6 +662,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input 
                             label="Teléfono" 
+                            icon={Phone}
                             placeholder="+549..."
                             value={providerForm.phone || ''} 
                             onChange={e => setProviderForm({...providerForm, phone: e.target.value})}
@@ -613,6 +672,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                             below the Teléfono input beside it. */}
                         <Select
                             label="Moneda"
+                            icon={Coins}
                             value={providerForm.currency || 'ARS'}
                             onChange={val => setProviderForm({...providerForm, currency: val as any})}
                             options={[
@@ -623,6 +683,7 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                     </div>
                     <Input 
                         label="Mail" 
+                        icon={Mail}
                         placeholder="contacto@empresa.com"
                         value={providerForm.email || ''} 
                         onChange={e => setProviderForm({...providerForm, email: e.target.value})}
@@ -694,12 +755,14 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                          <Input 
                             label="Artículo" 
+                            icon={FileText}
                             placeholder="Nombre del artículo"
                             value={articleForm.name || ''} 
                             onChange={e => setArticleForm({...articleForm, name: e.target.value})}
                         />
                          <Input 
                             label="Categoría" 
+                            icon={Package}
                             placeholder="Ej: BOLSILLO"
                             value={articleForm.category || ''} 
                             onChange={e => setArticleForm({...articleForm, category: e.target.value})}
@@ -708,12 +771,14 @@ export const Configuracion: React.FC<ConfiguracionProps> = ({ initialTab = 'PROV
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Input 
                             label="Código" 
+                            icon={Tag}
                             placeholder="SKU-0000"
                             value={articleForm.code || ''} 
                             onChange={e => setArticleForm({...articleForm, code: e.target.value})}
                         />
                         <Input 
                             label="Precio Unitario"
+                            icon={DollarSign}
                             type="number"
                             min="0"
                             max={MAX_UNIT_PRICE}

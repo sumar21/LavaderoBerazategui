@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Truck, CheckCircle, Camera, X, Loader2 } from 'lucide-react';
+import { Truck, CheckCircle, Camera, X, Loader2, Info, FileText, Layers } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { Input } from '../ui/Input';
 import { Modal } from '../ui/Modal';
 import { PurchaseOrder } from '@/types';
 import { notify } from '../ui/Notice';
@@ -151,6 +152,7 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
         onClose={onClose}
         title="Ingresar Mercadería"
         description={`Ingrese las cantidades recibidas para la OC #${order.sharepointId}`}
+        icon={Truck}
         maxWidth="4xl" // Más ancho para que entre más info
         loading={isLoading}
         loadingText="Registrando recepción…"
@@ -170,43 +172,37 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
             </>
         }
       >
-        <div className="flex flex-col md:h-[65vh] space-y-6 p-1">
-             <div className="bg-brand/10 border border-brand/20 p-4 rounded-md flex items-start gap-3 shrink-0">
-                <div className="p-2 bg-brand/10 rounded-full">
-                   <Truck className="w-4 h-4 text-brand" />
+        <div className="flex flex-col md:h-[65vh] space-y-5 p-1">
+             <div className="flex shrink-0 items-start gap-3 rounded-lg border border-brand/20 bg-brand/5 p-4">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand/10 text-brand" aria-hidden="true">
+                   <Info className="h-5 w-5" />
                 </div>
-                <div className="text-sm text-brand mt-1">
-                   <p className="font-semibold">Recepción Parcial o Total</p>
-                   <p className="opacity-80">Ingrese la cantidad que llegó físicamente en este envío. Si completa el total, la orden se cerrará automáticamente.</p>
+                <div className="text-sm">
+                   <p className="font-semibold text-brand">Recepción Parcial o Total</p>
+                   <p className="text-muted-foreground">Ingrese la cantidad que llegó físicamente en este envío. Si completa el total, la orden se cerrará automáticamente.</p>
                 </div>
              </div>
 
-             <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
+             <div className="flex flex-col lg:flex-row gap-5 flex-1 min-h-0">
                  <div className="flex-1 flex flex-col gap-4 h-full min-w-0">
                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 shrink-0">
-                         <div>
-                             <label className="block text-sm font-medium text-foreground mb-1">Nro. Remito <span className="text-red-500">*</span></label>
-                             <input 
-                                 type="text"
-                                 className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-ring outline-none"
-                                 placeholder="Ej: REM-00123"
-                                 value={remito}
-                                 onChange={(e) => setRemito(e.target.value)}
-                             />
-                         </div>
-                         <div>
-                             <label className="block text-sm font-medium text-foreground mb-1">Lote</label>
-                             <input 
-                                 type="text"
-                                 className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-ring outline-none"
-                                 placeholder="Ej: LOTE-001"
-                                 value={lote}
-                                 onChange={(e) => setLote(e.target.value)}
-                             />
-                         </div>
+                         <Input
+                             label={<>Nro. Remito <span className="text-red-500">*</span></>}
+                             icon={FileText}
+                             placeholder="Ej: REM-00123"
+                             value={remito}
+                             onChange={(e) => setRemito(e.target.value)}
+                         />
+                         <Input
+                             label="Lote"
+                             icon={Layers}
+                             placeholder="Ej: LOTE-001"
+                             value={lote}
+                             onChange={(e) => setLote(e.target.value)}
+                         />
                      </div>
 
-                     <div className="border rounded-md overflow-hidden border-border shadow-sm flex-1 min-h-0 overflow-y-auto custom-scrollbar relative">
+                     <div className="border rounded-lg overflow-hidden border-border shadow-sm flex-1 min-h-0 overflow-y-auto custom-scrollbar relative">
                          {/* MOBILE VIEW (Cards) */}
                          <div className="md:hidden divide-y divide-border">
                              {order.items.map((item, idx) => {
@@ -381,9 +377,9 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                                              className="hidden"
                                                              onChange={(e) => handleImageUpload(e, 'Item', item.sku)}
                                                          />
-                                                         <label 
+                                                         <label
                                                              htmlFor={`file-${item.sku}`}
-                                                             className={`p-1.5 rounded-lg cursor-pointer transition-colors inline-flex ${hasImage ? 'bg-brand/10 text-brand' : 'bg-muted text-muted-foreground hover:bg-muted'}`}
+                                                             className={`inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border transition-colors ${hasImage ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground'}`}
                                                              title="Adjuntar foto del producto"
                                                          >
                                                              <Camera className="w-4 h-4" />
@@ -403,7 +399,7 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                                 {!isComplete && (
                                                     <input
                                                         type="checkbox"
-                                                        className="h-4 w-4 rounded border-border text-brand focus:ring-ring cursor-pointer"
+                                                        className="h-5 w-5 rounded border-border accent-brand focus:ring-ring cursor-pointer"
                                                         checked={currentInput === String(pending) && pending > 0}
                                                         onChange={(e) => {
                                                             if (e.target.checked) {
@@ -425,9 +421,9 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                  </div>
 
                  {/* Remito Image Section */}
-                 <div className="lg:w-72 shrink-0 flex flex-col h-full">
-                     <label className="block text-sm font-medium text-foreground mb-2 shrink-0">Foto del Remito</label>
-                     <div className="border-2 border-dashed border-border rounded-md p-4 flex flex-col items-center justify-center text-center flex-1 min-h-[200px] bg-muted hover:bg-accent transition-colors relative">
+                 <div className="lg:w-72 shrink-0 flex flex-col h-full rounded-lg border border-border bg-muted/40 p-3">
+                     <p className="mb-3 shrink-0 text-sm font-semibold text-foreground">Foto del Remito</p>
+                     <div className="border-2 border-dashed border-border rounded-lg p-4 flex flex-col items-center justify-center text-center flex-1 min-h-[200px] bg-card/60 hover:bg-card transition-colors relative">
                          {remitoImage ? (
                              <div className="relative w-full h-full">
                                  <img src={remitoImage} alt="Remito" className="w-full h-full object-contain rounded-lg" />
@@ -448,11 +444,14 @@ export const ReceptionModal: React.FC<ReceptionModalProps> = ({ isOpen, onClose,
                                      onChange={(e) => handleImageUpload(e, 'Remito')}
                                  />
                                  <label htmlFor="remito-upload" className="cursor-pointer flex flex-col items-center w-full h-full justify-center">
-                                     <div className="p-3 bg-card rounded-full shadow-sm mb-3">
-                                         <Camera className="w-6 h-6 text-muted-foreground" />
+                                     <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-brand/10 text-brand">
+                                         <Camera className="h-7 w-7" aria-hidden="true" />
                                      </div>
-                                     <span className="text-sm text-muted-foreground font-medium">Subir foto del remito</span>
+                                     <span className="text-sm font-semibold text-brand">Subir foto del remito</span>
                                      <span className="text-xs text-muted-foreground mt-1">Click para adjuntar</span>
+                                     {/* Only what the input really takes: accept="image/*", and any
+                                         size is fine because the photo is recompressed to 800px. */}
+                                     <span className="mt-6 text-[11px] text-muted-foreground">Formatos aceptados: JPG, PNG</span>
                                  </label>
                              </>
                          )}

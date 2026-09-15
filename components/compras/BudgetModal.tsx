@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { DollarSign, Loader2, Trash2 } from 'lucide-react';
+import { DollarSign, FileText, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { PurchaseOrder } from '@/types';
@@ -72,6 +72,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
         onClose={onClose}
         title="Cargar Presupuesto"
         description={`Ingrese los precios y cantidades finales para la OC #${order.sharepointId || order.id}. La orden pasará a estado de aprobación.`}
+        icon={FileText}
         maxWidth="5xl"
         loading={isLoading}
         loadingText="Guardando presupuesto…"
@@ -92,13 +93,13 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
         }
       >
         <div className="space-y-5">
-           <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-md flex items-start gap-3">
-              <div className="p-2 bg-emerald-100 rounded-full">
-                  <DollarSign className="w-4 h-4 text-emerald-700" />
+           <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700" aria-hidden="true">
+                  <DollarSign className="h-5 w-5" />
               </div>
-              <div className="text-sm text-emerald-900 mt-1">
-                 <p className="font-semibold">Instrucciones</p>
-                 <p className="opacity-80">Puede ajustar las cantidades y precios unitarios. El sistema actualizará los totales de la orden automáticamente.</p>
+              <div className="text-sm">
+                 <p className="font-semibold text-emerald-700">Instrucciones</p>
+                 <p className="text-emerald-800">Puede ajustar las cantidades y precios unitarios. El sistema actualizará los totales de la orden automáticamente.</p>
               </div>
            </div>
 
@@ -166,7 +167,7 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
            </div>
 
            {/* DESKTOP VIEW (Table) */}
-           <div className="hidden md:block border rounded-md overflow-auto bg-muted border-border shadow-sm">
+           <div className="hidden md:block border rounded-lg overflow-auto bg-muted border-border shadow-sm">
               {/* table-fixed: without it the w-* below are only hints, so a long
                   subtotal widened its own column and shoved every other one left
                   as you typed. Fixed layout makes the widths binding — the article
@@ -241,8 +242,8 @@ export const BudgetModal: React.FC<BudgetModalProps> = ({ isOpen, onClose, order
                  </tbody>
                  <tfoot className="bg-muted/80 border-t border-border">
                     <tr>
-                       <td colSpan={3} className="px-4 py-4 text-right font-bold text-foreground uppercase text-xs tracking-wider">Total Estimado</td>
-                       <td className="px-4 py-4 text-right font-bold text-emerald-700 text-base tabular-nums">
+                       <td colSpan={3} className="px-4 py-4 text-right font-semibold text-muted-foreground uppercase text-xs tracking-wider">Total Estimado</td>
+                       <td className="px-4 py-4 text-right font-bold text-emerald-600 text-xl tabular-nums">
                           <span className="block truncate" title={formatCurrency(totalEstimated)}>
                              {formatCurrency(totalEstimated)}
                           </span>

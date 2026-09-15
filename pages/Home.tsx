@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Shirt, AlertTriangle, Clock, ShoppingCart,
-  AlertCircle, PackageSearch, Inbox,
+  Box, AlertTriangle, Clock, ShoppingCart, CircleCheck,
+  AlertCircle, PackageSearch, Inbox, Calendar, ArrowRight,
 } from 'lucide-react';
 import { Card, CardContent, cn } from '../components/ui/UIComponents';
 import { KpiCard, type Tone as KpiTone } from '../components/ui/KpiCard';
@@ -12,6 +12,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { stockService } from '../services/stockService';
 import { Stock, PurchaseOrder } from '@/types';
 import { capitalizeFirst } from '../utils/text';
+import { useUserProfile } from '../components/useUserProfile';
 
 interface HomeProps {
   onViewChange?: (view: string) => void;
@@ -35,15 +36,53 @@ const qtyOf = (item: any) => {
   return Number.isNaN(qty) ? 0 : qty;
 };
 
-const SectionHeading: React.FC<{ children: React.ReactNode; action?: React.ReactNode }> = ({ children, action }) => (
-  <div className="mb-2 flex shrink-0 items-center justify-between gap-3">
-    <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-      <span className="h-3.5 w-1 rounded-full bg-brand" aria-hidden="true" />
-      {children}
-    </h2>
-    {action}
-  </div>
+/** "Martes, 16 de Septiembre de 2026" — es-AR lowercases weekday and month. */
+const longDate = (d: Date) => {
+  const part = (options: Intl.DateTimeFormatOptions) => capitalizeFirst(d.toLocaleDateString('es-AR', options));
+  return `${part({ weekday: 'long' })}, ${d.getDate()} de ${part({ month: 'long' })} de ${d.getFullYear()}`;
+};
+
+const greeting = (hour: number) => (hour < 5 || hour >= 20 ? 'Buenas noches' : hour < 13 ? 'Buenos días' : 'Buenas tardes');
+
+const TONE_TILE = {
+  danger: 'bg-red-50 text-red-600 ring-red-100',
+  brand: 'bg-brand/10 text-brand ring-brand/15',
+} as const;
+
+/** List card: icon tile, title and subtitle, with the "see all" link on the right. */
+const ListCard: React.FC<{
+  icon: React.ElementType;
+  tone: keyof typeof TONE_TILE;
+  title: string;
+  subtitle: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}> = ({ icon: Icon, tone, title, subtitle, action, children }) => (
+  <Card className="relative flex min-h-0 flex-col overflow-hidden lg:flex-1">
+    {tone === 'danger' && <span className="absolute left-0 top-0 h-[4.5rem] w-1 bg-red-500" aria-hidden="true" />}
+    <div className="flex shrink-0 items-center gap-3 px-4 pb-3 pt-4">
+      <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ring-1', TONE_TILE[tone])}>
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <h2 className="truncate text-lg font-bold leading-tight">{title}</h2>
+        <p className="truncate text-xs text-muted-foreground sm:text-sm">{subtitle}</p>
+      </div>
+      {action}
+    </div>
+    <CardContent className="min-h-0 flex-1 overflow-y-auto px-3 pb-3">{children}</CardContent>
+  </Card>
 );
+
+const SeeAll: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
+  <button type="button" onClick={onClick} className="flex shrink-0 items-center gap-1 text-sm font-medium text-brand hover:underline">
+    {children}
+    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+  </button>
+);
+
+/** Header cells of both lists: a muted band with rounded ends, stuck to the top while the rows scroll. */
+const TH = 'sticky top-0 z-10 h-10 bg-muted px-3 text-left text-sm font-medium text-muted-foreground first:rounded-l-lg last:rounded-r-lg';
 
 const EmptyRow: React.FC<{ icon: React.ElementType; children: React.ReactNode }> = ({ icon: Icon, children }) => (
   <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
@@ -53,6 +92,7 @@ const EmptyRow: React.FC<{ icon: React.ElementType; children: React.ReactNode }>
 );
 
 export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
+  const user = useUserProfile();
   const [stock, setStock] = useState<Stock[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -116,9 +156,9 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
   const KPIS: Array<{ icon: React.ElementType; label: string; value: React.ReactNode; sub: string; tone: KpiTone; view: string }> = [
     // Zero is good news on the two alert tiles, so they go green rather than
     // grey — a colourless KPI reads as "no data", not as "nothing to do".
-    { icon: Shirt, label: 'Stock total', value: stats.total.toLocaleString('es-AR'), sub: 'unidades activas', tone: 'brand', view: 'stock' },
+    { icon: Box, label: 'Stock total', value: stats.total.toLocaleString('es-AR'), sub: 'unidades activas', tone: 'brand', view: 'stock' },
     { icon: AlertTriangle, label: 'Stock bajo', value: stats.low.length, sub: `menos de ${LOW_STOCK_THRESHOLD} un.`, tone: stats.low.length > 0 ? 'warning' : 'success', view: 'stock' },
-    { icon: Clock, label: 'Aprobaciones', value: stats.pending, sub: stats.pending > 0 ? 'órdenes pendientes' : 'todo al día', tone: stats.pending > 0 ? 'warning' : 'success', view: 'aprobaciones' },
+    { icon: stats.pending > 0 ? Clock : CircleCheck, label: 'Aprobaciones', value: stats.pending, sub: stats.pending > 0 ? 'órdenes pendientes' : 'todo al día', tone: stats.pending > 0 ? 'warning' : 'success', view: 'aprobaciones' },
     { icon: ShoppingCart, label: 'Órdenes', value: orders.length, sub: 'en el sistema', tone: 'info', view: 'compras' },
   ];
 
@@ -127,13 +167,28 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
        size, the two lists split what is left and scroll inside their own card.
        Sizing by row count instead meant picking a number that fit one laptop and
        overflowed the next. Below lg the lists stack, so the page scrolls. */
-    <div className="h-full overflow-y-auto p-3 md:p-6 lg:overflow-hidden">
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-4 lg:h-full">
+    <div className="h-full overflow-y-auto p-4 md:px-8 md:py-6 lg:overflow-hidden">
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-4 lg:h-full lg:gap-5">
 
-        <PageHeader className="shrink-0" title="Panel de control" subtitle="Resumen de stock, compras y aprobaciones." />
+        <PageHeader
+          className="shrink-0"
+          title="Panel de control"
+          subtitle="Resumen de stock, compras y aprobaciones."
+          actions={
+            <div className="hidden items-center gap-3 rounded-xl border border-border bg-card py-2.5 pl-3 pr-5 shadow-sm sm:flex">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+                <Calendar className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div className="leading-tight">
+                <p className="text-sm font-semibold">{longDate(new Date())}</p>
+                <p className="mt-0.5 text-[13px] text-muted-foreground">{greeting(new Date().getHours())}, {capitalizeFirst(user.name)}</p>
+              </div>
+            </div>
+          }
+        />
 
         {/* KPI row (§5.3), entering one after the other */}
-        <div className="grid shrink-0 grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid shrink-0 grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
           {KPIS.map((kpi, i) => (
             <div key={kpi.label} className="stagger-in" style={{ '--stagger-index': i } as React.CSSProperties}>
               <KpiCard
@@ -150,75 +205,84 @@ export const Home: React.FC<HomeProps> = ({ onViewChange, orders }) => {
 
         {/* Two working lists — the panel's actual value, not just counters */}
         <div className="grid grid-cols-1 gap-4 stagger-in lg:min-h-0 lg:flex-1 lg:grid-cols-2" style={{ '--stagger-index': 4 } as React.CSSProperties}>
-          <section className="flex min-h-0 flex-col">
-            <SectionHeading
-              action={
-                stats.low.length > LIST_SIZE ? (
-                  <button type="button" onClick={() => onViewChange?.('stock')} className="text-xs font-medium text-brand hover:underline">
-                    Ver los {stats.low.length}
-                  </button>
-                ) : undefined
-              }
-            >
-              Stock crítico
-            </SectionHeading>
-            <Card className="flex min-h-0 flex-col overflow-hidden lg:flex-1">
-              <CardContent className="min-h-0 flex-1 overflow-y-auto p-0">
-                {stats.low.length === 0 ? (
-                  <EmptyRow icon={PackageSearch}>Ningún artículo por debajo de {LOW_STOCK_THRESHOLD} unidades.</EmptyRow>
-                ) : (
-                  <ul className="divide-y divide-border">
-                    {stats.low.slice(0, LIST_SIZE).map(item => {
-                      const qty = qtyOf(item);
-                      return (
-                        <li key={item.id} className="flex items-center gap-3 px-4 py-2 transition-colors hover:bg-accent/60">
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-medium">{capitalizeFirst(item.concat || item.articulo || item.sku)}</p>
-                            <p className="truncate text-[11px] text-muted-foreground">{item.subdeposito || item.sku}</p>
-                          </div>
-                          <span className={cn('shrink-0 text-sm font-bold tabular-nums', qty === 0 ? 'text-red-600' : 'text-amber-600')}>
+          <ListCard
+            icon={AlertTriangle}
+            tone="danger"
+            title="Stock crítico"
+            subtitle="Artículos con stock por debajo del mínimo recomendado."
+            action={stats.low.length > LIST_SIZE ? <SeeAll onClick={() => onViewChange?.('stock')}>Ver los {stats.low.length}</SeeAll> : undefined}
+          >
+            {stats.low.length === 0 ? (
+              <EmptyRow icon={PackageSearch}>Ningún artículo por debajo de {LOW_STOCK_THRESHOLD} unidades.</EmptyRow>
+            ) : (
+              <table className="w-full table-fixed text-sm">
+                <thead>
+                  <tr>
+                    <th className={TH}>Artículo</th>
+                    <th className={cn(TH, 'w-20 text-center')}>Stock</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {stats.low.slice(0, LIST_SIZE).map(item => {
+                    const qty = qtyOf(item);
+                    return (
+                      <tr key={item.id} className="transition-colors hover:bg-accent/60">
+                        <td className="px-3 py-1.5">
+                          <p className="truncate font-medium">{capitalizeFirst(item.concat || item.articulo || item.sku)}</p>
+                          <p className="truncate text-xs text-muted-foreground">{capitalizeFirst(item.subdeposito) || item.sku}</p>
+                        </td>
+                        <td className="px-3 py-1.5 text-center">
+                          <span className={cn('inline-flex min-w-11 justify-center rounded-md px-2 py-0.5 font-semibold tabular-nums', qty === 0 ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600')}>
                             {qty.toLocaleString('es-AR')}
                           </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-          </section>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </ListCard>
 
-          <section className="flex min-h-0 flex-col">
-            <SectionHeading
-              action={
-                <button type="button" onClick={() => onViewChange?.('compras')} className="text-xs font-medium text-brand hover:underline">
-                  Ver todas
-                </button>
-              }
-            >
-              Últimas órdenes
-            </SectionHeading>
-            <Card className="flex min-h-0 flex-col overflow-hidden lg:flex-1">
-              <CardContent className="min-h-0 flex-1 overflow-y-auto p-0">
-                {stats.recent.length === 0 ? (
-                  <EmptyRow icon={Inbox}>Todavía no hay órdenes de compra.</EmptyRow>
-                ) : (
-                  <ul className="divide-y divide-border">
-                    {stats.recent.map(order => (
-                      <li key={order.id} className="flex items-center gap-3 px-4 py-2 transition-colors hover:bg-accent/60">
-                        <span className="shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">#{order.sharepointId}</span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[13px] font-medium">{capitalizeFirst(order.providerName) || 'Sin proveedor'}</p>
-                          <p className="truncate text-[11px] text-muted-foreground">{order.date}</p>
-                        </div>
-                        {order.status && <StatusBadge status={order.status} className="shrink-0" />}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
-          </section>
+          <ListCard
+            icon={Clock}
+            tone="brand"
+            title="Últimas órdenes"
+            subtitle="Órdenes de compra más recientes del sistema."
+            action={<SeeAll onClick={() => onViewChange?.('compras')}>Ver todas</SeeAll>}
+          >
+            {stats.recent.length === 0 ? (
+              <EmptyRow icon={Inbox}>Todavía no hay órdenes de compra.</EmptyRow>
+            ) : (
+              <table className="w-full table-fixed text-sm">
+                <thead>
+                  <tr>
+                    <th className={cn(TH, 'w-16')}>#</th>
+                    <th className={TH}>Proveedor</th>
+                    <th className={cn(TH, 'hidden w-28 sm:table-cell')}>Fecha</th>
+                    <th className={cn(TH, 'w-48')}>Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {stats.recent.map(order => (
+                    <tr key={order.id} className="transition-colors hover:bg-accent/60">
+                      <td className="px-2 py-2">
+                        <span className="inline-block rounded-md bg-muted px-2 py-1 text-xs font-semibold tabular-nums text-muted-foreground">#{order.sharepointId}</span>
+                      </td>
+                      <td className="px-3 py-2">
+                        <p className="truncate" title={capitalizeFirst(order.providerName)}>{capitalizeFirst(order.providerName) || 'Sin proveedor'}</p>
+                        <p className="truncate text-xs text-muted-foreground sm:hidden">{order.date}</p>
+                      </td>
+                      <td className="hidden px-3 py-2 tabular-nums text-muted-foreground sm:table-cell">{order.date}</td>
+                      <td className="px-3 py-2">
+                        {order.status && <StatusBadge status={order.status} />}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </ListCard>
         </div>
 
       </div>

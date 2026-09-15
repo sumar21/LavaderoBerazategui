@@ -4,6 +4,8 @@ import { Check, ChevronDown, X, Search } from 'lucide-react';
 import { Badge } from './Badge';
 import { Z } from './zLayers';
 import { capitalizeFirst } from '../../utils/text';
+import { FIELD_ICON, FIELD_LABEL } from './Input';
+import { cn } from './UIComponents';
 
 interface Option {
   value: string;
@@ -15,19 +17,24 @@ interface MultiSelectProps {
   value: string[];
   onChange: (value: string[]) => void;
   placeholder?: string;
-  label?: string;
+  label?: React.ReactNode;
   error?: string;
   className?: string;
+  icon?: React.ElementType;
+  /** Trigger height, for toolbars that sit taller than a form field. */
+  triggerClassName?: string;
 }
 
-export const MultiSelect: React.FC<MultiSelectProps> = ({ 
-  options, 
-  value, 
-  onChange, 
-  placeholder = "Seleccionar...", 
+export const MultiSelect: React.FC<MultiSelectProps> = ({
+  options,
+  value,
+  onChange,
+  placeholder = "Seleccionar...",
   label,
   error,
-  className = ""
+  className = "",
+  icon: Icon,
+  triggerClassName = ""
 }) => {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -125,21 +132,27 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
 
   return (
     <div className={`w-full relative ${className}`} ref={containerRef}>
-      {/* The kit's field label, DESIGN.md:554 — same element the Input renders.
-          It used to be text-sm/semibold with mb-1.5, which sat 6px taller and
-          pushed this control below any Input beside it in a grid. */}
-      {label && <label className="mb-1 block text-xs font-medium text-muted-foreground">{label}</label>}
-      
+      {/* Same label element as Input (FIELD_LABEL), so a MultiSelect beside an
+          Input in a grid lines up with it. */}
+      {label && <label className={FIELD_LABEL}>{label}</label>}
+
       <button
         type="button"
         onClick={handleToggle}
-        className={`w-full flex items-center justify-between rounded-md border bg-card px-3 py-2 min-h-[40px] text-sm transition-all duration-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 shadow-sm hover:border-ring ${
-          error ? 'border-red-500' : 'border-border'
-        } ${open ? 'border-primary ring-2 ring-ring/20' : ''}`}
+        // cn, not a template string: triggerClassName must be able to override the
+        // base radius and height, and plain class order does not decide CSS precedence.
+        className={cn(
+          'relative w-full flex items-center justify-between rounded-md border bg-card px-3 py-2 min-h-[40px] text-sm transition-all duration-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 shadow-sm hover:border-ring',
+          error ? 'border-red-500' : 'border-border',
+          open && 'border-primary ring-2 ring-ring/20',
+          Icon && 'pl-9',
+          triggerClassName
+        )}
       >
+        {Icon && <Icon className={FIELD_ICON} aria-hidden="true" />}
         <div className="flex flex-wrap gap-1 items-center overflow-hidden">
           {value.length === 0 ? (
-            <span className="text-muted-foreground">{placeholder}</span>
+            <span className={Icon ? 'text-foreground' : 'text-muted-foreground'}>{placeholder}</span>
           ) : (
             value.map(v => {
               const option = options.find(o => o.value === v);

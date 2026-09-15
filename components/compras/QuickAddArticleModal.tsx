@@ -5,7 +5,7 @@ import { Input } from '../ui/Input';
 import { MultiSelect } from '../ui/MultiSelect';
 import { Provider, Article } from '@/types';
 import { configService } from '../../services/configService';
-import { Loader2, Plus, Trash2, Package } from 'lucide-react';
+import { Loader2, Plus, Trash2, Package, Box, Tag, FileText, DollarSign } from 'lucide-react';
 import { notify } from '../ui/Notice';
 import { capitalizeFirst } from '../../utils/text';
 import { MAX_UNIT_PRICE, keepPriceText } from '../../utils/number';
@@ -156,6 +156,8 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Carga Masiva de Artículos"
+      description="Agregue múltiples artículos manualmente al sistema."
+      icon={Box}
       maxWidth="4xl"
       footer={
         <>
@@ -167,21 +169,23 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
         </>
       }
     >
-      <div className="space-y-6">
-        <MultiSelect 
-            label="Proveedores (Estos proveedores se asociarán a TODOS los artículos de la lista)"
+      <div className="space-y-5">
+        <MultiSelect
+            label={<>Proveedores <span className="text-xs text-muted-foreground">(Estos proveedores se asociarán a TODOS los artículos de la lista)</span></>}
             placeholder="Seleccionar proveedores..."
             options={providers.map(p => ({ label: p.name, value: p.id }))}
             value={providerIds}
             onChange={setProviderIds}
         />
-        
-        <div className="bg-muted p-4 rounded-md border border-border">
-           <h4 className="text-sm font-semibold text-foreground mb-3">Agregar al listado</h4>
+
+        <div className="rounded-xl border border-border bg-muted/50 p-4">
+           <h4 className="text-sm font-semibold text-foreground">Agregar al listado</h4>
+           <p className="mb-3 text-xs text-muted-foreground">Complete la información del artículo y añádalo a la lista.</p>
            <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
               <div className="md:col-span-3">
-                 <Input 
-                     label="Categoría / Familia" 
+                 <Input
+                     label="Categoría / Familia"
+                     icon={Box}
                      placeholder="Ej: INSUMOS"
                      value={category} 
                      onChange={e => setCategory(e.target.value)}
@@ -190,7 +194,8 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
               </div>
               <div className="md:col-span-3">
                  <Input 
-                     label="Código (SKU)" 
+                     label="Código (SKU)"
+                     icon={Tag}
                      placeholder="SKU-0000"
                      value={code} 
                      onChange={e => setCode(e.target.value)}
@@ -202,7 +207,8 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
               </div>
               <div className="md:col-span-3">
                  <Input 
-                     label="Nombre y Descripción" 
+                     label="Nombre y Descripción"
+                     icon={FileText}
                      placeholder="Nombre del artículo"
                      value={name} 
                      onChange={e => setName(e.target.value)}
@@ -215,7 +221,8 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
               <div className="md:col-span-2">
                  <Input 
                      type="number"
-                     label="Precio Unitario" 
+                     label="Precio Unitario"
+                     icon={DollarSign}
                      placeholder="0.00"
                      min="0"
                      max={MAX_UNIT_PRICE}
@@ -230,14 +237,15 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
               </div>
               <div className="md:col-span-1 border-t md:border-t-0 pt-2 md:pt-0">
                   <button 
-                      className={`w-full h-[42px] px-0 flex justify-center items-center rounded-lg transition-colors shadow-sm ${
-                        !isFormValidToStage || isSaving 
-                            ? 'bg-muted text-muted-foreground cursor-not-allowed opacity-70' 
-                            : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      className={`w-full h-11 md:h-10 px-0 flex justify-center items-center rounded-lg bg-brand text-brand-foreground shadow-sm transition-colors ${
+                        !isFormValidToStage || isSaving
+                            ? 'cursor-not-allowed opacity-50'
+                            : 'hover:bg-brand/90'
                       }`}
-                      onClick={handleStageArticle} 
+                      onClick={handleStageArticle}
                       disabled={!isFormValidToStage || isSaving}
                       title="Agregar a la grilla inferior"
+                      aria-label="Agregar a la grilla inferior"
                   >
                       <Plus className="w-5 h-5 text-current" />
                   </button>
@@ -312,9 +320,11 @@ export const QuickAddArticleModal: React.FC<QuickAddArticleModalProps> = ({
            </div>
           </>
         ) : (
-           <div className="flex flex-col items-center justify-center py-10 bg-card border-2 border-dashed border-border rounded-md">
-               <Package className="w-10 h-10 text-muted-foreground mb-3" />
-               <p className="text-sm font-medium text-muted-foreground">No hay artículos en la lista.</p>
+           <div className="flex flex-col items-center justify-center py-10 bg-card border-2 border-dashed border-border rounded-xl">
+               <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-muted text-muted-foreground" aria-hidden="true">
+                   <Package className="h-7 w-7" />
+               </div>
+               <p className="text-sm font-semibold text-foreground">No hay artículos en la lista.</p>
                <p className="text-xs text-muted-foreground mt-1 max-w-xs text-center">Complete los datos arriba y presione el botón "+" o la tecla Enter para ir añadiéndolos.</p>
            </div>
         )}

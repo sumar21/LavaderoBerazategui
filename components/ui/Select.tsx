@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import { Z } from './zLayers';
 import { capitalizeFirst } from '../../utils/text';
+import { FIELD_ICON, FIELD_LABEL } from './Input';
 
 interface Option {
   value: string;
@@ -14,19 +15,21 @@ interface SelectProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  label?: string;
+  label?: React.ReactNode;
   error?: string;
   className?: string;
+  icon?: React.ElementType;
 }
 
-export const Select: React.FC<SelectProps> = ({ 
-  options, 
-  value, 
-  onChange, 
-  placeholder = "Seleccionar...", 
+export const Select: React.FC<SelectProps> = ({
+  options,
+  value,
+  onChange,
+  placeholder = "Seleccionar...",
   label,
   error,
-  className = ""
+  className = "",
+  icon: Icon
 }) => {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
@@ -96,18 +99,18 @@ export const Select: React.FC<SelectProps> = ({
 
   return (
     <div className={`w-full relative ${className}`} ref={containerRef}>
-      {/* The kit's field label, DESIGN.md:554 — same element the Input renders.
-          It used to be text-sm/semibold with mb-1.5, which sat 6px taller and
-          pushed this control below any Input beside it in a grid. */}
-      {label && <label className="mb-1 block text-xs font-medium text-muted-foreground">{label}</label>}
-      
+      {/* Same label element as Input (FIELD_LABEL), so a Select beside an Input
+          in a grid lines up with it. */}
+      {label && <label className={FIELD_LABEL}>{label}</label>}
+
       <button
         type="button"
         onClick={handleToggle}
-        className={`w-full flex items-center justify-between rounded-md border bg-card px-3 py-2 h-10 text-sm transition-all duration-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 shadow-sm hover:border-ring ${
+        className={`relative w-full flex items-center justify-between rounded-md border bg-card px-3 py-2 h-10 text-sm transition-all duration-200 focus:outline-none focus:border-primary focus:ring-2 focus:ring-ring/20 shadow-sm hover:border-ring ${
           error ? 'border-red-500' : 'border-border'
-        } ${open ? 'border-primary ring-2 ring-ring/20' : ''}`}
+        } ${open ? 'border-primary ring-2 ring-ring/20' : ''} ${Icon ? 'pl-9' : ''}`}
       >
+        {Icon && <Icon className={FIELD_ICON} aria-hidden="true" />}
         <span className={`block truncate ${selectedOption ? "text-foreground font-medium" : "text-muted-foreground"}`}>
           {selectedOption ? capitalizeFirst(selectedOption.label) : placeholder}
         </span>

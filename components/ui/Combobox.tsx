@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Check, ChevronsUpDown, Search } from 'lucide-react';
 import { Z } from './zLayers';
 import { capitalizeFirst } from '../../utils/text';
+import { FIELD_ICON, FIELD_LABEL } from './Input';
 
 interface Option {
   value: string;
@@ -15,19 +16,21 @@ interface ComboboxProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  label?: string;
+  label?: React.ReactNode;
   error?: string;
   disabled?: boolean;
+  icon?: React.ElementType;
 }
 
-export const Combobox: React.FC<ComboboxProps> = ({ 
-  options, 
-  value, 
-  onChange, 
-  placeholder = "Seleccionar...", 
+export const Combobox: React.FC<ComboboxProps> = ({
+  options,
+  value,
+  onChange,
+  placeholder = "Seleccionar...",
   label,
   error,
-  disabled = false
+  disabled = false,
+  icon: Icon
 }) => {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -117,21 +120,21 @@ export const Combobox: React.FC<ComboboxProps> = ({
 
   return (
     <div className="w-full relative" ref={containerRef}>
-      {/* The kit's field label, DESIGN.md:554 — same element the Input renders.
-          It used to be text-sm/semibold with mb-1.5, which sat 6px taller and
-          pushed this control below any Input beside it in a grid. */}
-      {label && <label className="mb-1 block text-xs font-medium text-muted-foreground">{label}</label>}
-      
+      {/* Same label element as Input (FIELD_LABEL), so a Combobox beside an
+          Input in a grid lines up with it. */}
+      {label && <label className={FIELD_LABEL}>{label}</label>}
+
       <button
         type="button"
         onClick={handleToggle}
         disabled={disabled}
-        className={`w-full flex items-center justify-between rounded-md border bg-card px-3 py-2.5 h-10 text-sm transition-all duration-200 focus:outline-none shadow-sm ${
-          disabled 
-            ? 'bg-muted text-muted-foreground cursor-not-allowed border-border opacity-60' 
+        className={`relative w-full flex items-center justify-between rounded-md border bg-card px-3 py-2.5 h-10 text-sm transition-all duration-200 focus:outline-none shadow-sm ${Icon ? 'pl-9' : ''} ${
+          disabled
+            ? 'bg-muted text-muted-foreground cursor-not-allowed border-border opacity-60'
             : `hover:border-ring focus:border-primary focus:ring-2 focus:ring-ring/20 ${error ? 'border-red-500' : 'border-border'} ${open ? 'border-primary ring-2 ring-ring/20' : ''}`
         }`}
       >
+        {Icon && <Icon className={FIELD_ICON} aria-hidden="true" />}
         <span className={`block truncate ${selectedOption ? "text-foreground font-medium" : "text-muted-foreground"}`}>
           {selectedOption 
             ? capitalizeFirst(selectedOption.label)

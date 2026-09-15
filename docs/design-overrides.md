@@ -205,6 +205,31 @@ dice el kit, qué hacemos nosotros, dónde vive el cambio y por qué.
   `scripts/audit-kit.mjs` falla si se usa un paso de palette que no esté redefinido en `.dark`
   (lee las declaraciones reales del CSS, así que no puede quedar desincronizado).
 
+## 14. Rediseño de pantallas (septiembre 2026)
+
+- **Kit**: neutros en hue 240, `--radius` de 8px, escala tipográfica hasta `2xl`, labels de campo
+  en `text-xs` muted (`docs/DESIGN.md:332-345`, `docs/DESIGN.md:554`).
+- **Nosotros**: el cliente aprobó un rediseño y se calcó sobre los mismos primitivos:
+  - **Neutros claros en hue 214** (gris azulado que tira a la marca) y tinta navy
+    (`--foreground: 222 47% 11%`). El oscuro no cambia.
+  - **`--radius: 0.75rem`**: cards, diálogos y controles más redondeados.
+  - **Escala ampliada**: `text-3xl` para títulos de página (desde `md`), `text-4xl` para el valor
+    de los KPI y `text-[15px]` para el texto principal de las grillas y el nav. `audit-kit.mjs`
+    los admite explícitamente; cualquier otro tamaño sigue fallando.
+  - **Labels de campo en `text-sm` foreground**, definidos una sola vez en `FIELD_LABEL`
+    (`components/ui/Input.tsx`) y compartidos por Input, Select, Combobox y MultiSelect, igual que
+    el slot de ícono (`FIELD_ICON`). Un label distinto en cualquiera de los cuatro los desalinea en grilla.
+  - **Diálogos con ícono**: `Modal` acepta `icon` (tile de marca junto al título), sin la línea de
+    marca superior y con el footer sobre `bg-card`.
+  - **KPI sobre superficie teñida** por tono (`bg-*-50`), en vez del degradé con riel.
+  - **Acciones de grilla**: con borde (`rowAction()` en `Button.tsx`) en Stock y Artículos; íconos
+    sueltos en Compras y Proveedores, como en el diseño.
+- **Dónde vive**: `index.css`, `scripts/audit-kit.mjs`, `components/ui/*`, las páginas.
+- **Por qué**: lo pidió el cliente. Dos cosas del mockup **no se copiaron textual** porque habrían
+  mentido: los encabezados ⇅ de Proveedores ordenan de verdad (no son decorativos), y la zona de
+  foto del remito dice "JPG, PNG" y no "PDF / 10 MB" — el input es `accept="image/*"` y la foto
+  se recomprime a 800px, así que no hay PDF ni límite de tamaño.
+
 ---
 
 > Si aparece una divergencia nueva respecto del kit, se agrega como un bloque más acá

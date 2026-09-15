@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, ShoppingCart, Building2, Box, Search, CirclePlus, AlertTriangle } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
+import { Input, FIELD_LABEL } from '../ui/Input';
 import { Modal } from '../ui/Modal';
 import { Combobox } from '../ui/Combobox';
 import { OrderItem, Provider, Article } from '@/types';
@@ -123,6 +123,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
       onClose={onClose}
       title="Generar nueva OC"
       description="Complete los datos para crear una solicitud de compra."
+      icon={ShoppingCart}
       maxWidth="2xl"
       loading={isLoading}
       footer={
@@ -134,17 +135,19 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
         </>
       }
     >
-      <div className="space-y-6">
-        <div className="space-y-1 relative">
-           <div className="flex items-center justify-between">
-               <label className="text-sm font-medium text-foreground">Proveedor</label>
+      <div className="space-y-5">
+        <div className="relative">
+           <div className="flex items-center justify-between gap-2">
+               <label className={FIELD_LABEL}>Proveedor</label>
                {items.length > 0 && (
-                   <span className="text-[10px] text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded border border-amber-100">
+                   <span className="mb-1.5 inline-flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                       <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                        Bloqueado (elimine los artículos para cambiar)
                    </span>
                )}
            </div>
-           <Combobox 
+           <Combobox
+             icon={Building2}
              options={providerOptions}
              value={providerId}
              onChange={setProviderId}
@@ -153,30 +156,38 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
            />
         </div>
 
-        <div className="bg-muted/80 p-5 rounded-md border border-border space-y-4 shadow-sm">
-           <h4 className="text-sm font-semibold text-foreground flex items-center justify-between">
-              <span>Agregar Artículos</span>
-              <div className="flex items-center gap-3">
-                  <button 
-                    onClick={() => {
-                        if (!providerId) {
-                            notify.warning("Por favor, seleccione un proveedor primero.");
-                            return;
-                        }
-                        setIsQuickAddOpen(true);
-                    }}
-                    className={`text-xs font-medium underline flex items-center gap-1 ${
-                        providerId ? 'text-emerald-600 hover:text-emerald-700' : 'text-muted-foreground cursor-not-allowed no-underline'
-                    }`}
-                  >
-                    <Plus className="w-3 h-3" />
-                    Nuevo Artículo
-                  </button>
+        <div className="space-y-4 rounded-xl border border-border bg-muted/50 p-4 sm:p-5">
+           <div className="flex items-start justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand" aria-hidden="true">
+                      <Box className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                      <h4 className="text-sm font-semibold text-foreground sm:text-base">Agregar Artículos</h4>
+                      <p className="text-xs text-muted-foreground">Busque y agregue artículos del proveedor a la orden de compra.</p>
+                  </div>
               </div>
-           </h4>
+              <button
+                type="button"
+                onClick={() => {
+                    if (!providerId) {
+                        notify.warning("Por favor, seleccione un proveedor primero.");
+                        return;
+                    }
+                    setIsQuickAddOpen(true);
+                }}
+                className={`flex shrink-0 items-center gap-1.5 text-sm font-medium ${
+                    providerId ? 'text-brand hover:underline' : 'text-muted-foreground cursor-not-allowed'
+                }`}
+              >
+                <CirclePlus className="h-4 w-4" aria-hidden="true" />
+                Nuevo Artículo
+              </button>
+           </div>
            <div className="flex flex-col sm:flex-row gap-3 items-end">
               <div className="w-full sm:flex-1 min-w-0">
-                <Combobox 
+                <Combobox
+                  icon={Search}
                   options={productOptions}
                   value={tempArticleId}
                   onChange={setTempArticleId}
@@ -185,13 +196,13 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                 />
               </div>
               <div className="flex gap-3 w-full sm:w-auto shrink-0">
-                <div className="flex-1 sm:w-24">
-                  <Input 
-                    type="number" 
-                    placeholder="Cant." 
+                <div className="flex-1 sm:w-28">
+                  <Input
+                    type="number"
+                    placeholder="Cant."
                     min="1"
                     max={MAX_QUANTITY}
-                    className="h-[42px]" 
+                    className="md:h-10"
                     value={tempQty || ''}
                     onChange={(e) => setTempQty(toCount(e.target.value))}
                     disabled={!tempArticleId}
@@ -204,11 +215,12 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                   />
                 </div>
                 <div className="shrink-0">
-                  <Button 
-                    className="h-[42px] px-4 w-full sm:w-auto" 
-                    variant="secondary" 
+                  <Button
+                    className="h-11 md:h-10 w-12 px-0 bg-brand/10 text-brand hover:bg-brand/15"
+                    variant="secondary"
                     onClick={handleAddItem}
                     disabled={!tempArticleId || tempQty <= 0}
+                    aria-label="Agregar artículo"
                   >
                     <Plus className="w-5 h-5" />
                   </Button>
@@ -233,9 +245,9 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                 </div>
               ) : (
                 items.map((item, idx) => (
-                  <div key={item.id + '-' + idx} className="flex justify-between items-center bg-card p-3 rounded-lg border border-border text-sm shadow-sm hover:border-brand/20 transition-colors">
+                  <div key={item.id + '-' + idx} className="flex justify-between items-center gap-3 bg-card px-4 py-3 rounded-lg border border-border text-sm shadow-sm hover:border-brand/20 transition-colors">
                      <div className="min-w-0 flex-1">
-                        <span className="block truncate font-medium text-foreground">{capitalizeFirst(item.description)}</span>
+                        <span className="block truncate font-semibold text-foreground">{capitalizeFirst(item.description)}</span>
                         <span className="block truncate text-xs text-muted-foreground">{item.sku}</span>
                      </div>
                      <div className="flex items-center gap-3">
@@ -244,12 +256,12 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
                           min="1"
                           max={MAX_QUANTITY}
                           aria-label={`Cantidad de ${item.description}`}
-                          className="h-9 w-20 text-right"
+                          className="h-10 md:h-10 w-20 text-center font-medium"
                           value={item.quantity || ''}
                           onChange={(e) => handleItemQtyChange(item.id, toCount(e.target.value))}
                         />
                         <span className="text-xs text-muted-foreground">un.</span>
-                        <button onClick={() => handleRemoveItem(item.id)} className="text-muted-foreground hover:text-red-500 transition-colors p-1 hover:bg-red-50 rounded" title="Quitar">
+                        <button onClick={() => handleRemoveItem(item.id)} className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600" title="Quitar" aria-label={`Quitar ${item.description}`}>
                           <Trash2 className="w-4 h-4" />
                         </button>
                      </div>

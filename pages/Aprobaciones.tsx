@@ -204,9 +204,9 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
   };
 
   return (
-    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 bg-muted/50 overflow-hidden">
+    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 overflow-hidden">
       {/* Header */}
-      <div className="shrink-0 border-b border-border bg-muted px-4 py-4 sm:px-8">
+      <div className="shrink-0 px-4 pt-5 sm:px-8 md:pt-6">
         <PageHeader
           title="Aprobaciones"
           subtitle="Gestión de autorizaciones"
@@ -217,18 +217,18 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
                  size="icon"
                  onClick={onRefresh}
                  disabled={isRefreshing}
-                 className="rounded-md bg-card text-foreground border-border shadow-sm hover:bg-accent hover:text-brand transition-colors h-9 w-9 sm:h-10 sm:w-10 shrink-0"
+                 className="h-11 w-11 md:h-11 md:w-11 rounded-lg bg-card text-foreground border-border shadow-sm hover:bg-accent hover:text-brand transition-colors shrink-0"
                  title="Actualizar datos"
                >
-                 <RefreshCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-brand' : ''}`} />
+                 <RefreshCcw className={`w-5 h-5 ${isRefreshing ? 'animate-spin text-brand' : ''}`} />
                </Button>
 
                <div className="relative min-w-0 flex-1 sm:w-72 sm:flex-none group">
-                 <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-brand transition-colors" />
+                 <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-brand transition-colors" />
                  <input
                    placeholder="Buscar OC o proveedor..."
                    aria-label="Buscar órdenes"
-                   className="w-full pl-10 h-10 rounded-md bg-card shadow-sm border border-border focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all text-sm"
+                   className="w-full pl-11 h-11 rounded-lg bg-card shadow-sm border border-border focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all text-sm"
                    value={searchTerm}
                    onChange={(e) => setSearchTerm(e.target.value)}
                  />
@@ -265,7 +265,7 @@ export const Aprobaciones: React.FC<AprobacionesProps> = ({ orders, setOrders, o
         ) : (
           <div className="space-y-4">
             {/* Desktop Table View */}
-            <div className="hidden md:flex min-h-0 flex-1 flex-col overflow-hidden bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto bg-muted">
+            <div className="hidden md:flex min-h-0 flex-1 flex-col overflow-hidden bg-card rounded-xl border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto bg-muted">
               {/* table-fixed so a long amount or provider name cannot widen its own
                   column and shove the rest sideways. min-w keeps the columns readable:
                   below it the wrapper scrolls instead of squashing them. */}

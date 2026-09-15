@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Filter, RefreshCcw, ArrowRightLeft, Edit, Trash2, AlertTriangle, AlertCircle, X, Package, LayoutGrid, List } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import { Button, rowAction } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
@@ -554,16 +554,19 @@ export const StockOnline: React.FC = () => {
   const plantQty = filteredStock.filter(i => i.subdeposit === 'DEPOSITO').reduce((acc, item) => acc + item.quantity, 0);
 
   const totalsBar = (
-    <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-1 px-4 py-2.5 text-xs">
-      <div className="flex items-center gap-1.5 text-muted-foreground">
-        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+    <div className="flex flex-wrap items-center justify-end gap-x-6 gap-y-1 px-4 py-3 text-sm">
+      <span className="mr-auto text-muted-foreground">
+        Mostrando {filteredStock.length} {filteredStock.length === 1 ? 'producto' : 'productos'}
+      </span>
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <span className="h-2.5 w-2.5 rounded-full bg-orange-500" aria-hidden="true" />
         Logística: <b className="tabular-nums text-foreground">{logisticsQty}</b>
       </div>
-      <div className="flex items-center gap-1.5 text-muted-foreground">
-        <span className="h-1.5 w-1.5 rounded-full bg-blue-500" aria-hidden="true" />
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <span className="h-2.5 w-2.5 rounded-full bg-blue-500" aria-hidden="true" />
         Planta: <b className="tabular-nums text-foreground">{plantQty}</b>
       </div>
-      <div className="font-semibold text-foreground">
+      <div className="border-l border-border pl-6 font-semibold text-foreground">
         Total: <span className="tabular-nums">{totalQty}</span>
       </div>
     </div>
@@ -572,10 +575,10 @@ export const StockOnline: React.FC = () => {
   const activeFiltersCount = filters.subdeposit.length + filters.sku.length;
 
   return (
-    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 overflow-y-auto md:overflow-hidden bg-muted">
+    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 overflow-y-auto md:overflow-hidden">
       
       {/* Header Area */}
-      <div className="shrink-0 border-b border-border bg-muted px-4 py-4 sm:px-8">
+      <div className="shrink-0 px-4 pt-5 sm:px-8 md:pt-6">
         <PageHeader
           title="Stock Online"
           subtitle={
@@ -591,29 +594,29 @@ export const StockOnline: React.FC = () => {
                size="icon"
                onClick={fetchData}
                disabled={isLoading}
-               className="rounded-full bg-card text-foreground border-border shadow-sm hover:bg-accent hover:text-brand transition-colors shrink-0"
+               className="h-11 w-11 md:h-11 md:w-11 rounded-lg bg-card text-foreground border-border shadow-sm hover:bg-accent hover:text-brand transition-colors shrink-0"
                title="Actualizar datos"
              >
-               <RefreshCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-brand' : ''}`} />
+               <RefreshCcw className={`w-5 h-5 ${isLoading ? 'animate-spin text-brand' : ''}`} />
              </Button>
-             
-             <div className="relative flex-1 sm:w-80 group">
-               <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-brand transition-colors" />
-               <input 
-                 placeholder="Buscar..." 
-                 className="w-full pl-10 h-10 rounded-md bg-card shadow-sm border border-border focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all text-sm"
+
+             <div className="relative flex-1 sm:w-72 group">
+               <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-brand transition-colors" />
+               <input
+                 placeholder="Buscar..."
+                 className="w-full pl-11 h-11 rounded-lg bg-card shadow-sm border border-border focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all text-sm"
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
                />
              </div>
-             
+
              <div className="relative">
-                <Button 
-                    variant={activeFiltersCount > 0 ? "secondary" : "outline"} 
-                    className={`h-10 rounded-md px-4 ${activeFiltersCount > 0 ? "bg-brand/10 text-brand border-brand/20" : "bg-card text-foreground border-border shadow-sm"}`}
+                <Button
+                    variant={activeFiltersCount > 0 ? "secondary" : "outline"}
+                    className={`h-11 md:h-11 rounded-lg px-5 font-semibold ${activeFiltersCount > 0 ? "bg-brand/10 text-brand border-brand/20" : "bg-card text-foreground border-border shadow-sm"}`}
                     onClick={() => setShowFilters(!showFilters)}
                 >
-                    <Filter className="w-4 h-4 mr-2" />
+                    <Filter className="w-5 h-5 sm:mr-2" />
                     <span className="hidden sm:inline">{activeFiltersCount > 0 ? `Filtros (${activeFiltersCount})` : 'Filtrar'}</span>
                     <span className="sm:hidden">{activeFiltersCount > 0 ? activeFiltersCount : ''}</span>
                 </Button>
@@ -664,12 +667,12 @@ export const StockOnline: React.FC = () => {
                 )}
              </div>
 
-             <Button 
-                variant="default" 
-                className="w-full sm:w-auto h-10 rounded-md px-5 shadow-sm" 
+             <Button
+                variant="default"
+                className="w-full sm:w-auto h-11 md:h-11 rounded-lg px-6 text-base font-semibold shadow-sm"
                 onClick={() => handleOpenModal('ADD')}
              >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-5 h-5 mr-2" />
               Ingresar
             </Button>
           </div>
@@ -704,74 +707,56 @@ export const StockOnline: React.FC = () => {
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden md:flex min-h-0 flex-1 flex-col overflow-hidden bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto bg-muted">
+            <div className="hidden md:flex min-h-0 flex-1 flex-col overflow-hidden bg-card rounded-xl border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto bg-muted">
               {/* table-fixed so a long product name cannot widen its own column and
                   drag the rest sideways. min-w keeps them readable - below it the
                   wrapper scrolls instead of squashing them. */}
-              <table className="w-full table-fixed min-w-[720px] text-left border-collapse text-[13px]">
+              <table className="w-full table-fixed min-w-[760px] text-left border-collapse text-[13px]">
                 <thead className="sticky top-0 z-20 bg-muted border-b border-border">
                   <tr>
-                    <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Producto</th>
-                    <th className="h-12 w-40 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Ubicación</th>
-                    <th className="h-12 w-40 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cantidad</th>
-                    <th className="h-12 w-44 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
+                    <th className="h-14 px-6 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Producto</th>
+                    <th className="h-14 w-44 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Ubicación</th>
+                    <th className="h-14 w-40 px-4 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Cantidad</th>
+                    <th className="h-14 w-60 px-6 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/50 bg-card">
+                <tbody className="divide-y divide-border bg-card">
                   {filteredStock.map((item) => (
-                    <tr key={item.id} className="hover:bg-card/60 transition-colors group">
-                      <td className="h-16 px-4 py-3">
-                        {/* No icon tile and no chip around the SKU: both inflated the
-                            row well past the reference grid's height. */}
+                    <tr key={item.id} className="hover:bg-muted/40 transition-colors group">
+                      <td className="h-[4.5rem] px-6 py-3">
                         <div className="min-w-0">
-                          <span className="block truncate text-[13px] font-medium text-foreground">{capitalizeFirst(item.description)}</span>
-                          <span className="block truncate text-[11px] text-muted-foreground">SKU: {item.sku}</span>
+                          <span className="block truncate text-[15px] font-bold text-foreground">{capitalizeFirst(item.description)}</span>
+                          <span className="mt-0.5 block truncate text-[13px] text-muted-foreground">SKU: {item.sku}</span>
                         </div>
                       </td>
-                      <td className="h-16 px-4 py-3">
-                        <Badge 
+                      <td className="h-[4.5rem] px-4 py-3">
+                        <Badge
                             variant={item.subdeposit === 'DEPOSITO' ? 'info' : 'warning'}
-                            className="border-0 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                            className="border-0 px-3 py-1 text-[11px] font-bold uppercase tracking-wide"
                         >
                           {item.subdeposit}
                         </Badge>
                       </td>
-                      <td className="h-16 px-4 py-3 text-right">
-                         <div className="flex flex-col items-end">
-                            <span className={`text-base font-bold tabular-nums tracking-tight ${item.quantity < 50 ? 'text-amber-600' : 'text-foreground'}`}>
+                      <td className="h-[4.5rem] px-4 py-3 text-center">
+                         <div className="flex flex-col items-center gap-0.5">
+                            <span className={`text-lg font-bold tabular-nums tracking-tight ${item.quantity < 50 ? 'text-orange-600' : 'text-foreground'}`}>
                                 {item.quantity} un.
                             </span>
-                            {item.quantity < 50 && <span className="text-[10px] font-bold text-amber-500 uppercase tracking-wide">Bajo Stock</span>}
+                            {item.quantity < 50 && <span className="rounded-md bg-orange-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-orange-600">Bajo Stock</span>}
                          </div>
                       </td>
-                      <td className="h-16 px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button 
-                            onClick={() => handleOpenModal('TRANSFORM', item)}
-                            title="Transformar"
-                            className="p-2 text-muted-foreground hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                          >
+                      <td className="h-[4.5rem] px-6 py-3">
+                        <div className="flex items-center justify-end gap-3">
+                          <button onClick={() => handleOpenModal('TRANSFORM', item)} title="Transformar" className={rowAction()}>
                             <RefreshCcw className="w-4 h-4" />
                           </button>
-                          <button 
-                            onClick={() => handleOpenModal('TRANSFER', item)}
-                            title="Transferir"
-                            className="p-2 text-muted-foreground hover:text-brand hover:bg-brand/10 rounded-lg transition-colors"
-                          >
+                          <button onClick={() => handleOpenModal('TRANSFER', item)} title="Transferir" className={rowAction()}>
                             <ArrowRightLeft className="w-4 h-4" />
                           </button>
-                          <button 
-                            onClick={() => handleOpenModal('EDIT', item)}
-                            title="Editar"
-                            className="p-2 text-muted-foreground hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
-                          >
+                          <button onClick={() => handleOpenModal('EDIT', item)} title="Editar" className={rowAction()}>
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button 
-                             onClick={() => handleOpenModal('DELETE', item)}
-                             title="Eliminar"
-                             className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          >
+                          <button onClick={() => handleOpenModal('DELETE', item)} title="Eliminar" className={rowAction(true)}>
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -783,7 +768,7 @@ export const StockOnline: React.FC = () => {
                     header is stuck to the top of. As a sibling div outside the box
                     it spanned the full card while the header stopped at the
                     scrollbar, and the mismatch read as a broken header. */}
-                <tfoot className="sticky bottom-0 z-20 border-t border-border bg-muted">
+                <tfoot className="sticky bottom-0 z-20 border-t border-border bg-card [&_td>div]:px-6">
                   <tr>
                     <td colSpan={4} className="p-0">{totalsBar}</td>
                   </tr>

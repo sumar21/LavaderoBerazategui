@@ -43,6 +43,15 @@ const SIZES: Record<KitSize, string> = {
   icon: 'h-11 w-11 md:h-10 md:w-10',
 };
 
+/** Bordered square icon action in a grid row. `danger` is tinted even at rest. */
+export const rowAction = (danger = false) =>
+  cn(
+    'flex h-9 w-9 items-center justify-center rounded-lg border shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+    danger
+      ? 'border-red-100 bg-red-50 text-red-600 hover:bg-red-100'
+      : 'border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground'
+  );
+
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'default', size = 'default', isLoading = false, disabled, children, ...props }, ref) => {
     const v = VARIANT_ALIASES[variant] ?? (variant as KitVariant);

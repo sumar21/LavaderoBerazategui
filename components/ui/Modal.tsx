@@ -11,6 +11,8 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   description?: string;
+  /** Shown in a brand tile beside the title. */
+  icon?: React.ElementType;
   children: React.ReactNode;
   footer?: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl';
@@ -33,7 +35,7 @@ const MAX_WIDTHS = {
  * gutter and a body that scrolls inside `max-h-[90vh]`.
  */
 export const Modal: React.FC<ModalProps> = ({
-  isOpen, onClose, title, description, children, footer, maxWidth = 'lg',
+  isOpen, onClose, title, description, icon: Icon, children, footer, maxWidth = 'lg',
   loading = false, loadingText = 'Cargando datos…',
 }) => {
   const { visible, overlayClass, modalClass } = useModalAnimation(isOpen);
@@ -64,18 +66,20 @@ export const Modal: React.FC<ModalProps> = ({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          'relative flex w-full flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl shadow-black/25 max-h-[90vh]',
+          'relative flex w-full flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-2xl shadow-black/25 max-h-[90vh]',
           MAX_WIDTHS[maxWidth],
           modalClass
         )}
       >
-        {/* Brand hairline: ties the dialog to the shell without shouting. */}
-        <div className="h-1 shrink-0 bg-gradient-to-r from-brand via-sidebar-accent to-brand" aria-hidden="true" />
-
-        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border p-4 sm:p-5">
-          <div className="min-w-0 pr-6">
-            <h3 className="truncate text-lg font-bold leading-tight text-foreground">{title}</h3>
-            {description && <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">{description}</p>}
+        <div className="flex shrink-0 items-center gap-4 p-4 pb-2 sm:p-6 sm:pb-3">
+          {Icon && (
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand sm:h-12 sm:w-12" aria-hidden="true">
+              <Icon className="h-6 w-6" />
+            </div>
+          )}
+          <div className="min-w-0 pr-8">
+            <h3 className="truncate text-lg font-bold leading-tight text-foreground sm:text-xl">{title}</h3>
+            {description && <p className="mt-1 text-xs text-muted-foreground sm:text-sm">{description}</p>}
           </div>
           <button
             type="button"
@@ -89,7 +93,7 @@ export const Modal: React.FC<ModalProps> = ({
 
         {/* A half-drawn form behind a blur reads as broken. While the dialog is
             busy the body is empty and the spinner is the only thing in it. */}
-        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:px-6 sm:pb-6 sm:pt-4">
           {loading ? (
             <div className="flex min-h-[14rem] items-center justify-center py-10">
               <Loader text={loadingText} />
@@ -100,7 +104,7 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
 
         {footer && (
-          <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-muted/40 p-4 sm:flex-row sm:justify-end sm:gap-3 sm:p-5 [&>*]:w-full sm:[&>*]:w-auto">
+          <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-card p-4 sm:flex-row sm:justify-end sm:gap-3 sm:px-6 [&>*]:w-full sm:[&>*]:w-auto">
             {footer}
           </div>
         )}

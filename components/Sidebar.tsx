@@ -65,8 +65,8 @@ const normalize = (str: string) =>
  */
 const navItemClass = (active: boolean, collapsed: boolean) =>
   cn(
-    'group relative flex w-full items-center rounded-md text-sm font-medium transition-colors',
-    collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5 md:py-2',
+    'group relative flex w-full items-center rounded-lg text-[15px] font-medium transition-colors',
+    collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3.5 py-3',
     active
       ? 'bg-sidebar-accent text-sidebar-foreground shadow-sm'
       : 'text-sidebar-muted hover:bg-white/10 hover:text-sidebar-foreground'
@@ -113,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Collapsed, the toggle stacks under the logo but stays INSIDE this band,
           above the divider — the shape the studio's other apps use. */}
-      <div className={cn('flex shrink-0 border-b border-sidebar-border', isCollapsed ? 'flex-col items-center gap-1 px-2 py-3' : 'h-16 items-center justify-between px-4')}>
+      <div className={cn('flex shrink-0 border-b border-sidebar-border', isCollapsed ? 'flex-col items-center gap-1 px-2 py-3' : 'h-20 items-center justify-between px-5')}>
         {isCollapsed ? (
           <>
             <img src="/favicon.svg" alt="Lavadero Berazategui" className="h-8 w-8 object-contain" />
@@ -128,7 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </>
         ) : (
-          <Logo variant="light" size="sm" />
+          <Logo variant="light" size="md" />
         )}
 
         {/* Collapse toggle sits beside the logo — desktop only. */}
@@ -155,9 +155,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {!isCollapsed && (
-          <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-muted/70">
+          <p className="px-3.5 pb-3 text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted/80">
             Menú principal
           </p>
         )}
@@ -184,19 +184,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 className={navItemClass(active && !hasSubItems, isCollapsed)}
               >
                 {active && !hasSubItems && <ActiveBar />}
-                <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
                 {!isCollapsed && (
                   <>
                     <span className="flex-1 text-left">{item.label}</span>
                     {hasSubItems && (
-                      <ChevronDown className={cn('h-4 w-4 shrink-0 transition-transform', expanded && 'rotate-180')} aria-hidden="true" />
+                      <ChevronDown className={cn('h-5 w-5 shrink-0 transition-transform', expanded && 'rotate-180')} aria-hidden="true" />
                     )}
                   </>
                 )}
               </button>
 
               {hasSubItems && expanded && !isCollapsed && (
-                <div className="mt-1 space-y-1 pl-4">
+                <div className="mt-1 space-y-1 pl-6">
                   {item.subItems!.map(sub => (
                     <button
                       key={sub.id}
@@ -205,7 +205,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       className={navItemClass(currentView === sub.id, false)}
                     >
                       {currentView === sub.id && <ActiveBar />}
-                      {sub.icon && <sub.icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />}
+                      {sub.icon && <sub.icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />}
                       <span className="flex-1 text-left">{sub.label}</span>
                     </button>
                   ))}
@@ -216,7 +216,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         })}
       </nav>
 
-      <div className="shrink-0 border-t border-sidebar-border p-3">
+      <div className="shrink-0 border-t border-sidebar-border px-3 py-4">
         {/* Theme switch, above the user block. Icon and label report the theme you
             are IN, not the one you would get — it sits directly on top of the
             user's name and role, which are state labels, so anything else here
@@ -230,27 +230,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={toggleTheme}
           title={isCollapsed ? (isDark ? 'Modo oscuro' : 'Modo claro') : undefined}
           className={cn(
-            'mb-2 flex w-full items-center rounded-md text-sm font-medium text-sidebar-muted transition-colors hover:bg-white/10 hover:text-sidebar-foreground',
-            isCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5 md:py-2'
+            'mb-3 flex w-full items-center rounded-lg text-[15px] font-medium text-sidebar-muted transition-colors hover:bg-white/10 hover:text-sidebar-foreground',
+            isCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3.5 py-3'
           )}
         >
           {isDark
-            ? <Moon className="h-4 w-4 shrink-0" aria-hidden="true" />
-            : <Sun className="h-4 w-4 shrink-0" aria-hidden="true" />}
+            ? <Moon className="h-5 w-5 shrink-0" aria-hidden="true" />
+            : <Sun className="h-5 w-5 shrink-0" aria-hidden="true" />}
           {!isCollapsed && (isDark ? 'Modo oscuro' : 'Modo claro')}
         </button>
 
-        <div className={cn('mb-2 flex items-center', isCollapsed ? 'justify-center' : 'gap-3 px-1')}>
+        <div className={cn('mb-3 flex items-center', isCollapsed ? 'justify-center' : 'gap-3 px-1.5')}>
           <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-semibold text-sidebar-foreground"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/15 text-sm font-semibold text-sidebar-foreground"
             title={isCollapsed ? `${capitalizeFirst(user.name)} · ${user.role}` : undefined}
           >
             {user.initials}
           </div>
           {!isCollapsed && (
             <div className="flex min-w-0 flex-col">
-              <span className="truncate text-sm font-semibold leading-tight text-sidebar-foreground">{capitalizeFirst(user.name)}</span>
-              <span className="truncate text-[11px] text-sidebar-muted">{user.role}</span>
+              <span className="truncate text-base font-semibold leading-tight text-sidebar-foreground">{capitalizeFirst(user.name)}</span>
+              <span className="truncate text-[13px] text-sidebar-muted">{user.role}</span>
             </div>
           )}
         </div>
@@ -262,15 +262,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onLogout}
           title={isCollapsed ? 'Cerrar sesión' : undefined}
           className={cn(
-            'flex w-full items-center rounded-md text-sm font-medium text-red-300 transition-colors hover:bg-red-400/15 hover:text-red-200',
-            isCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5 md:py-2'
+            'flex w-full items-center rounded-lg text-[15px] font-medium text-red-300 transition-colors hover:bg-red-400/15 hover:text-red-200',
+            isCollapsed ? 'justify-center px-0 py-3' : 'gap-3 px-3.5 py-3'
           )}
         >
-          <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
           {!isCollapsed && 'Cerrar sesión'}
         </button>
 
-        {!isCollapsed && <p className="mt-2 px-3 text-[10px] text-sidebar-muted/60">v20251223_1.0.10</p>}
+        {!isCollapsed && <p className="mt-2 px-3.5 text-[11px] text-sidebar-muted/70">v20251223_1.0.10</p>}
       </div>
     </>
   );

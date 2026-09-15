@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Eye, Send, FileText, Calendar, User, DollarSign, MessageCircle, Mail, Trash2, Truck, CheckCircle, RefreshCcw, X } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Send, FileText, Calendar, Users, DollarSign, Trash2, Truck, RefreshCcw, X } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
@@ -767,16 +767,18 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
   const statusOptions = uniqueStatuses.map(status => ({ value: status, label: status }));
 
   return (
-    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 bg-muted/50 overflow-y-auto md:overflow-hidden">
+    <div className="h-full flex flex-col animate-in fade-in zoom-in-95 duration-500 overflow-y-auto md:overflow-hidden">
       {/* Header */}
-      <div className="shrink-0 border-b border-border bg-muted px-4 py-4 sm:px-8">
+      <div className="shrink-0 px-4 pt-5 sm:px-8 md:pt-6">
         <PageHeader
           title="Gestión de Compras"
           subtitle="Control de órdenes y proveedores"
           actions={
           <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3 w-full lg:w-auto items-center">
-             <div className="hidden lg:flex flex-1 sm:w-40 min-w-[140px]">
+             <div className="hidden lg:flex w-44 shrink-0">
                 <MultiSelect
+                    icon={FileText}
+                    triggerClassName="min-h-[44px] rounded-lg font-medium"
                     options={statusOptions}
                     value={selectedStatus}
                     onChange={setSelectedStatus}
@@ -784,25 +786,27 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                 />
              </div>
 
-             <div className="hidden lg:flex flex-1 sm:w-64 min-w-[160px]">
+             <div className="hidden lg:flex w-52 shrink-0">
                  <MultiSelect
+                     icon={Users}
+                     triggerClassName="min-h-[44px] rounded-lg font-medium"
                      options={providers.map(p => ({ value: p.id, label: p.name }))}
                      value={selectedProviders}
                      onChange={setSelectedProviders}
                      placeholder="Filtrar Proveedores"
                  />
              </div>
-             
-             <div className="flex w-full sm:w-auto gap-2 items-center">
+
+             <div className="flex w-full sm:w-auto gap-2 sm:gap-3 items-center">
                <Button
                  variant="outline"
                  size="icon"
                  onClick={fetchData}
                  disabled={isLoading}
-                 className="rounded-md bg-card text-foreground border-border shadow-sm hover:bg-accent hover:text-brand transition-colors shrink-0"
+                 className="h-11 w-11 md:h-11 md:w-11 rounded-lg bg-card text-foreground border-border shadow-sm hover:bg-accent hover:text-brand transition-colors shrink-0"
                  title="Actualizar datos"
                >
-                 <RefreshCcw className={`w-4 h-4 ${isLoading ? 'animate-spin text-brand' : ''}`} />
+                 <RefreshCcw className={`w-5 h-5 ${isLoading ? 'animate-spin text-brand' : ''}`} />
                </Button>
 
                {/* Mobile Filter Button & Popover */}
@@ -811,7 +815,7 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                    variant="outline"
                    size="icon"
                    onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)}
-                   className={`rounded-md bg-card text-foreground border-border shadow-sm hover:bg-accent hover:text-brand transition-colors shrink-0 ${isMobileFiltersOpen ? 'ring-2 ring-ring/20 border-brand text-brand' : ''}`}
+                   className={`h-11 w-11 md:h-11 md:w-11 rounded-lg bg-card text-foreground border-border shadow-sm hover:bg-accent hover:text-brand transition-colors shrink-0 ${isMobileFiltersOpen ? 'ring-2 ring-ring/20 border-brand text-brand' : ''}`}
                    title="Filtros"
                  >
                    <Filter className="w-4 h-4" />
@@ -883,22 +887,22 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                  )}
                </div>
 
-               <div className="relative flex-1 sm:w-64 group">
-                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground group-focus-within:text-brand transition-colors" />
-                 <Input 
-                   placeholder="Buscar..." 
-                   className="pl-10 bg-card shadow-sm border-border focus:border-primary focus:ring-ring/20 rounded-md w-full"
+               <div className="relative flex-1 sm:w-56 group">
+                 <Search className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-muted-foreground group-focus-within:text-brand transition-colors" />
+                 <Input
+                   placeholder="Buscar..."
+                   className="h-11 md:h-11 pl-11 bg-card shadow-sm border-border focus:border-primary focus:ring-ring/20 rounded-lg w-full"
                    value={searchTerm}
                    onChange={(e) => setSearchTerm(e.target.value)}
                  />
                </div>
              </div>
-             
-             <Button 
+
+             <Button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="w-full sm:w-auto bg-brand hover:bg-brand/90 text-brand-foreground shadow-sm rounded-md px-6 py-2.5 flex items-center justify-center gap-2 transition-all active:scale-95"
+                className="w-full sm:w-auto h-11 md:h-11 bg-brand hover:bg-brand/90 text-brand-foreground shadow-sm rounded-lg px-6 text-base font-semibold flex items-center justify-center gap-2 transition-all active:scale-95"
              >
-               <Plus className="w-4 h-4" />
+               <Plus className="w-5 h-5" />
                <span className="hidden sm:inline">Nueva Orden</span>
                <span className="sm:hidden">Nueva OC</span>
              </Button>
@@ -928,19 +932,19 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden md:flex min-h-0 flex-1 flex-col overflow-hidden bg-card rounded-lg border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto bg-muted">
+            <div className="hidden md:flex min-h-0 flex-1 flex-col overflow-hidden bg-card rounded-xl border border-border shadow-sm"><div className="min-h-0 flex-1 overflow-auto bg-muted">
               {/* table-fixed: a long provider name used to widen its column and drag
                   every other one out of place. min-w keeps them readable — below it
                   the wrapper scrolls instead of squashing. */}
-              <table className="w-full table-fixed min-w-[920px] text-left text-[13px]">
+              <table className="w-full table-fixed min-w-[960px] text-left text-[13px]">
                 <thead className="sticky top-0 z-20 bg-muted border-b border-border">
-                  <tr className="border-b border-border bg-muted/50">
-                    <th className="h-12 w-32 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Orden</th>
-                    <th className="h-12 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Fecha & Proveedor</th>
-                    <th className="h-12 w-28 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Items</th>
-                    <th className="h-12 w-48 px-4 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Estado</th>
-                    <th className="h-12 w-32 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Avance</th>
-                    <th className="h-12 w-44 px-4 text-right text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
+                  <tr className="border-b border-border">
+                    <th className="h-14 w-32 px-6 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Orden</th>
+                    <th className="h-14 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Fecha & Proveedor</th>
+                    <th className="h-14 w-28 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Items</th>
+                    <th className="h-14 w-56 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Estado</th>
+                    <th className="h-14 w-40 px-4 text-left text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Avance</th>
+                    <th className="h-14 w-52 px-6 text-center text-sm align-middle font-medium text-muted-foreground whitespace-nowrap">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-card [&_tr]:transition-colors [&_tr:hover]:bg-muted/40">
@@ -953,60 +957,60 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                     }
                     
                     return (
-                      <tr key={order.id} className="hover:bg-brand/10/30 transition-all duration-200 group">
-                        <td className="h-16 px-4 py-3">
-                          <span className="inline-block bg-brand/10 text-brand font-bold px-2 py-1 rounded text-xs">
+                      <tr key={order.id} className="transition-all duration-200 group">
+                        <td className="h-[4.25rem] px-6 py-3">
+                          <span className="inline-block rounded-md bg-brand/10 px-3 py-1.5 text-sm font-bold tabular-nums text-brand">
                               #{order.sharepointId || order.id}
                           </span>
                         </td>
-                        <td className="h-16 px-4 py-3">
+                        <td className="h-[4.25rem] px-4 py-3">
                            <div className="flex min-w-0 flex-col">
-                              <span className="truncate font-semibold text-foreground text-sm" title={capitalizeFirst(order.providerName)}>{capitalizeFirst(order.providerName)}</span>
+                              <span className="truncate font-semibold text-foreground text-[15px]" title={capitalizeFirst(order.providerName)}>{capitalizeFirst(order.providerName)}</span>
                               <div className="flex items-center gap-1.5 mt-1">
-                                  <Calendar className="w-3 h-3 text-muted-foreground" />
-                                  <span className="text-xs text-muted-foreground">{order.date}</span>
+                                  <Calendar className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                                  <span className="text-sm tabular-nums text-muted-foreground">{order.date}</span>
                               </div>
                            </div>
                         </td>
 
-                        <td className="h-16 px-4 py-3 text-right">
-                          <span className="font-bold text-foreground">{totalItems}</span> <span className="text-muted-foreground text-xs">un.</span>
+                        <td className="h-[4.25rem] px-4 py-3">
+                          <span className="text-[15px] font-bold tabular-nums text-foreground">{totalItems}</span> <span className="text-muted-foreground text-sm">un.</span>
                         </td>
-                        <td className="h-16 px-4 py-3 text-center">
+                        <td className="h-[4.25rem] px-4 py-3">
                           {getStatusBadge(order.status)}
                         </td>
-                        <td className="h-16 px-4 py-3 text-right">
+                        <td className="h-[4.25rem] px-4 py-3">
                            {order.status.toUpperCase() === 'COMPLETADA' || order.status.toUpperCase() === 'APROBADA' || order.status.toUpperCase() === 'EN RECEPCION' || order.status.toUpperCase() === 'PENDIENTE INGRESO' ? (
-                               <div className="flex flex-col items-end gap-1">
-                                   <div className="w-24 bg-muted rounded-full h-1.5 overflow-hidden">
-                                       <div 
-                                          className={`h-1.5 rounded-full ${progress === 100 ? 'bg-emerald-500' : 'bg-brand'}`} 
-                                          style={{ width: `${progress}%` }} 
+                               <div className="flex items-center gap-3">
+                                   <div className="w-20 bg-muted rounded-full h-2 overflow-hidden">
+                                       <div
+                                          className={`h-2 rounded-full ${progress === 100 ? 'bg-emerald-500' : 'bg-brand'}`}
+                                          style={{ width: `${progress}%` }}
                                        />
                                    </div>
-                                   <span className="text-[10px] font-bold text-muted-foreground">{progress}%</span>
+                                   <span className="text-xs font-semibold tabular-nums text-muted-foreground">{progress}%</span>
                                </div>
                            ) : (
-                               <span className="text-muted-foreground text-xs">-</span>
+                               <span className="pl-8 text-muted-foreground text-sm">-</span>
                            )}
                         </td>
-                        <td className="h-16 px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-1">
+                        <td className="h-[4.25rem] px-6 py-3">
+                          <div className="flex items-center justify-end gap-2">
                               {order.status === 'Presupuesto' && (
                                   <>
                                       <button 
                                           onClick={() => handleOpenBudgetModal(order)}
                                           title="Cargar Presupuesto"
-                                          className="p-2 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                          className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-emerald-600 hover:bg-emerald-50"
                                       >
-                                          <DollarSign className="w-4 h-4" />
+                                          <DollarSign className="w-5 h-5" />
                                       </button>
                                       <button 
                                           onClick={() => handleResendClick(order)}
                                           title="Reenviar solicitud"
-                                          className="p-2 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                          className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-emerald-600 hover:bg-emerald-50"
                                       >
-                                          <Send className="w-4 h-4" />
+                                          <Send className="w-5 h-5" />
                                       </button>
                                       <button 
                                           onClick={() => {
@@ -1014,9 +1018,9 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                                             setIsDeleteModalOpen(true);
                                           }}
                                           title="Eliminar Orden"
-                                          className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                          className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-red-600 hover:bg-red-50"
                                       >
-                                          <Trash2 className="w-4 h-4" />
+                                          <Trash2 className="w-5 h-5" />
                                       </button>
                                   </>
                               )}
@@ -1025,9 +1029,9 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                                   <button 
                                       onClick={() => handleOpenReceptionModal(order)}
                                       title="Ingresar Remito (Recepción)"
-                                      className="p-2 text-muted-foreground hover:text-brand hover:bg-brand/10 rounded-lg transition-colors"
+                                      className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-brand hover:bg-brand/10"
                                   >
-                                      <Truck className="w-4 h-4" />
+                                      <Truck className="w-5 h-5" />
                                   </button>
                               )}
 
@@ -1036,16 +1040,23 @@ export const Compras: React.FC<ComprasProps> = ({ orders, setOrders, onRefresh, 
                                       setSelectedOrder(order);
                                       setIsViewModalOpen(true);
                                   }}
-                                  className="p-2 text-muted-foreground hover:text-brand hover:bg-brand/10 rounded-lg transition-colors"
+                                  className="rounded-lg p-2 text-muted-foreground transition-colors hover:text-brand hover:bg-brand/10"
                                   title="Ver detalles"
                               >
-                                  <Eye className="w-4 h-4" />
+                                  <Eye className="w-5 h-5" />
                               </button>
                           </div>
                         </td>
                       </tr>
                     )})}
                 </tbody>
+                <tfoot className="sticky bottom-0 z-20 border-t border-border bg-card">
+                  <tr>
+                    <td colSpan={6} className="px-6 py-3 text-sm text-muted-foreground">
+                      Mostrando {filteredOrders.length} de {orders.length} órdenes
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
             </div>

@@ -19,8 +19,8 @@ interface PageHeaderProps {
 export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, actions, className }) => (
   <div className={cn('flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between', className)}>
     <div className="min-w-0">
-      <h1 className="truncate text-2xl font-bold tracking-tight">{title}</h1>
-      {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
+      <h1 className="truncate text-2xl font-bold tracking-tight md:text-3xl">{title}</h1>
+      {subtitle && <p className="mt-1 text-sm text-muted-foreground md:text-base">{subtitle}</p>}
     </div>
     {actions && <div className="flex flex-wrap items-center gap-2 lg:justify-end">{actions}</div>}
   </div>
